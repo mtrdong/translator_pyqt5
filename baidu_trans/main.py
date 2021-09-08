@@ -38,7 +38,7 @@ class Window(FramelessWidget, Ui_Form):
         font.setPixelSize(14)
         self.setFont(font)
         self.setupUi(self)
-        # 禁止窗口缩放
+        # 调整分辨率时不改变窗口大小
         self.sizeChanged.connect(lambda x: self.resize(x[0], x[1]))
         # 隐藏输入框清空按钮
         self.pushButton_5.hide()
@@ -129,6 +129,8 @@ class Window(FramelessWidget, Ui_Form):
         如果输入内容为图片，则对图片进行识别并发起翻译
         如果输入内容为文本，则设置一个定时器，定时结束时自动发起翻译
         """
+        if '>正在识别翻译，请稍候...<' in self.textEdit.toHtml():
+            return None
         self.timer.stop()  # 文本框内容发生变化时停止定时器
         text = self.textEdit.toPlainText().strip()
         if text:
@@ -146,7 +148,7 @@ class Window(FramelessWidget, Ui_Form):
                 self.ocr_thread = BaiduOCRThread(img)
                 self.ocr_thread.trigger.connect(self.transImageText)
                 self.ocr_thread.start()
-            elif '<i>正在识别翻译，请稍候...</i>' not in self.textEdit.toHtml() and text != self.textEditCurrentContent:
+            elif text != self.textEditCurrentContent:
                 self.timer.start(1000)  # 如果文本框输入的不是文件且内容不为空则启动 1000ms 定时器
             self.textEditCurrentContent = text
         else:

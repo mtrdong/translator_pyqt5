@@ -1,7 +1,17 @@
 # -*- coding: utf-8 -*-
-from PyQt5.QtCore import pyqtSignal, Qt, QRectF, QBuffer, qAbs, QRect, QIODevice, QPoint
-from PyQt5.QtGui import QPainter, QPainterPath, QColor, QPen, QKeySequence, QGuiApplication, QCursor
-from PyQt5.QtWidgets import QWidget, QTextEdit, QGraphicsDropShadowEffect, QApplication, QLabel, QDesktopWidget, QShortcut
+from PyQt5.QtCore import pyqtSignal, Qt, QRectF, QBuffer, qAbs, QRect, QIODevice, QPoint, QSize
+from PyQt5.QtGui import QPainter, QPainterPath, QColor, QPen, QKeySequence, QGuiApplication, QCursor, QFont
+from PyQt5.QtWidgets import (
+    QWidget,
+    QTextEdit,
+    QGraphicsDropShadowEffect,
+    QApplication,
+    QLabel,
+    QDesktopWidget,
+    QShortcut,
+    QTextBrowser,
+    QVBoxLayout
+)
 
 
 class FramelessWidget(QWidget):
@@ -282,7 +292,7 @@ class Screenshot(QWidget):
             self._endPos = event.pos()
             self.update()
         else:
-            move_widget(self._label, event.pos(), self._screenGeometry)  # 提示框跟随鼠标移动
+            move_widget(self._label, self._screenGeometry, event.pos())  # 提示框跟随鼠标移动
 
     def paintEvent(self, event):
         """绘制屏幕选区"""
@@ -316,7 +326,7 @@ class Screenshot(QWidget):
         if not self.isVisible():
             self._fullScreenImage = QGuiApplication.primaryScreen().grabWindow(QApplication.desktop().winId())  # 获取整个屏幕
             self._label.show()  # 显示提示框
-            move_widget(self._label, QCursor.pos(), self._screenGeometry)  # 刷新提示框位置
+            move_widget(self._label, self._screenGeometry, QCursor.pos())  # 刷新提示框位置
             super().showFullScreen()  # 全屏显示截图窗口
 
     def complete(self):
@@ -347,18 +357,85 @@ class Screenshot(QWidget):
         self._fullScreenImage = None
 
 
-def move_widget(widget: QWidget, pos: QPoint, geometry: QRect):
+class FloatWidget(QWidget):
+    """ 自定义Widget(悬浮窗口)
+    1. 无边框、圆角、置顶
+    2. 添加阴影
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        font = QFont('微软雅黑')
+        font.setPixelSize(14)
+        self.setFont(font)
+        self.setMaximumSize(QSize(249, 261))
+        # 无边框置顶
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        # 背景透明
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        # 阴影效果
+        self.effect = QGraphicsDropShadowEffect(self)
+        self.effect.setOffset(0, 0)
+        self.effect.setBlurRadius(10)
+        self.effect.setColor(QColor(200, 200, 200))
+        self.setGraphicsEffect(self.effect)
+        # 文本浏览框
+        self.verticalLayout = QVBoxLayout(self)
+        self.verticalLayout.setContentsMargins(20, 20, 20, 20)
+        self.verticalLayout.setSpacing(0)
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.textBrowser = QTextBrowser(self)
+        self.textBrowser.setMaximumSize(QSize(211, 36))
+        self.textBrowser.setStyleSheet("QTextBrowser {background-color: transparent; border: 1px solid transparent;} QScrollBar:vertical {background: transparent; width: 6px; margin: 0;} QScrollBar::handle:vertical {background: rgb(224, 224, 224); min-height: 30px; border-radius: 3px;} QScrollBar::sub-line:vertical {height: 0; subcontrol-position: top;} QScrollBar::add-line:vertical {height: 0; subcontrol-position: bottom;} QScrollBar:horizontal {background: transparent; height: 6px; margin: 0;} QScrollBar::handle:horizontal {background: rgb(224, 224, 224); min-width: 30px; border-radius: 3px;} QScrollBar::sub-line:horizontal {width: 0; subcontrol-position: left;} QScrollBar::add-line:horizontal {width: 0; subcontrol-position: right;}")
+        self.textBrowser.setObjectName("textBrowser")
+        self.verticalLayout.addWidget(self.textBrowser)
+        self.textBrowser_2 = QTextBrowser(self)
+        self.textBrowser_2.setMaximumSize(QSize(211, 36))
+        self.textBrowser_2.setStyleSheet("QTextBrowser {background-color: transparent; border: 1px solid transparent;} QScrollBar:vertical {background: transparent; width: 6px; margin: 0;} QScrollBar::handle:vertical {background: rgb(224, 224, 224); min-height: 30px; border-radius: 3px;} QScrollBar::sub-line:vertical {height: 0; subcontrol-position: top;} QScrollBar::add-line:vertical {height: 0; subcontrol-position: bottom;} QScrollBar:horizontal {background: transparent; height: 6px; margin: 0;} QScrollBar::handle:horizontal {background: rgb(224, 224, 224); min-width: 30px; border-radius: 3px;} QScrollBar::sub-line:horizontal {width: 0; subcontrol-position: left;} QScrollBar::add-line:horizontal {width: 0; subcontrol-position: right;}")
+        self.textBrowser_2.setObjectName("textBrowser_2")
+        self.verticalLayout.addWidget(self.textBrowser_2)
+        self.textBrowser_3 = QTextBrowser(self)
+        self.textBrowser_3.setStyleSheet("QTextBrowser {background-color: transparent; border: 1px solid transparent;} QScrollBar:vertical {background: transparent; width: 6px; margin: 0;} QScrollBar::handle:vertical {background: rgb(224, 224, 224); min-height: 30px; border-radius: 3px;} QScrollBar::sub-line:vertical {height: 0; subcontrol-position: top;} QScrollBar::add-line:vertical {height: 0; subcontrol-position: bottom;} QScrollBar:horizontal {background: transparent; height: 6px; margin: 0;} QScrollBar::handle:horizontal {background: rgb(224, 224, 224); min-width: 30px; border-radius: 3px;} QScrollBar::sub-line:horizontal {width: 0; subcontrol-position: left;} QScrollBar::add-line:horizontal {width: 0; subcontrol-position: right;}")
+        self.textBrowser_3.setObjectName("textBrowser_3")
+        self.verticalLayout.addWidget(self.textBrowser_3)
+
+    def paintEvent(self, event):
+        # 窗口背景
+        painter = QPainter(self)
+        painter.setRenderHint(painter.Antialiasing)
+        painter.setBrush(Qt.white)
+        painter.setPen(Qt.transparent)
+        rect = self.rect()
+        rect.setLeft(10)
+        rect.setTop(10)
+        rect.setWidth(rect.width() - 10)
+        rect.setHeight(rect.height() - 10)
+        painter.drawRoundedRect(rect, 10, 10)
+
+
+def move_widget(widget: QWidget, geometry: QRect, pos: QPoint = None, offset: int = 20):
     """ 移动部件
     保持部件始终显示在屏幕内
     :param widget: 移动部件
-    :param pos: 鼠标坐标
     :param geometry: 屏幕宽高
+    :param pos: 鼠标坐标。窗口跟随鼠标移动
+    :param offset: 窗口跟随鼠标移动时窗口与鼠标的间距
     """
     screen_w = geometry.width()  # 屏幕宽
     screen_h = geometry.height()  # 屏幕高
-    x = pos.x() + 20  # 鼠标X坐标
-    y = pos.y() + 20  # 鼠标Y坐标
-    # 保持部件始终显示在屏幕内
-    x = x - widget.width() - 40 if x + widget.width() > screen_w else x
-    y = y - widget.height() - 40 if y + widget.height() > screen_h else y
+    if pos is None:  # 窗口跟不随鼠标
+        x = widget.geometry().x()  # 部件X坐标
+        y = widget.geometry().y()  # 部件Y坐标
+        # 保持部件始终显示在屏幕内
+        if x < 0 or x + widget.width() > screen_w:
+            x = 0 if x < 0 else screen_w - widget.width()
+        if y < 0 or y + widget.height() > screen_h:
+            y = 0 if y < 0 else screen_h - widget.height()
+    else:  # 窗口跟随鼠标
+        x = pos.x() + offset  # 鼠标X坐标
+        y = pos.y() + offset  # 鼠标Y坐标
+        # 保持部件始终显示在屏幕内
+        if x + widget.width() > screen_w:  # 部件右侧超出边界
+            x = screen_w - widget.width() if x - widget.width() < offset * 2 else x - widget.width() - offset * 2
+        if y + widget.height() > screen_h:  # 部件底部超出边界
+            y = screen_h - widget.height() if y - widget.height() < offset * 2 else y - widget.height() - offset * 2
     widget.move(x, y)  # 移动部件
