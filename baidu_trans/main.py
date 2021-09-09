@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
+import contextlib
 import sys
 from time import sleep
 
 from PyQt5.QtCore import pyqtSlot, QTranslator, QTimer, QBuffer, QIODevice
-from PyQt5.QtGui import QIcon, QFont
+from PyQt5.QtGui import QIcon, QFont, QCursor
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
-from PyQt5.QtWidgets import QApplication, QMessageBox
+from PyQt5.QtWidgets import QApplication, QMessageBox, QDesktopWidget
 from system_hotkey import SystemHotkey
 
-from form import Ui_Form
+from FloatWindow import Ui_FloatWindow
+from MainWindow import Ui_MainWindow
 from resource import favicon_ico, widgets_zh_CN_qm
 from utils import *
-from widgets import FramelessWidget, Screenshot
+from widgets import FramelessWidget, Screenshot, FloatWidget, move_widget
 
 # 窗口最大宽高
 MAX_W, MAX_H = 440, 660
@@ -22,7 +24,7 @@ MIN_W, MIN_H = 440, 209
 exports = {'中文(简体)': 'zh', '英语': 'en', '日语': 'jp', '泰语': 'th', '西班牙语': 'spa', '阿拉伯语': 'ara', '法语': 'fra', '韩语': 'kor', '俄语': 'ru', '德语': 'de', '葡萄牙语': 'pt', '意大利语': 'it', '希腊语': 'el', '荷兰语': 'nl', '波兰语': 'pl', '芬兰语': 'fin', '捷克语': 'cs', '保加利亚语': 'bul', '丹麦语': 'dan', '爱沙尼亚语': 'est', '匈牙利语': 'hu', '罗马尼亚语': 'rom', '斯洛文尼亚语': 'slo', '瑞典语': 'swe', '越南语': 'vie', '中文(粤语)': 'yue', '中文(繁体)': 'cht', '中文(文言文)': 'wyw', '南非荷兰语': 'afr', '阿尔巴尼亚语': 'alb', '阿姆哈拉语': 'amh', '亚美尼亚语': 'arm', '阿萨姆语': 'asm', '阿斯图里亚斯语': 'ast', '阿塞拜疆语': 'aze', '巴斯克语': 'baq', '白俄罗斯语': 'bel', '孟加拉语': 'ben', '波斯尼亚语': 'bos', '缅甸语': 'bur', '加泰罗尼亚语': 'cat', '宿务语': 'ceb', '克罗地亚语': 'hrv', '世界语': 'epo', '法罗语': 'fao', '菲律宾语': 'fil', '加利西亚语': 'glg', '格鲁吉亚语': 'geo', '古吉拉特语': 'guj', '豪萨语': 'hau', '希伯来语': 'heb', '印地语': 'hi', '冰岛语': 'ice', '伊博语': 'ibo', '印尼语': 'id', '爱尔兰语': 'gle', '卡纳达语': 'kan', '克林贡语': 'kli', '库尔德语': 'kur', '老挝语': 'lao', '拉丁语': 'lat', '拉脱维亚语': 'lav', '立陶宛语': 'lit', '卢森堡语': 'ltz', '马其顿语': 'mac', '马拉加斯语': 'mg', '马来语': 'may', '马拉雅拉姆语': 'mal', '马耳他语': 'mlt', '马拉地语': 'mar', '尼泊尔语': 'nep', '新挪威语': 'nno', '波斯语': 'per', '萨丁尼亚语': 'srd', '塞尔维亚语(拉丁文)': 'srp', '僧伽罗语 ': 'sin', '斯洛伐克语': 'sk', '索马里语': 'som', '斯瓦希里语': 'swa', '他加禄语': 'tgl', '塔吉克语': 'tgk', '泰米尔语': 'tam', '鞑靼语': 'tat', '泰卢固语': 'tel', '土耳其语': 'tr', '土库曼语': 'tuk', '乌克兰语': 'ukr', '乌尔都语': 'urd', '奥克语': 'oci', '吉尔吉斯语': 'kir', '普什图语': 'pus', '高棉语': 'hkm', '海地语': 'ht', '书面挪威语': 'nob', '旁遮普语': 'pan', '阿尔及利亚阿拉伯语': 'arq', '比斯拉马语': 'bis', '加拿大法语': 'frn', '哈卡钦语': 'hak', '胡帕语': 'hup', '印古什语': 'ing', '拉特加莱语': 'lag', '毛里求斯克里奥尔语': 'mau', '黑山语': 'mot', '巴西葡萄牙语': 'pot', '卢森尼亚语': 'ruy', '塞尔维亚-克罗地亚语': 'sec', '西里西亚语': 'sil', '突尼斯阿拉伯语': 'tua', '亚齐语': 'ach', '阿肯语': 'aka', '阿拉贡语': 'arg', '艾马拉语': 'aym', '俾路支语': 'bal', '巴什基尔语': 'bak', '本巴语': 'bem', '柏柏尔语': 'ber', '博杰普尔语': 'bho', '比林语': 'bli', '布列塔尼语': 'bre', '切罗基语': 'chr', '齐切瓦语': 'nya', '楚瓦什语': 'chv', '康瓦尔语': 'cor', '科西嘉语': 'cos', '克里克语': 'cre', '克里米亚鞑靼语': 'cri', '迪维希语': 'div', '古英语': 'eno', '中古法语': 'frm', '弗留利语': 'fri', '富拉尼语': 'ful', '盖尔语': 'gla', '卢干达语': 'lug', '古希腊语': 'gra', '瓜拉尼语': 'grn', '夏威夷语': 'haw', '希利盖农语': 'hil', '伊多语': 'ido', '因特语': 'ina', '伊努克提图特语': 'iku', '爪哇语': 'jav', '卡拜尔语': 'kab', '格陵兰语': 'kal', '卡努里语': 'kau', '克什米尔语': 'kas', '卡舒比语': 'kah', '卢旺达语': 'kin', '刚果语': 'kon', '孔卡尼语': 'kok', '林堡语': 'lim', '林加拉语': 'lin', '逻辑语': 'loj', '低地德语': 'log', '下索布语': 'los', '迈蒂利语': 'mai', '曼克斯语': 'glv', '毛利语': 'mao', '马绍尔语': 'mah', '南恩德贝莱语': 'nbl', '那不勒斯语': 'nea', '西非书面语': 'nqo', '北方萨米语': 'sme', '挪威语': 'nor', '奥杰布瓦语': 'oji', '奥里亚语': 'ori', '奥罗莫语': 'orm', '奥塞梯语': 'oss', '邦板牙语': 'pam', '帕皮阿门托语': 'pap', '北索托语': 'ped', '克丘亚语': 'que', '罗曼什语': 'roh', '罗姆语': 'ro', '萨摩亚语': 'sm', '梵语': 'san', '苏格兰语': 'sco', '掸语': 'sha', '修纳语': 'sna', '信德语': 'snd', '桑海语': 'sol', '南索托语': 'sot', '叙利亚语': 'syr', '德顿语': 'tet', '提格利尼亚语': 'tir', '聪加语': 'tso', '契维语': 'twi', '高地索布语': 'ups', '文达语': 'ven', '瓦隆语': 'wln', '威尔士语': 'wel', '西弗里斯语': 'fry', '沃洛夫语': 'wol', '科萨语': 'xho', '意第绪语': 'yid', '约鲁巴语': 'yor', '扎扎其语': 'zaz', '祖鲁语': 'zul', '巽他语': 'sun', '苗语': 'hmn', '塞尔维亚语(西里尔文)': 'src'}
 
 
-class Window(FramelessWidget, Ui_Form):
+class MainWindow(FramelessWidget, Ui_MainWindow):
     def __init__(self, *args, **kwargs):
         # 通过线程创建百度翻译对象
         self.baidu_trans_obj = None
@@ -102,11 +104,40 @@ class Window(FramelessWidget, Ui_Form):
         """ 剪切板数据变更
         开启复制翻译时，获取剪切板内容并发起翻译
         """
-        data = self.clipboard.mimeData()
-        if 'text/plain' in data.formats() and self.clipboard_flag:
-            self.textEdit.setText(data.text())
-            QApplication.processEvents()
-            self.startTrans()
+        if self.clipboard_flag and not self.trans_started:
+            data = self.clipboard.mimeData()
+            if 'text/plain' in data.formats():
+                # 通过线程发起翻译
+                self.start_trans_thread = StartTransThread(data.text(), 'zh')
+                self.start_trans_thread.trigger.connect(self.outToFloatWindow)
+                self.start_trans_thread.start()
+                # 显示悬浮窗
+                self.float_window = FloatWindow(data.text())
+                self.float_window.pushButtonClicked.connect(self.gotoMainWindow)
+                self.float_window.radioButtonClicked.connect(self.checkBox.click)
+                self.float_window.show()
+                move_widget(self.float_window, QDesktopWidget().screenGeometry(), QCursor.pos(), 10)
+                # 通过线程关闭悬浮窗
+                self.mouse_check_thread = MouseCheckThread(self.float_window)
+                self.mouse_check_thread.trigger.connect(self.float_window.close)
+                self.mouse_check_thread.start()
+                # 标记正在翻译
+                self.trans_started = True
+
+    def gotoMainWindow(self, s):
+        """从悬浮窗口转到主窗口"""
+        self.float_window.close()
+        if not self.isHidden():
+            self.showNormal()
+        self.textEdit.setText(s)
+        self.startTrans()
+
+    def outToFloatWindow(self, data):
+        """翻译结果输出到悬浮窗口"""
+        # 标记翻译结束
+        self.trans_started = False
+        with contextlib.suppress(Exception):
+            self.float_window.outResult(data)
 
     def comboBoxCurrentIndexChanged(self):
         """ 下拉列表索引变更
@@ -198,11 +229,11 @@ class Window(FramelessWidget, Ui_Form):
             return None
         # 通过线程发起翻译
         self.start_trans_thread = StartTransThread(query, to_str)
-        self.start_trans_thread.trigger.connect(self.printResult)
+        self.start_trans_thread.trigger.connect(self.outResult)
         self.start_trans_thread.start()
         self.trans_started = True
 
-    def printResult(self, data):
+    def outResult(self, data):
         """ 发起翻译的线程结束
         线程结束时获取翻译结果并输出
         """
@@ -328,6 +359,75 @@ class Window(FramelessWidget, Ui_Form):
             self.ocr_thread.start()
 
 
+class FloatWindow(FloatWidget, Ui_FloatWindow):
+    def __init__(self, query: str, *args, **kwargs):
+        # 窗口初始化
+        super().__init__(*args, **kwargs)
+        # 窗口设置
+        font = QFont('微软雅黑')
+        font.setPixelSize(14)
+        self.setFont(font)
+        self.setupUi(self)
+        # 翻译内容
+        self.query = query
+        # 信号连接
+        self.radioButton.clicked.connect(lambda x: self.radioButtonClicked.emit(self.radioButton.isChecked()))
+        self.pushButton.clicked.connect(lambda x: self.pushButtonClicked.emit(self.query))
+        self.textBrowser_2.anchorClicked.connect(self.anchorClicked)
+        # 初始化输出
+        self.textBrowser.setText(self.query)
+        self.textBrowser_2.setText("<i style='color: #606060;'>正在翻译...</i>")
+
+    def outResult(self, data):
+        """输出翻译结果"""
+        trans_result = get_trans_result(data)  # 直译
+        word_means = get_word_means(data)  # 释义
+        spell_html = get_spell_html(data)  # 音标
+        if spell_html:
+            explanation_html = '<div style="color: #3C3C3C;"><p>{}</p></div>'.format(spell_html)
+            word_means_html = '<div style="color: #3C3C3C;">{}</div>'.format(word_means if word_means else trans_result)
+            self.textBrowser_2.setText(explanation_html)
+            self.textBrowser_3.setText(word_means_html)
+        else:
+            trans_result_html = '<div style="color: #3C3C3C;">{}<div>'.format(trans_result)
+            self.textBrowser_3.setText(trans_result_html)
+            self.textBrowser_2.hide()
+
+    def anchorClicked(self, url):
+        """ 点击底部输出框中的链接
+        点击输出框中音标发音按钮时，获取单词发音并播放
+        点击输出框中文本链接的时候，提取文本并进行翻译
+        """
+        url = url.url().replace('#', '')
+        if url in ['英', '美', '音']:  # 点击发音按钮
+            if url == '英':
+                lan = 'en'
+            elif url == '美':
+                lan = 'uk'
+            else:
+                lan = 'zh'
+            # 通过线程下载并播放发音
+            self.voice_thread = DownloadVoiceThread(lan, self.query)
+            self.voice_thread.trigger.connect(self.playVoice)
+            self.voice_thread.start()
+
+    def playVoice(self, voice_data):
+        """ 下载单词发音的线程结束
+        获取单词发音并创建播放器进行播放
+        """
+        # 将语音写入缓冲区
+        buffer = QBuffer(self)
+        buffer.setData(voice_data)
+        buffer.open(QIODevice.ReadOnly)
+        # 创建播放器
+        player = QMediaPlayer(self)
+        player.setVolume(100)
+        player.setMedia(QMediaContent(), buffer)
+        sleep(0.1)  # 延时等待 setMedia 完成。
+        # 播放语音
+        player.play()
+
+
 if __name__ == '__main__':
     # 创建QApplication类的实例
     app = QApplication(sys.argv)
@@ -336,7 +436,7 @@ if __name__ == '__main__':
     translator.load(widgets_zh_CN_qm)
     app.installTranslator(translator)
     # 创建主窗口
-    window = Window()
+    window = MainWindow()
     window.show()
     # 进入程序的主循环，并通过exit函数确保主循环安全结束
     sys.exit(app.exec_())

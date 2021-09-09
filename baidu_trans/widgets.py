@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
-from PyQt5.QtCore import pyqtSignal, Qt, QRectF, QBuffer, qAbs, QRect, QIODevice, QPoint, QSize
+from time import sleep
+
+from PyQt5.QtCore import pyqtSignal, Qt, QRectF, QBuffer, qAbs, QRect, QIODevice, QPoint, QSize, QPropertyAnimation
 from PyQt5.QtGui import QPainter, QPainterPath, QColor, QPen, QKeySequence, QGuiApplication, QCursor, QFont
+from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtWidgets import (
     QWidget,
     QTextEdit,
@@ -10,8 +13,15 @@ from PyQt5.QtWidgets import (
     QDesktopWidget,
     QShortcut,
     QTextBrowser,
-    QVBoxLayout
+    QVBoxLayout,
+    QHBoxLayout,
+    QRadioButton,
+    QSpacerItem,
+    QSizePolicy,
+    QPushButton
 )
+
+from utils import DownloadVoiceThread, get_trans_result, get_spell_html
 
 
 class FramelessWidget(QWidget):
@@ -361,13 +371,13 @@ class FloatWidget(QWidget):
     """ 自定义Widget(悬浮窗口)
     1. 无边框、圆角、置顶
     2. 添加阴影
+    3. 淡入/淡出
     """
+    radioButtonClicked = pyqtSignal(bool)
+    pushButtonClicked = pyqtSignal(str)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        font = QFont('微软雅黑')
-        font.setPixelSize(14)
-        self.setFont(font)
-        self.setMaximumSize(QSize(249, 261))
         # 无边框置顶
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         # 背景透明
@@ -378,25 +388,9 @@ class FloatWidget(QWidget):
         self.effect.setBlurRadius(10)
         self.effect.setColor(QColor(200, 200, 200))
         self.setGraphicsEffect(self.effect)
-        # 文本浏览框
-        self.verticalLayout = QVBoxLayout(self)
-        self.verticalLayout.setContentsMargins(20, 20, 20, 20)
-        self.verticalLayout.setSpacing(0)
-        self.verticalLayout.setObjectName("verticalLayout")
-        self.textBrowser = QTextBrowser(self)
-        self.textBrowser.setMaximumSize(QSize(211, 36))
-        self.textBrowser.setStyleSheet("QTextBrowser {background-color: transparent; border: 1px solid transparent;} QScrollBar:vertical {background: transparent; width: 6px; margin: 0;} QScrollBar::handle:vertical {background: rgb(224, 224, 224); min-height: 30px; border-radius: 3px;} QScrollBar::sub-line:vertical {height: 0; subcontrol-position: top;} QScrollBar::add-line:vertical {height: 0; subcontrol-position: bottom;} QScrollBar:horizontal {background: transparent; height: 6px; margin: 0;} QScrollBar::handle:horizontal {background: rgb(224, 224, 224); min-width: 30px; border-radius: 3px;} QScrollBar::sub-line:horizontal {width: 0; subcontrol-position: left;} QScrollBar::add-line:horizontal {width: 0; subcontrol-position: right;}")
-        self.textBrowser.setObjectName("textBrowser")
-        self.verticalLayout.addWidget(self.textBrowser)
-        self.textBrowser_2 = QTextBrowser(self)
-        self.textBrowser_2.setMaximumSize(QSize(211, 36))
-        self.textBrowser_2.setStyleSheet("QTextBrowser {background-color: transparent; border: 1px solid transparent;} QScrollBar:vertical {background: transparent; width: 6px; margin: 0;} QScrollBar::handle:vertical {background: rgb(224, 224, 224); min-height: 30px; border-radius: 3px;} QScrollBar::sub-line:vertical {height: 0; subcontrol-position: top;} QScrollBar::add-line:vertical {height: 0; subcontrol-position: bottom;} QScrollBar:horizontal {background: transparent; height: 6px; margin: 0;} QScrollBar::handle:horizontal {background: rgb(224, 224, 224); min-width: 30px; border-radius: 3px;} QScrollBar::sub-line:horizontal {width: 0; subcontrol-position: left;} QScrollBar::add-line:horizontal {width: 0; subcontrol-position: right;}")
-        self.textBrowser_2.setObjectName("textBrowser_2")
-        self.verticalLayout.addWidget(self.textBrowser_2)
-        self.textBrowser_3 = QTextBrowser(self)
-        self.textBrowser_3.setStyleSheet("QTextBrowser {background-color: transparent; border: 1px solid transparent;} QScrollBar:vertical {background: transparent; width: 6px; margin: 0;} QScrollBar::handle:vertical {background: rgb(224, 224, 224); min-height: 30px; border-radius: 3px;} QScrollBar::sub-line:vertical {height: 0; subcontrol-position: top;} QScrollBar::add-line:vertical {height: 0; subcontrol-position: bottom;} QScrollBar:horizontal {background: transparent; height: 6px; margin: 0;} QScrollBar::handle:horizontal {background: rgb(224, 224, 224); min-width: 30px; border-radius: 3px;} QScrollBar::sub-line:horizontal {width: 0; subcontrol-position: left;} QScrollBar::add-line:horizontal {width: 0; subcontrol-position: right;}")
-        self.textBrowser_3.setObjectName("textBrowser_3")
-        self.verticalLayout.addWidget(self.textBrowser_3)
+        # 淡入/淡出动画
+        self.animation = QPropertyAnimation(self, b"windowOpacity", self)
+        self.animation.setDuration(300)  # 动画持续时间
 
     def paintEvent(self, event):
         # 窗口背景
@@ -410,6 +404,25 @@ class FloatWidget(QWidget):
         rect.setWidth(rect.width() - 10)
         rect.setHeight(rect.height() - 10)
         painter.drawRoundedRect(rect, 10, 10)
+
+    def showFullScreen(self):
+        self.show()
+
+    def show(self):
+        """窗口淡入"""
+        if not self.isVisible():
+            # 先显示窗口再执行动画
+            super().show()
+            self.animation.setStartValue(0)
+            self.animation.setEndValue(1)
+            self.animation.start()
+
+    def close(self):
+        """窗口淡出"""
+        self.animation.setStartValue(1)
+        self.animation.setEndValue(0)
+        self.animation.start()
+        self.animation.finished.connect(self.deleteLater)  # 动画执行完毕再销毁窗口
 
 
 def move_widget(widget: QWidget, geometry: QRect, pos: QPoint = None, offset: int = 20):

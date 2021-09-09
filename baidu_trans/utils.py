@@ -1,19 +1,24 @@
 # -*- coding: utf-8 -*-
+import contextlib
 import json
 import random
 import re
 
 from PyQt5.QtCore import pyqtSignal, QThread
+from PyQt5.QtGui import QCursor
+from PyQt5.QtWidgets import QWidget
 from aip import AipOcr
 
 from baidu_trans_spider import BaiDuTrans
 
 __all__ = [
+    'MouseCheckThread',
     'BaiduTransThread',
     'StartTransThread',
     'DownloadVoiceThread',
     'BaiduOCRThread',
     'get_trans_result',
+    'get_word_means',
     'get_spell_html',
     'get_comment_html',
     'get_exchange_html',
@@ -21,12 +26,29 @@ __all__ = [
 ]
 
 
+class MouseCheckThread(QThread):
+    """鼠标相对悬浮窗位置监测"""
+    trigger = pyqtSignal(object)
+
+    def __init__(self, widget: QWidget):
+        super().__init__()
+        self.widget = widget
+
+    def run(self):
+        widget_pos = self.widget.pos()
+        with contextlib.suppress(Exception):
+            while 1:
+                mouse_pos = QCursor.pos()
+                pos = mouse_pos - widget_pos
+                if not (-10 <= pos.x() <= self.widget.width() + 10 and -10 <= pos.y() <= self.widget.height() + 10):
+                    # 鼠标超出悬浮窗范围，发送信号并结束循环
+                    self.trigger.emit(True)
+                    break
+
+
 class BaiduTransThread(QThread):
     """创建百度翻译对象"""
     trigger = pyqtSignal(object)
-
-    def __init__(self):
-        super().__init__()
 
     def run(self):
         try:
@@ -105,8 +127,17 @@ def get_trans_result(data):
     try:
         trans_result = '<br />'.join([d['dst'] for d in data['trans_result']['data']])
     except:
-        trans_result = None
+        trans_result = ''
     return trans_result
+
+
+def get_word_means(data):
+    """获取简明释义"""
+    try:
+        word_means = '; '.join(data['dict_result']['simple_means']['word_means'])
+    except:
+        word_means = ''
+    return word_means
 
 
 def get_spell_html(data):
