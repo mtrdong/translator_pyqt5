@@ -1,27 +1,7 @@
 # -*- coding: utf-8 -*-
-from time import sleep
-
-from PyQt5.QtCore import pyqtSignal, Qt, QRectF, QBuffer, qAbs, QRect, QIODevice, QPoint, QSize, QPropertyAnimation
-from PyQt5.QtGui import QPainter, QPainterPath, QColor, QPen, QKeySequence, QGuiApplication, QCursor, QFont
-from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
-from PyQt5.QtWidgets import (
-    QWidget,
-    QTextEdit,
-    QGraphicsDropShadowEffect,
-    QApplication,
-    QLabel,
-    QDesktopWidget,
-    QShortcut,
-    QTextBrowser,
-    QVBoxLayout,
-    QHBoxLayout,
-    QRadioButton,
-    QSpacerItem,
-    QSizePolicy,
-    QPushButton
-)
-
-from utils import DownloadVoiceThread, get_trans_result, get_spell_html
+from PyQt5.QtCore import pyqtSignal, Qt, QRectF, QBuffer, qAbs, QRect, QIODevice, QPoint, QPropertyAnimation
+from PyQt5.QtGui import QPainter, QPainterPath, QColor, QPen, QKeySequence, QGuiApplication, QCursor
+from PyQt5.QtWidgets import QWidget, QTextEdit, QGraphicsDropShadowEffect, QApplication, QLabel, QDesktopWidget, QShortcut
 
 
 class FramelessWidget(QWidget):
@@ -37,7 +17,7 @@ class FramelessWidget(QWidget):
         # 背景透明
         self.setAttribute(Qt.WA_TranslucentBackground)
         # 无边框置顶
-        self.setWindowFlags(Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowMinimizeButtonHint | Qt.WindowMaximizeButtonHint)
+        self.setWindowFlags(Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowMinMaxButtonsHint)
         # 初始化变量
         self.currentWidth = 0
         self.currentHeight = 0

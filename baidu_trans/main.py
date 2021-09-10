@@ -127,7 +127,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
     def gotoMainWindow(self, s):
         """从悬浮窗口转到主窗口"""
         self.float_window.close()
-        if not self.isHidden():
+        if self.isMinimized() or not self.isVisible():  # 窗口最小化或不可见
+            self.hide()
             self.showNormal()
         self.textEdit.setText(s)
         self.startTrans()
