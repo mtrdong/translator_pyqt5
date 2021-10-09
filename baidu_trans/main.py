@@ -3,7 +3,7 @@ import contextlib
 import sys
 from time import sleep
 
-from PyQt5.QtCore import pyqtSlot, QTranslator, QTimer, QBuffer, QIODevice
+from PyQt5.QtCore import pyqtSlot, QTranslator, QTimer, QBuffer, QIODevice, QPropertyAnimation, QSize, QRect
 from PyQt5.QtGui import QIcon, QFont, QCursor
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtWidgets import QApplication, QMessageBox, QDesktopWidget
@@ -45,8 +45,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         # 隐藏输入框清空按钮
         self.pushButton_5.hide()
         # 隐藏语音和复制按钮
-        self.widget_3.hide()
         self.widget_4.hide()
+        self.widget_5.hide()
         # 隐藏输出框
         self.textBrowser.hide()
         self.textBrowser_2.hide()
@@ -75,6 +75,9 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.screen_trans_hot_key.register(['f1'], callback=lambda x: self.pushButton_4.click())
         # 翻译状态（True-正在翻译；False-翻译结束）
         self.trans_started = False
+        # 主窗口尺寸缩放动画
+        self.animation = QPropertyAnimation(self, b"size", self)
+        self.animation.setDuration(100)  # 动画持续时间
 
     def getBaiduTransObj(self, obj):
         """ 创建百度翻译对象的线程结束
@@ -187,14 +190,11 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             # 清空输出框内容
             self.textBrowser.clear()
             self.textBrowser_2.clear()
-            # 隐藏语音和复制按钮
-            self.widget_3.hide()
-            self.widget_4.hide()
-            # 隐藏输出框
-            self.textBrowser.hide()
-            self.textBrowser_2.hide()
             # 重设窗口大小
-            self.resize(MIN_W, MIN_H)
+            self.hide_widget()
+            self.animation.setEndValue(QSize(MIN_W, MIN_H))
+            self.animation.start()
+            self.animation.finished.connect(lambda: self.change_widget())
         # 输入框内容不为空时显示清空按钮，否则隐藏清空按钮
         if self.textEdit.toPlainText():
             self.pushButton_5.show()
@@ -257,30 +257,23 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             # 设置输出内容
             self.textBrowser.setText(trans_result_html)
             self.textBrowser_2.setText(explanation_html)
-            # 显示中间输出框、语音和复制按钮
-            self.widget_3.show()
-            self.textBrowser.show()
-            # 显示底部输出框
-            self.textBrowser_2.show()
-            # 隐藏底部语音和复制按钮
-            self.widget_4.hide()
             # 重设窗口大小
-            self.resize(MAX_W, MAX_H)
+            if self.height() != MAX_H:
+                self.hide_widget()
+                self.animation.setEndValue(QSize(MAX_W, MAX_H))
+                self.animation.start()
+                self.animation.finished.connect(lambda: self.change_widget(1))
         else:
             trans_result_html = '<div style="font-size: 16px; color: #3C3C3C;">{}<div>'.format(trans_result)
             # 设置输出内容
             self.textBrowser_2.setText(trans_result_html)
-            # 显示底部输出框
-            self.textBrowser_2.show()
-            # 显示底部语音和复制按钮
-            self.widget_4.show()
-            # 隐藏中间输出框、语音和复制按钮
-            self.widget_3.hide()
-            self.textBrowser.hide()
             # 重设窗口大小
-            w = self.widget_3.width() + self.textBrowser.width()
-            h = self.widget_3.height() + self.textBrowser.height()
-            self.resize(MAX_W - w, MAX_H - h)
+            h = self.widget_4.height() + self.textBrowser.height()
+            if self.height() != MAX_H - h:
+                self.hide_widget()
+                self.animation.setEndValue(QSize(MAX_W, MAX_H - h))
+                self.animation.start()
+                self.animation.finished.connect(lambda: self.change_widget(2))
 
     def voiceButtonClicked(self):
         """点击语音播报按钮"""
@@ -358,6 +351,24 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             self.ocr_thread = BaiduOCRThread(img_data)
             self.ocr_thread.trigger.connect(self.transImageText)
             self.ocr_thread.start()
+
+    def hide_widget(self):
+        """隐藏部件"""
+        self.textBrowser.hide()
+        self.textBrowser_2.hide()
+        self.widget_4.hide()
+        self.widget_5.hide()
+
+    def change_widget(self, mode=0):
+        """调整部件"""
+        self.hide_widget()
+        if mode == 1:
+            self.widget_4.show()
+            self.textBrowser.show()
+            self.textBrowser_2.show()
+        elif mode == 2:
+            self.widget_5.show()
+            self.textBrowser_2.show()
 
 
 class FloatWindow(FloatWidget, Ui_FloatWindow):

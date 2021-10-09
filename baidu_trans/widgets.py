@@ -415,7 +415,7 @@ def move_widget(widget: QWidget, geometry: QRect, pos: QPoint = None, offset: in
     """
     screen_w = geometry.width()  # 屏幕宽
     screen_h = geometry.height()  # 屏幕高
-    if pos is None:  # 窗口跟不随鼠标
+    if pos is None:  # 窗口不跟随鼠标
         x = widget.geometry().x()  # 部件X坐标
         y = widget.geometry().y()  # 部件Y坐标
         # 保持部件始终显示在屏幕内
