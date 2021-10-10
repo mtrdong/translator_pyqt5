@@ -359,12 +359,6 @@
          </item>
          <item>
           <widget class="QWidget" name="widget_3" native="true">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>100</height>
-            </size>
-           </property>
            <layout class="QVBoxLayout" name="verticalLayout_6">
             <property name="spacing">
              <number>0</number>
@@ -632,8 +626,6 @@
           </widget>
          </item>
         </layout>
-        <zorder>widget_3</zorder>
-        <zorder>textEdit</zorder>
        </widget>
       </item>
      </layout>

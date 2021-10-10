@@ -10,7 +10,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from baidu_trans.widgets import MyWidget, MyTextEdit
+from widgets import MyTextEdit, MyWidget
 
 
 class Ui_MainWindow(object):
@@ -120,7 +120,6 @@ class Ui_MainWindow(object):
         self.verticalLayout_4.addItem(spacerItem4)
         self.verticalLayout_3.addWidget(self.textEdit)
         self.widget_3 = QtWidgets.QWidget(self.widget_2)
-        self.widget_3.setMinimumSize(QtCore.QSize(0, 100))
         self.widget_3.setObjectName("widget_3")
         self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.widget_3)
         self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
@@ -197,8 +196,6 @@ class Ui_MainWindow(object):
         self.horizontalLayout_13.addItem(spacerItem6)
         self.verticalLayout_6.addWidget(self.widget_5)
         self.verticalLayout_3.addWidget(self.widget_3)
-        self.widget_3.raise_()
-        self.textEdit.raise_()
         self.verticalLayout_2.addWidget(self.widget_2)
         self.verticalLayout.addWidget(self.widget)
 

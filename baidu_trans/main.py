@@ -3,7 +3,7 @@ import contextlib
 import sys
 from time import sleep
 
-from PyQt5.QtCore import pyqtSlot, QTranslator, QTimer, QBuffer, QIODevice, QPropertyAnimation, QSize, QRect
+from PyQt5.QtCore import pyqtSlot, QTranslator, QTimer, QBuffer, QIODevice, QPropertyAnimation, QSize
 from PyQt5.QtGui import QIcon, QFont, QCursor
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtWidgets import QApplication, QMessageBox, QDesktopWidget
@@ -319,7 +319,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         player = QMediaPlayer(self)
         player.setVolume(100)
         player.setMedia(QMediaContent(), buffer)
-        sleep(0.1)  # 延时等待 setMedia 完成。
+        sleep(0.01)  # 延时等待 setMedia 完成。
         # 播放语音
         player.play()
 
@@ -432,7 +432,7 @@ class FloatWindow(FloatWidget, Ui_FloatWindow):
         player = QMediaPlayer(self)
         player.setVolume(100)
         player.setMedia(QMediaContent(), buffer)
-        sleep(0.1)  # 延时等待 setMedia 完成。
+        sleep(0.01)  # 延时等待 setMedia 完成。
         # 播放语音
         player.play()
 

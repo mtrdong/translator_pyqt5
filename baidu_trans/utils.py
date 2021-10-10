@@ -28,7 +28,7 @@ __all__ = [
 
 class MouseCheckThread(QThread):
     """鼠标相对悬浮窗位置监测"""
-    trigger = pyqtSignal(object)
+    trigger = pyqtSignal(bool)
 
     def __init__(self, widget: QWidget):
         super().__init__()
