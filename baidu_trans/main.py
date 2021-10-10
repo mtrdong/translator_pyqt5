@@ -361,6 +361,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
 
     def change_widget(self, mode=0):
         """调整部件"""
+        self.animation.finished.disconnect()  # 断开信号连接
         self.hide_widget()
         if mode == 1:
             self.widget_4.show()
