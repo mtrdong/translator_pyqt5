@@ -10,7 +10,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from widgets import MyWidget, MyTextEdit
+from baidu_trans.widgets import MyWidget, MyTextEdit
 
 
 class Ui_MainWindow(object):
@@ -197,6 +197,8 @@ class Ui_MainWindow(object):
         self.horizontalLayout_13.addItem(spacerItem6)
         self.verticalLayout_6.addWidget(self.widget_5)
         self.verticalLayout_3.addWidget(self.widget_3)
+        self.widget_3.raise_()
+        self.textEdit.raise_()
         self.verticalLayout_2.addWidget(self.widget_2)
         self.verticalLayout.addWidget(self.widget)
 

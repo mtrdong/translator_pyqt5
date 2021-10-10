@@ -45,7 +45,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         # 隐藏输入框清空按钮
         self.pushButton_5.hide()
         # 隐藏输出框和输出控件
-        self.widget_3.hide()
+        self.hide_widget()
         # 语音和复制按钮点击事件
         self.pushButton_6.clicked.connect(self.voiceButtonClicked)
         self.pushButton_8.clicked.connect(self.voiceButtonClicked)
@@ -73,7 +73,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.trans_started = False
         # 主窗口尺寸缩放动画
         self.animation = QPropertyAnimation(self, b"size", self)
-        self.animation.setDuration(100)  # 动画持续时间
+        self.animation.setDuration(200)  # 动画持续时间
 
     def getBaiduTransObj(self, obj):
         """ 创建百度翻译对象的线程结束
@@ -350,7 +350,6 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
 
     def hide_widget(self):
         """隐藏部件"""
-        self.widget_3.show()
         self.textBrowser.hide()
         self.textBrowser_2.hide()
         self.widget_4.hide()
@@ -359,6 +358,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
     def change_widget(self, mode=0):
         """调整部件"""
         self.animation.disconnect()  # 断开信号连接
+        self.hide_widget()
         if mode == 1:
             self.widget_4.show()
             self.textBrowser.show()
@@ -366,8 +366,6 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         elif mode == 2:
             self.widget_5.show()
             self.textBrowser_2.show()
-        else:
-            self.widget_3.hide()
 
 
 class FloatWindow(FloatWidget, Ui_FloatWindow):
