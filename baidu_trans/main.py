@@ -44,12 +44,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.sizeChanged.connect(lambda x: self.resize(x[0], x[1]))
         # 隐藏输入框清空按钮
         self.pushButton_5.hide()
-        # 隐藏语音和复制按钮
-        self.widget_4.hide()
-        self.widget_5.hide()
-        # 隐藏输出框
-        self.textBrowser.hide()
-        self.textBrowser_2.hide()
+        # 隐藏输出框和输出控件
+        self.widget_3.hide()
         # 语音和复制按钮点击事件
         self.pushButton_6.clicked.connect(self.voiceButtonClicked)
         self.pushButton_8.clicked.connect(self.voiceButtonClicked)
@@ -193,8 +189,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             # 重设窗口大小
             self.hide_widget()
             self.animation.setEndValue(QSize(MIN_W, MIN_H))
-            self.animation.start()
             self.animation.finished.connect(lambda: self.change_widget())
+            self.animation.start()
         # 输入框内容不为空时显示清空按钮，否则隐藏清空按钮
         if self.textEdit.toPlainText():
             self.pushButton_5.show()
@@ -261,8 +257,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             if self.height() != MAX_H:
                 self.hide_widget()
                 self.animation.setEndValue(QSize(MAX_W, MAX_H))
-                self.animation.start()
                 self.animation.finished.connect(lambda: self.change_widget(1))
+                self.animation.start()
         else:
             trans_result_html = '<div style="font-size: 16px; color: #3C3C3C;">{}<div>'.format(trans_result)
             # 设置输出内容
@@ -272,8 +268,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             if self.height() != MAX_H - h:
                 self.hide_widget()
                 self.animation.setEndValue(QSize(MAX_W, MAX_H - h))
-                self.animation.start()
                 self.animation.finished.connect(lambda: self.change_widget(2))
+                self.animation.start()
 
     def voiceButtonClicked(self):
         """点击语音播报按钮"""
@@ -354,6 +350,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
 
     def hide_widget(self):
         """隐藏部件"""
+        self.widget_3.show()
         self.textBrowser.hide()
         self.textBrowser_2.hide()
         self.widget_4.hide()
@@ -361,8 +358,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
 
     def change_widget(self, mode=0):
         """调整部件"""
-        self.animation.finished.disconnect()  # 断开信号连接
-        self.hide_widget()
+        self.animation.disconnect()  # 断开信号连接
         if mode == 1:
             self.widget_4.show()
             self.textBrowser.show()
@@ -370,6 +366,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         elif mode == 2:
             self.widget_5.show()
             self.textBrowser_2.show()
+        else:
+            self.widget_3.hide()
 
 
 class FloatWindow(FloatWidget, Ui_FloatWindow):
