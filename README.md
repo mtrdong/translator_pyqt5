@@ -16,10 +16,11 @@
 
 
 
-> 封装exe可执行文件时，需修改`PyExecJS`的`_external_runtime.py`第121行代码：
+> 封装exe可执行文件时，需修改`PyExecJS`的`_external_runtime.py`第1、121行代码：
 
 ```python
-Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=self._cwd, universal_newlines=True, creationflags=CREATE_NO_WINDOW)
+from subprocess import Popen, PIPE, CREATE_NO_WINDOW  # 第1行
+Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=self._cwd, universal_newlines=True, creationflags=CREATE_NO_WINDOW)  # 第121行
 ```
 
 
