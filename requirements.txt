@@ -2,6 +2,7 @@ baidu-aip==2.2.18.0
 PyExecJS==1.5.1
 pyinstaller==4.5.1
 PyQt5==5.15.4
+PyQt5-stubs==5.15.2.0
 pyqt5-tools==5.15.4.3.2
 pywin32==300
 requests==2.26.0

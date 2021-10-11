@@ -189,7 +189,6 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             # 重设窗口大小
             self.hide_widget()
             self.animation.setEndValue(QSize(MIN_W, MIN_H))
-            self.animation.finished.connect(lambda: self.change_widget())
             self.animation.start()
         # 输入框内容不为空时显示清空按钮，否则隐藏清空按钮
         if self.textEdit.toPlainText():
@@ -358,7 +357,6 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
     def change_widget(self, mode=0):
         """调整部件"""
         self.animation.disconnect()  # 断开信号连接
-        self.hide_widget()
         if mode == 1:
             self.widget_4.show()
             self.textBrowser.show()
