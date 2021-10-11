@@ -3,16 +3,18 @@ import contextlib
 import json
 import random
 import re
+from time import sleep
 
 from PyQt5.QtCore import pyqtSignal, QThread
 from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QGraphicsOpacityEffect, QApplication
 from aip import AipOcr
 
 from baidu_trans_spider import BaiDuTrans
 
 __all__ = [
     'MouseCheckThread',
+    'FadeInThread',
     'BaiduTransThread',
     'StartTransThread',
     'DownloadVoiceThread',
@@ -44,6 +46,24 @@ class MouseCheckThread(QThread):
                     # 鼠标超出悬浮窗范围，发送信号并结束循环
                     self.trigger.emit(True)
                     break
+
+
+class FadeInThread(QThread):
+    """部件淡入效果"""
+    trigger = pyqtSignal(bool)
+
+    def __init__(self, widget: QWidget):
+        super().__init__()
+        self.widget = widget
+        self.opacity = QGraphicsOpacityEffect()
+
+    def run(self):
+        for i in range(0, 21):
+            self.opacity.setOpacity(i / 20)
+            self.widget.setGraphicsEffect(self.opacity)
+            QApplication.processEvents()
+            sleep(0.01)
+        self.trigger.emit(True)
 
 
 class BaiduTransThread(QThread):
