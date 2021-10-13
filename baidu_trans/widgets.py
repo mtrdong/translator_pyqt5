@@ -160,7 +160,7 @@ class MyTextEdit(QTextEdit):
         super().paintEvent(event)
         if self.height() == self.maximumHeight() and self.currentHeight != self.maximumHeight():
             # 添加阴影
-            self.effect.setColor(QColor(220, 220, 220))
+            self.effect.setColor(QColor(240, 240, 240))
             self.setGraphicsEffect(self.effect)
             self.currentHeight = self.height()
         elif self.height() == self.minimumHeight() and self.currentHeight != self.minimumHeight():

@@ -252,7 +252,7 @@ class BaiDuTrans(object):
     def get_result(self):
         """ 获取翻译结果
         获取翻译结果前须调用 start_trans(query, to_str) 方法启动翻译
-        翻译结果以字符串列表形式返回。第一个元素为直译结果，第二各元素为简明释义
+        返回结果分别为：直译、释义、例句
         """
         if self._trans_flag:
             return self._get_trans_result(), self._get_explanation(), self._get_example()
@@ -287,17 +287,17 @@ class BaiDuTrans(object):
 if __name__ == '__main__':
     bt = BaiDuTrans()
     while 1:
-        word = input('请输入您要翻译的内容（仅支持中英互译）: ')
+        word = input('请输入您要翻译的内容: ')
         if not word:
             select = input('您要退出吗（Y/N）: ')
-            if select.lower() == 'y':
+            if select.lower() in ['y', 'yes']:
                 break
         else:
-            to_lan = 'zh' if re.findall('[\u4e00-\u9fa5]+', word) else 'en'
+            to_lan = 'zh' if re.findall('[\u4e00-\u9fa5]', word) else 'en'
             try:
                 bt.start_trans(word, to_lan)
             except Exception as e:
-                print(f'【翻译出错啦】{e}')
+                print(f'【翻译出错啦】: {e}')
             else:
                 result, explanation, example = bt.get_result()
                 print(f'【译】: {result}')

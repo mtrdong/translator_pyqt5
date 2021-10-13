@@ -12,6 +12,7 @@ from system_hotkey import SystemHotkey
 from FloatWindow import Ui_FloatWindow
 from MainWindow import Ui_MainWindow
 from resource import favicon_ico, widgets_zh_CN_qm
+from threads import *
 from utils import *
 from widgets import FramelessWidget, Screenshot, FloatWidget, move_widget
 
