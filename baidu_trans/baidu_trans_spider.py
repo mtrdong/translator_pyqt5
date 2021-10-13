@@ -61,7 +61,7 @@ def e(r: str):
     if p < 0:
         p = (2147483647 & p) + 2147483648
     p = int(p % 1e6)
-    return f"{str(p)}.{p ^ m}"
+    return f"{p}.{p ^ m}"
 
 
 class BaiDuTrans(object):

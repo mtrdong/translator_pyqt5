@@ -70,32 +70,6 @@ class FramelessWidget(QWidget):
         self.mFlag = False
 
 
-class MyWidget(QWidget):
-    """ 自定义Widget(部件)
-    1. 设置背景大小和颜色
-    2. 设置背景圆角
-    """
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # 背景透明
-        self.setAttribute(Qt.WA_TranslucentBackground)
-        # 无边框
-        self.setWindowFlags(Qt.FramelessWindowHint)
-
-    def paintEvent(self, event):
-        # 窗口背景
-        painter = QPainter(self)
-        painter.setRenderHint(painter.Antialiasing)
-        painter.setBrush(QColor(250, 250, 250))  # 颜色
-        painter.setPen(Qt.transparent)
-        rect = self.rect()
-        rect.setLeft(10)  # 左边距
-        rect.setTop(46)  # 上边距
-        rect.setWidth(rect.width() - 10)  # 右边距
-        rect.setHeight(rect.height() - 10)  # 下边距
-        painter.drawRoundedRect(rect, 10, 10)  # 圆角
-
-
 class MyTextEdit(QTextEdit):
     """ 自定义TextEdit
     1. 自定义右键菜单
