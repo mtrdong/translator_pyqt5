@@ -74,7 +74,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.trans_started = False
         # 主窗口尺寸缩放动画
         self.animation = QPropertyAnimation(self, b"size", self)
-        self.animation.setDuration(200)  # 动画持续时间
+        self.animation.setDuration(100)  # 动画持续时间
 
     def getBaiduTransObj(self, obj):
         """ 创建百度翻译对象的线程结束

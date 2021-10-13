@@ -47,8 +47,8 @@ class FadeInThread(QThread):
         self.opacity = QGraphicsOpacityEffect()
 
     def run(self):
-        for i in range(0, 21):
-            self.opacity.setOpacity(i / 20)
+        for i in range(0, 11):
+            self.opacity.setOpacity(i / 10)
             self.widget.setGraphicsEffect(self.opacity)
             QApplication.processEvents()
             sleep(0.01)
