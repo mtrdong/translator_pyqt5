@@ -35,10 +35,11 @@ class FramelessWidget(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(painter.Antialiasing)
         color = QColor(Qt.gray)
-        for i in range(10):
+        num = 11  # 阴影宽度 = 内边距 + 2
+        for i in range(num):
             painterPath = QPainterPath()
             painterPath.setFillRule(Qt.WindingFill)
-            ref = QRectF(10 - i, 10 - i, self.width() - (10 - i) * 2, self.height() - (10 - i) * 2)
+            ref = QRectF(num - i, num - i, self.width() - (num - i) * 2, self.height() - (num - i) * 2)
             painterPath.addRoundedRect(ref, 0, 0)
             color.setAlpha(int(150 - i ** 0.5 * 50))
             painter.setPen(color)
@@ -49,10 +50,10 @@ class FramelessWidget(QWidget):
         painter_2.setBrush(QColor(240, 240, 240, 255))
         painter_2.setPen(Qt.transparent)
         rect = self.rect()
-        rect.setLeft(10)
-        rect.setTop(10)
-        rect.setWidth(rect.width() - 10)
-        rect.setHeight(rect.height() - 10)
+        rect.setLeft(num)
+        rect.setTop(num)
+        rect.setWidth(rect.width() - num)
+        rect.setHeight(rect.height() - num)
         painter_2.drawRoundedRect(rect, 0, 0)
 
     def mousePressEvent(self, event):
