@@ -228,7 +228,6 @@ class Screenshot(QWidget):
     def mousePressEvent(self, event):
         """ 鼠标按键按下
         左键按下记录鼠标按下位置
-        右键按下退出截图，并发送结束信号
         """
         if event.button() == Qt.LeftButton:
             # 关闭提示框
@@ -236,17 +235,17 @@ class Screenshot(QWidget):
             # 点击鼠标左键开始截图
             self._beginPos = event.pos()
             self._pressLeftButton = True
-        elif event.button() == Qt.RightButton:
-            # 点击鼠标右键取消截图
-            self.cancel()
 
     def mouseReleaseEvent(self, event):
         """ 鼠标按键抬起
         记录鼠标抬起位置
         退出截图，并发送结束信号和截图
         """
-        self._endPos = event.pos()
-        self.complete()  # 截屏完成
+        if event.button() == Qt.LeftButton:
+            self._endPos = event.pos()
+            self.finished()  # 截屏完成
+        elif event.button() == Qt.RightButton:
+            self.cancel()  # 取消截屏
 
     def mouseMoveEvent(self, event):
         """ 鼠标移动
@@ -294,7 +293,7 @@ class Screenshot(QWidget):
             move_widget(self._label, self._screenGeometry, QCursor.pos())  # 刷新提示框位置
             super().showFullScreen()  # 全屏显示截图窗口
 
-    def complete(self):
+    def finished(self):
         """ 截屏完成
         通过信号发送截取的图片，并重置变量
         """
@@ -312,6 +311,7 @@ class Screenshot(QWidget):
         丢弃截图并退出截屏
         """
         self._captureImage = None  # 清除截图
+        self.finished()
 
     def reset(self):
         """重置变量"""

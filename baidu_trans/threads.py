@@ -31,7 +31,7 @@ class MouseCheckThread(QThread):
             while 1:
                 mouse_pos = QCursor.pos()
                 pos = mouse_pos - widget_pos
-                if not (-20 <= pos.x() <= self.widget.width() and -20 <= pos.y() <= self.widget.height()):
+                if not (-20 <= pos.x() <= self.widget.width() + 20 and -20 <= pos.y() <= self.widget.height() + 20):
                     # 鼠标超出悬浮窗范围，发送信号并结束循环
                     self.trigger.emit(True)
                     break
