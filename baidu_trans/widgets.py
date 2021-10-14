@@ -81,7 +81,7 @@ class MyTextEdit(QTextEdit):
         super().__init__(*args)
         # 阴影设置
         self.effect = QGraphicsDropShadowEffect(self)
-        self.effect.setOffset(0, 0)
+        self.effect.setOffset(0, 2)
         self.effect.setBlurRadius(10)
         # 变量初始化
         self.clipboard = QApplication.clipboard()

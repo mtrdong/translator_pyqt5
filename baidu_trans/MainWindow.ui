@@ -262,7 +262,7 @@
            </size>
           </property>
           <property name="styleSheet">
-           <string notr="true">QTextEdit {background-color: rgb(255, 255, 255); border: 2px solid rgb(255, 255, 255); border-radius: 10px; font: 16px &quot;微软雅黑&quot;; color: rgb(60, 60, 60); padding: 6px;} QTextEdit:hover {border: 2px solid rgb(82, 186, 255);} QTextEdit:focus {border: 2px solid rgb(82, 186, 255);}</string>
+           <string notr="true">QTextEdit {background-color: rgb(255, 255, 255); border-radius: 10px; font: 16px &quot;微软雅黑&quot;; color: rgb(60, 60, 60); padding: 6px;} QTextEdit:hover {border: 2px solid rgb(82, 186, 255);} QTextEdit:focus {border: 2px solid rgb(82, 186, 255);}</string>
           </property>
           <property name="placeholderText">
            <string>输入文字/拖入图片</string>
