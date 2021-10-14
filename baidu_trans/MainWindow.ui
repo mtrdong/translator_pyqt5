@@ -338,7 +338,7 @@
         <item>
          <widget class="QWidget" name="widget_2" native="true">
           <property name="styleSheet">
-           <string notr="true">QPushButton {background-color: transparent; border-radius: 10px; font-size: 16px}</string>
+           <string notr="true">QPushButton {background-color: transparent; border: 0; font-size: 16px}</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_5">
            <property name="spacing">

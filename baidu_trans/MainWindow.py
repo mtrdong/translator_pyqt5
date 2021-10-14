@@ -116,7 +116,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_4.addItem(spacerItem4)
         self.verticalLayout_3.addWidget(self.textEdit)
         self.widget_2 = QtWidgets.QWidget(self.widget)
-        self.widget_2.setStyleSheet("QPushButton {background-color: transparent; border-radius: 10px; font-size: 16px}")
+        self.widget_2.setStyleSheet("QPushButton {background-color: transparent; border: 0; font-size: 16px}")
         self.widget_2.setObjectName("widget_2")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.widget_2)
         self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)

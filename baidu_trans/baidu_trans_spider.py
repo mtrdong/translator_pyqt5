@@ -11,21 +11,21 @@ from retrying import retry
 def n(r: int, o: str):
     for t in range(0, len(o) - 2, 3):
         a = o[t + 2]
-        a = ord(a[0]) - 87 if a >= "a" else int(a)
-        a = r >> a if o[t + 1] == "+" else r << a
-        r = r + a & 4294967295 if o[t] == "+" else r ^ a
+        a = ord(a[0]) - 87 if a >= 'a' else int(a)
+        a = r >> a if '+' == o[t + 1] else r << a
+        r = r + a & 4294967295 if '+' == o[t] else r ^ a
     return r
 
 
 def e(r: str):
-    i = "320305.131321201"
-    o = re.findall("[\U00010000-\U0010ffff]", r)
+    i = '320305.131321201'
+    o = re.findall('[\U00010000-\U0010ffff]', r)
     if not o:
         t = len(r)
         if t > 30:
             r = r[:10] + r[math.floor(t / 2) - 5: math.floor(t / 2) + 5] + r[-10:]
     else:
-        e = re.split("[\U00010000-\U0010ffff]", r)
+        e = re.split('[\U00010000-\U0010ffff]', r)
         h, f = len(e), []
         for C in range(0, h):
             if e[C]:
@@ -34,8 +34,8 @@ def e(r: str):
                 f.append(o[C])
         g = len(f)
         if g > 30:
-            r = "".join(f[:10] + f[math.floor(g / 2) - 5: math.floor(g / 2) + 5] + f[-10:])
-    d = i.split(".")
+            r = ''.join(f[:10] + f[math.floor(g / 2) - 5: math.floor(g / 2) + 5] + f[-10:])
+    d = i.split('.')
     S, v = [], 0
     while v < len(r):
         A = ord(r[v])
@@ -43,16 +43,13 @@ def e(r: str):
             S.append(A)
         elif 2048 > A:
             S.extend([A >> 6 | 192, 63 & A | 128])
-        elif (64512 & A) == 55296 and len(r) > v + 1 and (64512 & ord(r[v + 1])) == 56320:
-            # TODO 翻译内容中包含 emoji 表情时无法得到正确的 sign
-            #  由于 Python 与 JavaScript 对 emoji 表情字符的编码不一样
-            #  输入 emoji 表情时，Python 的 ord() 与 JavaScript 的 charCodeAt() 返回的值不一样
+        elif 55296 == (64512 & A) and v + 1 < len(r) and 56320 == (64512 & ord(r[v + 1])):
             A = 65536 + ((1023 & A) << 10) + (1023 & ord(r[++v]))
             S.extend([A >> 18 | 240, A >> 12 & 63 | 128, A >> 6 & 63 | 128, 63 & A | 128])
         else:
             S.extend([A >> 12 | 224, A >> 6 & 63 | 128, 63 & A | 128])
         v += 1
-    m, s, F, D = int(d[0]) | 0, int(d[1]) | 0, "+-a^+6", "+-3^+b+-f"
+    m, s, F, D = int(d[0]) | 0, int(d[1]) | 0, '+-a^+6', '+-3^+b+-f'
     p = m
     for b in range(0, len(S)):
         p += S[b]
@@ -61,7 +58,7 @@ def e(r: str):
     if p < 0:
         p = (2147483647 & p) + 2147483648
     p = int(p % 1e6)
-    return f"{p}.{p ^ m}"
+    return f'{p}.{p ^ m}'
 
 
 class BaiDuTrans(object):
@@ -115,9 +112,10 @@ class BaiDuTrans(object):
 
     def _get_form_data(self, query, from_str, to_str):
         """构建表单参数"""
-        # with open(index_d52622f_js, 'r', encoding='utf-8') as f:
+        # with open(index_d52622f_js, 'r', encoding='UTF-8') as f:
         #     js = f.read()
-        # sign = execjs.compile(js).call('e', query)
+        # eval_js = js2py.eval_js(js)
+        # sign = eval_js(query)
         sign = e(query)
         form_data = {
             'from': from_str,
@@ -131,7 +129,7 @@ class BaiDuTrans(object):
     def _get_comment_str(self):
         """获取单词释义"""
         try:
-            parts = self._result["dict_result"]["simple_means"]["symbols"][0]["parts"]
+            parts = self._result['dict_result']['simple_means']['symbols'][0]['parts']
         except:
             return ''
         else:

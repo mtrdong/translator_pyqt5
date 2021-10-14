@@ -12,18 +12,9 @@
 
 **5. 支持一键复制翻译结果**
 
-**6. `Python`翻译`JavaScript`方法，不再依赖`PyExecJS`执行`JS`文件获取`sign`**
+**6. `Python`翻译`JavaScript`方法，不再依赖执行`JS`文件获取`sign`**
 
 ......
-
-
-
-> （<font color=red size=5>╳</font>）封装`exe`可执行文件时，需修改`PyExecJS`的`_external_runtime.py`第`1`、`121`行代码：
-
-```python
-from subprocess import Popen, PIPE, CREATE_NO_WINDOW  # 第1行
-Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=self._cwd, universal_newlines=True, creationflags=CREATE_NO_WINDOW)  # 第121行
-```
 
 
 
@@ -56,14 +47,4 @@ pyinstaller main-portable.spec
 ```shell
 sudo apt-get install libxcb-xinerama0
 ```
-
-
-
-> （<font color=red size=5>╳</font>）解决`Linux`运行程序时报错：`Could not find an available JavaScript runtime.`：
-
-```shell
-sudo apt-get install nodejs
-```
-
-
 
