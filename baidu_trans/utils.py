@@ -6,6 +6,7 @@ import re
 from aip import AipOcr
 
 __all__ = [
+    'baidu_ocr',
     'get_trans_result',
     'get_word_means',
     'get_spell_html',
