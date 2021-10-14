@@ -391,7 +391,7 @@ class FloatWindow(FloatWidget, Ui_FloatWindow):
         trans_result = get_trans_result(data)  # 直译
         word_means = get_word_means(data)  # 释义
         spell_html = get_spell_html(data)  # 音标
-        if not all([trans_result, word_means, spell_html]):
+        if not (trans_result or word_means):
             self.textBrowser_3.setText('<div style="color: #FF3C3C;">翻译结果为空，请重试</div>')
             self.textBrowser_2.hide()
         elif spell_html:
