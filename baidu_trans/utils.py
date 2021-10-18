@@ -24,8 +24,10 @@ def baidu_ocr(img_bytes):
     API_KEY = ''
     SECRECT_KEY = ''
     client = AipOcr(APP_ID, API_KEY, SECRECT_KEY)
-    message = client.basicGeneral(img_bytes)  # 通用文字识别（标准版），50000次/天免费
-    # message = client.basicAccurate(img_bytes)  # 通用文字识别（高精度版），500次/天免费
+    # 通用文字识别（标准版），50000次/天免费
+    message = client.basicGeneral(img_bytes, options={'detect_language': 'true'})
+    # 通用文字识别（高精度版），500次/天免费
+    # message = client.basicAccurate(img_bytes, options={'language_type': 'auto_detect'})
     try:
         text = ''.join([words.get('words') for words in message.get('words_result')])
     except:
