@@ -345,7 +345,7 @@ class FloatWidget(QWidget):
         self.setGraphicsEffect(self.effect)
         # 淡入/淡出动画
         self.animation = QPropertyAnimation(self, b"windowOpacity", self)
-        self.animation.setDuration(300)  # 动画持续时间
+        self.animation.setDuration(200)  # 动画持续时间
 
     def paintEvent(self, event):
         # 窗口背景

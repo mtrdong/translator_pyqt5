@@ -6,6 +6,7 @@ from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QWidget, QGraphicsOpacityEffect, QApplication
 
 from baidu_trans_spider import BaiDuTrans
+from utils import baidu_ocr
 
 __all__ = [
     'MouseCheckThread',
