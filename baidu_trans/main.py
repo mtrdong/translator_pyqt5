@@ -3,7 +3,7 @@ import contextlib
 import sys
 from time import sleep
 
-from PyQt5.QtCore import pyqtSlot, QTranslator, QTimer, QBuffer, QIODevice, QPropertyAnimation, QSize
+from PyQt5.QtCore import pyqtSlot, QTranslator, QTimer, QBuffer, QIODevice, QPropertyAnimation, QSize, Qt
 from PyQt5.QtGui import QIcon, QFont, QCursor
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtWidgets import QApplication, QMessageBox, QDesktopWidget
@@ -54,9 +54,10 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.pushButton_9.clicked.connect(self.copyButtonClicked)
         # 底部输出框链接点击事件
         self.textBrowser_2.anchorClicked.connect(self.anchorClicked)
-        # 下拉语言列表设置
+        # 下拉语言列表初始化
         self.comboBox.addItems(target_lang.keys())
         self.comboBox.setCurrentIndex(0)
+        self.comboBoxDisableIndex = 0
         self.comboBox.currentIndexChanged.connect(self.comboBoxCurrentIndexChanged)
         # 监听剪切板
         self.clipboard = QApplication.clipboard()
@@ -146,9 +147,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """
         if self.textEdit.toPlainText() and self.baidu_trans_result:
             to_str = target_lang.get(self.comboBox.currentText())
-            from_ = self.baidu_trans_result['trans_result']['from']
             to_ = self.baidu_trans_result['trans_result']['to']
-            if not (from_ == to_str or to_ == to_str):
+            if to_ != to_str:  # 防止自动纠正目标语言时触发翻译
                 self.startTrans()
         elif self.textEdit.toPlainText():
             self.startTrans()
@@ -274,10 +274,17 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             self.animation.setEndValue(QSize(self.width(), MAX_H - h))
             self.animation.finished.connect(lambda: self.change_widget(2))
             self.animation.start()
+        # 自动纠正下拉列表的目标语言选项
         to_str = data['trans_result']['to']
         if to_str != target_lang.get(self.comboBox.currentText()):
             index = list(target_lang.values()).index(to_str)
             self.comboBox.setCurrentIndex(index)
+        # 禁用下拉列表的当前源语言选项
+        from_str = data['trans_result']['from']
+        index = list(target_lang.values()).index(from_str)
+        self.comboBox.setItemData(self.comboBoxDisableIndex, 1 | 32, Qt.UserRole - 1)  # 解禁上次禁用选项
+        self.comboBox.setItemData(index, 0, Qt.UserRole - 1)  # 禁用当前源语言选项
+        self.comboBoxDisableIndex = index  # 记录禁用选项
 
     def voiceButtonClicked(self):
         """点击语音播报按钮"""
