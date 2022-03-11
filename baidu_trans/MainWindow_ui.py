@@ -10,7 +10,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from widgets import MyTextEdit
+from baidu_trans.widgets import MyTextEdit
 
 
 class Ui_MainWindow(object):
@@ -51,13 +51,14 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.setSpacing(0)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_3.setSpacing(10)
+        self.horizontalLayout_3.setSpacing(15)
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
-        self.label = QtWidgets.QLabel(MainWindow)
-        self.label.setObjectName("label")
-        self.horizontalLayout_3.addWidget(self.label)
+        self.comboBox_2 = QtWidgets.QComboBox(MainWindow)
+        self.comboBox_2.setMinimumSize(QtCore.QSize(60, 28))
+        self.comboBox_2.setObjectName("comboBox_2")
+        self.horizontalLayout_3.addWidget(self.comboBox_2)
         self.comboBox = QtWidgets.QComboBox(MainWindow)
-        self.comboBox.setMinimumSize(QtCore.QSize(110, 28))
+        self.comboBox.setMinimumSize(QtCore.QSize(100, 28))
         self.comboBox.setEditable(True)
         self.comboBox.setObjectName("comboBox")
         self.horizontalLayout_3.addWidget(self.comboBox)
@@ -200,7 +201,9 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "翻译"))
         self.pushButton.setText(_translate("MainWindow", "─"))
         self.pushButton_2.setText(_translate("MainWindow", "╳"))
-        self.label.setText(_translate("MainWindow", "目标语言"))
+        self.comboBox_2.setToolTip(_translate("MainWindow", "翻译引擎"))
+        self.comboBox.setToolTip(_translate("MainWindow", "目标语言"))
+        self.pushButton_3.setToolTip(_translate("MainWindow", "开始翻译"))
         self.pushButton_3.setText(_translate("MainWindow", "翻译"))
         self.pushButton_4.setToolTip(_translate("MainWindow", "截屏翻译（F1）"))
         self.pushButton_4.setText(_translate("MainWindow", "📸"))
