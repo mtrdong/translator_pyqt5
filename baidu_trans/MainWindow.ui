@@ -2,14 +2,6 @@
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QWidget" name="MainWindow">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>438</width>
-    <height>532</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>翻译</string>
   </property>
@@ -116,10 +108,10 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <property name="spacing">
-          <number>15</number>
+          <number>10</number>
          </property>
          <item>
-          <widget class="QComboBox" name="comboBox_2">
+          <widget class="QComboBox" name="comboBox">
            <property name="minimumSize">
             <size>
              <width>60</width>
@@ -132,10 +124,10 @@
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="comboBox">
+          <widget class="QComboBox" name="comboBox_2">
            <property name="minimumSize">
             <size>
-             <width>100</width>
+             <width>120</width>
              <height>28</height>
             </size>
            </property>
@@ -159,7 +151,7 @@
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>15</width>
+           <width>20</width>
            <height>20</height>
           </size>
          </property>
@@ -264,12 +256,12 @@
           <property name="minimumSize">
            <size>
             <width>400</width>
-            <height>100</height>
+            <height>110</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>16777215</width>
+            <width>400</width>
             <height>160</height>
            </size>
           </property>
@@ -378,7 +370,7 @@
              </property>
              <property name="maximumSize">
               <size>
-               <width>410</width>
+               <width>400</width>
                <height>55</height>
               </size>
              </property>
@@ -427,12 +419,6 @@
                     <height>22</height>
                    </size>
                   </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>22</width>
-                    <height>22</height>
-                   </size>
-                  </property>
                   <property name="cursor">
                    <cursorShape>PointingHandCursor</cursorShape>
                   </property>
@@ -447,12 +433,6 @@
                 <item>
                  <widget class="QPushButton" name="pushButton_7">
                   <property name="minimumSize">
-                   <size>
-                    <width>22</width>
-                    <height>22</height>
-                   </size>
-                  </property>
-                  <property name="maximumSize">
                    <size>
                     <width>22</width>
                     <height>22</height>
@@ -505,7 +485,7 @@
              <property name="minimumSize">
               <size>
                <width>400</width>
-               <height>200</height>
+               <height>260</height>
               </size>
              </property>
              <property name="styleSheet">
