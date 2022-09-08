@@ -227,17 +227,18 @@ class BaiDuTrans(object):
         zh_str = ''.join([s[0] for s in example[1]])
         return en_str.strip(), zh_str
 
-    def start_trans(self, query: str, to_str: str):
+    def start_trans(self, query: str, to_str: str, from_str: str = None):
         """ 启动翻译
         翻译成功后返回百度翻译的源数据
         :param query: 翻译内容
         :param to_str: 目标语言
+        :param from_str: 源语言
         """
         self._result = {}
-        lan = self._get_lan(query)
-        from_str = lan
-        if lan == to_str:
-            to_str = 'en' if lan == 'zh' else 'zh'
+        if not from_str:
+            from_str = self._get_lan(query)  # 自动检测源语言
+        if from_str == to_str:
+            to_str = 'en' if from_str == 'zh' else 'zh'
         path = f'/v2transapi?from={from_str}&to={to_str}'
         form_data = self._get_form_data(query, from_str, to_str)
         response = self._post(path, form_data)

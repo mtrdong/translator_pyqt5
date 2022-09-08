@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QWidget, QTextEdit, QGraphicsDropShadowEffect, QAppl
 
 class FramelessWidget(QWidget):
     """ 自定义Widget(主窗口)
-    1. 无边框、置顶
+    1. 无边框、置顶/取消置顶
     2. 添加阴影
     3. 鼠标拖动
     """
@@ -16,13 +16,26 @@ class FramelessWidget(QWidget):
         super().__init__(*args, **kwargs)
         # 背景透明
         self.setAttribute(Qt.WA_TranslucentBackground)
-        # 无边框置顶
-        self.setWindowFlags(Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowMinMaxButtonsHint)
+        # 无边框
+        self.setWindowFlags(Qt.Window | Qt.FramelessWindowHint | Qt.WindowMinMaxButtonsHint)
         # 初始化变量
+        self.topHintFlag = False
         self.currentWidth = 0
         self.currentHeight = 0
         self.mFlag = False
         self.mPos = None
+
+    def staysOnTopHint(self):
+        """置顶/取消置顶"""
+        default = Qt.Window | Qt.FramelessWindowHint | Qt.WindowMinMaxButtonsHint
+        windowHandle = self.windowHandle()
+        if self.topHintFlag:
+            windowHandle.setFlags(default)
+            self.topHintFlag = False
+        else:
+            windowHandle.setFlags(default | Qt.WindowStaysOnTopHint)
+            self.topHintFlag = True
+        windowHandle.show()
 
     def paintEvent(self, event):
         # 检测窗口变化

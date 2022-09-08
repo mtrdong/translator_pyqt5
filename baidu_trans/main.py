@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import contextlib
 import sys
+import time
 from time import sleep
 
 from PyQt5.QtCore import pyqtSlot, QTranslator, QTimer, QBuffer, QIODevice, QPropertyAnimation, QSize, Qt
@@ -17,16 +18,17 @@ from utils import *
 from widgets import FramelessWidget, Screenshot, FloatWidget, move_widget
 
 # 窗口最大、最小高度
-MAX_H, MIN_H = 652, 221
+MAX_H, MIN_H = 692, 259
 
-# 目标语言
-lang = {'中文(简体)': 'zh', '英语': 'en', '日语': 'jp', '泰语': 'th', '西班牙语': 'spa', '阿拉伯语': 'ara', '法语': 'fra', '韩语': 'kor', '俄语': 'ru', '德语': 'de', '葡萄牙语': 'pt', '意大利语': 'it', '希腊语': 'el', '荷兰语': 'nl', '波兰语': 'pl', '芬兰语': 'fin', '捷克语': 'cs', '保加利亚语': 'bul', '丹麦语': 'dan', '爱沙尼亚语': 'est', '匈牙利语': 'hu', '罗马尼亚语': 'rom', '斯洛文尼亚语': 'slo', '瑞典语': 'swe', '越南语': 'vie', '中文(粤语)': 'yue', '中文(繁体)': 'cht', '中文(文言文)': 'wyw', '南非荷兰语': 'afr', '阿尔巴尼亚语': 'alb', '阿姆哈拉语': 'amh', '亚美尼亚语': 'arm', '阿萨姆语': 'asm', '阿斯图里亚斯语': 'ast', '阿塞拜疆语': 'aze', '巴斯克语': 'baq', '白俄罗斯语': 'bel', '孟加拉语': 'ben', '波斯尼亚语': 'bos', '缅甸语': 'bur', '加泰罗尼亚语': 'cat', '宿务语': 'ceb', '克罗地亚语': 'hrv', '世界语': 'epo', '法罗语': 'fao', '菲律宾语': 'fil', '加利西亚语': 'glg', '格鲁吉亚语': 'geo', '古吉拉特语': 'guj', '豪萨语': 'hau', '希伯来语': 'heb', '印地语': 'hi', '冰岛语': 'ice', '伊博语': 'ibo', '印尼语': 'id', '爱尔兰语': 'gle', '卡纳达语': 'kan', '克林贡语': 'kli', '库尔德语': 'kur', '老挝语': 'lao', '拉丁语': 'lat', '拉脱维亚语': 'lav', '立陶宛语': 'lit', '卢森堡语': 'ltz', '马其顿语': 'mac', '马拉加斯语': 'mg', '马来语': 'may', '马拉雅拉姆语': 'mal', '马耳他语': 'mlt', '马拉地语': 'mar', '尼泊尔语': 'nep', '新挪威语': 'nno', '波斯语': 'per', '萨丁尼亚语': 'srd', '塞尔维亚语(拉丁文)': 'srp', '僧伽罗语 ': 'sin', '斯洛伐克语': 'sk', '索马里语': 'som', '斯瓦希里语': 'swa', '他加禄语': 'tgl', '塔吉克语': 'tgk', '泰米尔语': 'tam', '鞑靼语': 'tat', '泰卢固语': 'tel', '土耳其语': 'tr', '土库曼语': 'tuk', '乌克兰语': 'ukr', '乌尔都语': 'urd', '奥克语': 'oci', '吉尔吉斯语': 'kir', '普什图语': 'pus', '高棉语': 'hkm', '海地语': 'ht', '书面挪威语': 'nob', '旁遮普语': 'pan', '阿尔及利亚阿拉伯语': 'arq', '比斯拉马语': 'bis', '加拿大法语': 'frn', '哈卡钦语': 'hak', '胡帕语': 'hup', '印古什语': 'ing', '拉特加莱语': 'lag', '毛里求斯克里奥尔语': 'mau', '黑山语': 'mot', '巴西葡萄牙语': 'pot', '卢森尼亚语': 'ruy', '塞尔维亚-克罗地亚语': 'sec', '西里西亚语': 'sil', '突尼斯阿拉伯语': 'tua', '亚齐语': 'ach', '阿肯语': 'aka', '阿拉贡语': 'arg', '艾马拉语': 'aym', '俾路支语': 'bal', '巴什基尔语': 'bak', '本巴语': 'bem', '柏柏尔语': 'ber', '博杰普尔语': 'bho', '比林语': 'bli', '布列塔尼语': 'bre', '切罗基语': 'chr', '齐切瓦语': 'nya', '楚瓦什语': 'chv', '康瓦尔语': 'cor', '科西嘉语': 'cos', '克里克语': 'cre', '克里米亚鞑靼语': 'cri', '迪维希语': 'div', '古英语': 'eno', '中古法语': 'frm', '弗留利语': 'fri', '富拉尼语': 'ful', '盖尔语': 'gla', '卢干达语': 'lug', '古希腊语': 'gra', '瓜拉尼语': 'grn', '夏威夷语': 'haw', '希利盖农语': 'hil', '伊多语': 'ido', '因特语': 'ina', '伊努克提图特语': 'iku', '爪哇语': 'jav', '卡拜尔语': 'kab', '格陵兰语': 'kal', '卡努里语': 'kau', '克什米尔语': 'kas', '卡舒比语': 'kah', '卢旺达语': 'kin', '刚果语': 'kon', '孔卡尼语': 'kok', '林堡语': 'lim', '林加拉语': 'lin', '逻辑语': 'loj', '低地德语': 'log', '下索布语': 'los', '迈蒂利语': 'mai', '曼克斯语': 'glv', '毛利语': 'mao', '马绍尔语': 'mah', '南恩德贝莱语': 'nbl', '那不勒斯语': 'nea', '西非书面语': 'nqo', '北方萨米语': 'sme', '挪威语': 'nor', '奥杰布瓦语': 'oji', '奥里亚语': 'ori', '奥罗莫语': 'orm', '奥塞梯语': 'oss', '邦板牙语': 'pam', '帕皮阿门托语': 'pap', '北索托语': 'ped', '克丘亚语': 'que', '罗曼什语': 'roh', '罗姆语': 'ro', '萨摩亚语': 'sm', '梵语': 'san', '苏格兰语': 'sco', '掸语': 'sha', '修纳语': 'sna', '信德语': 'snd', '桑海语': 'sol', '南索托语': 'sot', '叙利亚语': 'syr', '德顿语': 'tet', '提格利尼亚语': 'tir', '聪加语': 'tso', '契维语': 'twi', '高地索布语': 'ups', '文达语': 'ven', '瓦隆语': 'wln', '威尔士语': 'wel', '西弗里斯语': 'fry', '沃洛夫语': 'wol', '科萨语': 'xho', '意第绪语': 'yid', '约鲁巴语': 'yor', '扎扎其语': 'zaz', '祖鲁语': 'zul', '巽他语': 'sun', '苗语': 'hmn', '塞尔维亚语(西里尔文)': 'src'}
+# 语言种类
+source_lang = {'自动检测': '', '中文(简体)': 'zh', '英语': 'en', '日语': 'jp', '泰语': 'th', '西班牙语': 'spa', '阿拉伯语': 'ara', '法语': 'fra', '韩语': 'kor', '俄语': 'ru', '德语': 'de', '葡萄牙语': 'pt', '意大利语': 'it', '希腊语': 'el', '荷兰语': 'nl', '波兰语': 'pl', '芬兰语': 'fin', '捷克语': 'cs', '保加利亚语': 'bul', '丹麦语': 'dan', '爱沙尼亚语': 'est', '匈牙利语': 'hu', '罗马尼亚语': 'rom', '斯洛文尼亚语': 'slo', '瑞典语': 'swe', '越南语': 'vie', '中文(粤语)': 'yue', '中文(繁体)': 'cht', '中文(文言文)': 'wyw', '南非荷兰语': 'afr', '阿尔巴尼亚语': 'alb', '阿姆哈拉语': 'amh', '亚美尼亚语': 'arm', '阿萨姆语': 'asm', '阿斯图里亚斯语': 'ast', '阿塞拜疆语': 'aze', '巴斯克语': 'baq', '白俄罗斯语': 'bel', '孟加拉语': 'ben', '波斯尼亚语': 'bos', '缅甸语': 'bur', '加泰罗尼亚语': 'cat', '宿务语': 'ceb', '克罗地亚语': 'hrv', '世界语': 'epo', '法罗语': 'fao', '菲律宾语': 'fil', '加利西亚语': 'glg', '格鲁吉亚语': 'geo', '古吉拉特语': 'guj', '豪萨语': 'hau', '希伯来语': 'heb', '印地语': 'hi', '冰岛语': 'ice', '伊博语': 'ibo', '印尼语': 'id', '爱尔兰语': 'gle', '卡纳达语': 'kan', '克林贡语': 'kli', '库尔德语': 'kur', '老挝语': 'lao', '拉丁语': 'lat', '拉脱维亚语': 'lav', '立陶宛语': 'lit', '卢森堡语': 'ltz', '马其顿语': 'mac', '马拉加斯语': 'mg', '马来语': 'may', '马拉雅拉姆语': 'mal', '马耳他语': 'mlt', '马拉地语': 'mar', '尼泊尔语': 'nep', '新挪威语': 'nno', '波斯语': 'per', '萨丁尼亚语': 'srd', '塞尔维亚语(拉丁文)': 'srp', '僧伽罗语 ': 'sin', '斯洛伐克语': 'sk', '索马里语': 'som', '斯瓦希里语': 'swa', '他加禄语': 'tgl', '塔吉克语': 'tgk', '泰米尔语': 'tam', '鞑靼语': 'tat', '泰卢固语': 'tel', '土耳其语': 'tr', '土库曼语': 'tuk', '乌克兰语': 'ukr', '乌尔都语': 'urd', '奥克语': 'oci', '吉尔吉斯语': 'kir', '普什图语': 'pus', '高棉语': 'hkm', '海地语': 'ht', '书面挪威语': 'nob', '旁遮普语': 'pan', '阿尔及利亚阿拉伯语': 'arq', '比斯拉马语': 'bis', '加拿大法语': 'frn', '哈卡钦语': 'hak', '胡帕语': 'hup', '印古什语': 'ing', '拉特加莱语': 'lag', '毛里求斯克里奥尔语': 'mau', '黑山语': 'mot', '巴西葡萄牙语': 'pot', '卢森尼亚语': 'ruy', '塞尔维亚-克罗地亚语': 'sec', '西里西亚语': 'sil', '突尼斯阿拉伯语': 'tua', '亚齐语': 'ach', '阿肯语': 'aka', '阿拉贡语': 'arg', '艾马拉语': 'aym', '俾路支语': 'bal', '巴什基尔语': 'bak', '本巴语': 'bem', '柏柏尔语': 'ber', '博杰普尔语': 'bho', '比林语': 'bli', '布列塔尼语': 'bre', '切罗基语': 'chr', '齐切瓦语': 'nya', '楚瓦什语': 'chv', '康瓦尔语': 'cor', '科西嘉语': 'cos', '克里克语': 'cre', '克里米亚鞑靼语': 'cri', '迪维希语': 'div', '古英语': 'eno', '中古法语': 'frm', '弗留利语': 'fri', '富拉尼语': 'ful', '盖尔语': 'gla', '卢干达语': 'lug', '古希腊语': 'gra', '瓜拉尼语': 'grn', '夏威夷语': 'haw', '希利盖农语': 'hil', '伊多语': 'ido', '因特语': 'ina', '伊努克提图特语': 'iku', '爪哇语': 'jav', '卡拜尔语': 'kab', '格陵兰语': 'kal', '卡努里语': 'kau', '克什米尔语': 'kas', '卡舒比语': 'kah', '卢旺达语': 'kin', '刚果语': 'kon', '孔卡尼语': 'kok', '林堡语': 'lim', '林加拉语': 'lin', '逻辑语': 'loj', '低地德语': 'log', '下索布语': 'los', '迈蒂利语': 'mai', '曼克斯语': 'glv', '毛利语': 'mao', '马绍尔语': 'mah', '南恩德贝莱语': 'nbl', '那不勒斯语': 'nea', '西非书面语': 'nqo', '北方萨米语': 'sme', '挪威语': 'nor', '奥杰布瓦语': 'oji', '奥里亚语': 'ori', '奥罗莫语': 'orm', '奥塞梯语': 'oss', '邦板牙语': 'pam', '帕皮阿门托语': 'pap', '北索托语': 'ped', '克丘亚语': 'que', '罗曼什语': 'roh', '罗姆语': 'ro', '萨摩亚语': 'sm', '梵语': 'san', '苏格兰语': 'sco', '掸语': 'sha', '修纳语': 'sna', '信德语': 'snd', '桑海语': 'sol', '南索托语': 'sot', '叙利亚语': 'syr', '德顿语': 'tet', '提格利尼亚语': 'tir', '聪加语': 'tso', '契维语': 'twi', '高地索布语': 'ups', '文达语': 'ven', '瓦隆语': 'wln', '威尔士语': 'wel', '西弗里斯语': 'fry', '沃洛夫语': 'wol', '科萨语': 'xho', '意第绪语': 'yid', '约鲁巴语': 'yor', '扎扎其语': 'zaz', '祖鲁语': 'zul', '巽他语': 'sun', '苗语': 'hmn', '塞尔维亚语(西里尔文)': 'src'}
+target_lang = {'中文(简体)': 'zh', '英语': 'en', '日语': 'jp', '泰语': 'th', '西班牙语': 'spa', '阿拉伯语': 'ara', '法语': 'fra', '韩语': 'kor', '俄语': 'ru', '德语': 'de', '葡萄牙语': 'pt', '意大利语': 'it', '希腊语': 'el', '荷兰语': 'nl', '波兰语': 'pl', '芬兰语': 'fin', '捷克语': 'cs', '保加利亚语': 'bul', '丹麦语': 'dan', '爱沙尼亚语': 'est', '匈牙利语': 'hu', '罗马尼亚语': 'rom', '斯洛文尼亚语': 'slo', '瑞典语': 'swe', '越南语': 'vie', '中文(粤语)': 'yue', '中文(繁体)': 'cht', '中文(文言文)': 'wyw', '南非荷兰语': 'afr', '阿尔巴尼亚语': 'alb', '阿姆哈拉语': 'amh', '亚美尼亚语': 'arm', '阿萨姆语': 'asm', '阿斯图里亚斯语': 'ast', '阿塞拜疆语': 'aze', '巴斯克语': 'baq', '白俄罗斯语': 'bel', '孟加拉语': 'ben', '波斯尼亚语': 'bos', '缅甸语': 'bur', '加泰罗尼亚语': 'cat', '宿务语': 'ceb', '克罗地亚语': 'hrv', '世界语': 'epo', '法罗语': 'fao', '菲律宾语': 'fil', '加利西亚语': 'glg', '格鲁吉亚语': 'geo', '古吉拉特语': 'guj', '豪萨语': 'hau', '希伯来语': 'heb', '印地语': 'hi', '冰岛语': 'ice', '伊博语': 'ibo', '印尼语': 'id', '爱尔兰语': 'gle', '卡纳达语': 'kan', '克林贡语': 'kli', '库尔德语': 'kur', '老挝语': 'lao', '拉丁语': 'lat', '拉脱维亚语': 'lav', '立陶宛语': 'lit', '卢森堡语': 'ltz', '马其顿语': 'mac', '马拉加斯语': 'mg', '马来语': 'may', '马拉雅拉姆语': 'mal', '马耳他语': 'mlt', '马拉地语': 'mar', '尼泊尔语': 'nep', '新挪威语': 'nno', '波斯语': 'per', '萨丁尼亚语': 'srd', '塞尔维亚语(拉丁文)': 'srp', '僧伽罗语 ': 'sin', '斯洛伐克语': 'sk', '索马里语': 'som', '斯瓦希里语': 'swa', '他加禄语': 'tgl', '塔吉克语': 'tgk', '泰米尔语': 'tam', '鞑靼语': 'tat', '泰卢固语': 'tel', '土耳其语': 'tr', '土库曼语': 'tuk', '乌克兰语': 'ukr', '乌尔都语': 'urd', '奥克语': 'oci', '吉尔吉斯语': 'kir', '普什图语': 'pus', '高棉语': 'hkm', '海地语': 'ht', '书面挪威语': 'nob', '旁遮普语': 'pan', '阿尔及利亚阿拉伯语': 'arq', '比斯拉马语': 'bis', '加拿大法语': 'frn', '哈卡钦语': 'hak', '胡帕语': 'hup', '印古什语': 'ing', '拉特加莱语': 'lag', '毛里求斯克里奥尔语': 'mau', '黑山语': 'mot', '巴西葡萄牙语': 'pot', '卢森尼亚语': 'ruy', '塞尔维亚-克罗地亚语': 'sec', '西里西亚语': 'sil', '突尼斯阿拉伯语': 'tua', '亚齐语': 'ach', '阿肯语': 'aka', '阿拉贡语': 'arg', '艾马拉语': 'aym', '俾路支语': 'bal', '巴什基尔语': 'bak', '本巴语': 'bem', '柏柏尔语': 'ber', '博杰普尔语': 'bho', '比林语': 'bli', '布列塔尼语': 'bre', '切罗基语': 'chr', '齐切瓦语': 'nya', '楚瓦什语': 'chv', '康瓦尔语': 'cor', '科西嘉语': 'cos', '克里克语': 'cre', '克里米亚鞑靼语': 'cri', '迪维希语': 'div', '古英语': 'eno', '中古法语': 'frm', '弗留利语': 'fri', '富拉尼语': 'ful', '盖尔语': 'gla', '卢干达语': 'lug', '古希腊语': 'gra', '瓜拉尼语': 'grn', '夏威夷语': 'haw', '希利盖农语': 'hil', '伊多语': 'ido', '因特语': 'ina', '伊努克提图特语': 'iku', '爪哇语': 'jav', '卡拜尔语': 'kab', '格陵兰语': 'kal', '卡努里语': 'kau', '克什米尔语': 'kas', '卡舒比语': 'kah', '卢旺达语': 'kin', '刚果语': 'kon', '孔卡尼语': 'kok', '林堡语': 'lim', '林加拉语': 'lin', '逻辑语': 'loj', '低地德语': 'log', '下索布语': 'los', '迈蒂利语': 'mai', '曼克斯语': 'glv', '毛利语': 'mao', '马绍尔语': 'mah', '南恩德贝莱语': 'nbl', '那不勒斯语': 'nea', '西非书面语': 'nqo', '北方萨米语': 'sme', '挪威语': 'nor', '奥杰布瓦语': 'oji', '奥里亚语': 'ori', '奥罗莫语': 'orm', '奥塞梯语': 'oss', '邦板牙语': 'pam', '帕皮阿门托语': 'pap', '北索托语': 'ped', '克丘亚语': 'que', '罗曼什语': 'roh', '罗姆语': 'ro', '萨摩亚语': 'sm', '梵语': 'san', '苏格兰语': 'sco', '掸语': 'sha', '修纳语': 'sna', '信德语': 'snd', '桑海语': 'sol', '南索托语': 'sot', '叙利亚语': 'syr', '德顿语': 'tet', '提格利尼亚语': 'tir', '聪加语': 'tso', '契维语': 'twi', '高地索布语': 'ups', '文达语': 'ven', '瓦隆语': 'wln', '威尔士语': 'wel', '西弗里斯语': 'fry', '沃洛夫语': 'wol', '科萨语': 'xho', '意第绪语': 'yid', '约鲁巴语': 'yor', '扎扎其语': 'zaz', '祖鲁语': 'zul', '巽他语': 'sun', '苗语': 'hmn', '塞尔维亚语(西里尔文)': 'src'}
 
 # 翻译引擎
-engine = {
-    '谷歌': 'google',
-    '百度': 'baidu',
-    '有道': 'youdao',
+ace_engine = {
+    '谷歌翻译': 'google',
+    '百度翻译': 'baidu',
+    '有道翻译': 'youdao',
 }
 
 class MainWindow(FramelessWidget, Ui_MainWindow):
@@ -43,31 +45,36 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         font = QFont('微软雅黑')
         font.setPixelSize(14)
         self.setFont(font)
-        self.setupUi(self)
         self.resize(self.minimumSize())
+        self.setupUi(self)
         # 调整分辨率时不改变窗口大小
         self.sizeChanged.connect(lambda x: self.resize(x[0], x[1]))
         # 隐藏输入框清空按钮
-        self.pushButton_5.hide()
+        self.pushButton_7.hide()
         # 隐藏输出框和输出控件
         self.hide_widget()
         # 通过线程调整部件透明度实现淡入效果
         self.fade_in_thread = FadeInThread(self.widget_2)
         # 语音和复制按钮点击事件
-        self.pushButton_6.clicked.connect(self.voiceButtonClicked)
         self.pushButton_8.clicked.connect(self.voiceButtonClicked)
-        self.pushButton_7.clicked.connect(self.copyButtonClicked)
+        self.pushButton_10.clicked.connect(self.voiceButtonClicked)
         self.pushButton_9.clicked.connect(self.copyButtonClicked)
+        self.pushButton_11.clicked.connect(self.copyButtonClicked)
         # 底部输出框链接点击事件
         self.textBrowser_2.anchorClicked.connect(self.anchorClicked)
         # 下拉列表初始化
-        self.comboBox.addItems(engine.keys())
+        self.comboBox.addItems(ace_engine.keys())
         self.comboBox.setCurrentIndex(0)
         self.comboBox.currentIndexChanged.connect(self.comboBoxCurrentIndexChanged)
-        self.comboBox_2.addItems(lang.keys())
+        self.comboBox_2.addItems(source_lang.keys())
         self.comboBox_2.setCurrentIndex(0)
-        self.comboBoxDisableIndex = 0
+        self.comboBox_2DisableIndex = 0
         self.comboBox_2.currentIndexChanged.connect(self.comboBox_2CurrentIndexChanged)
+        self.comboBox_3.addItems(target_lang.keys())
+        self.comboBox_3.setCurrentIndex(0)
+        self.comboBox_3DisableIndex = 0
+        self.comboBox_3.currentIndexChanged.connect(self.comboBox_3CurrentIndexChanged)
+        self.refreshDisableIndex()
         # 监听剪切板
         self.clipboard = QApplication.clipboard()
         self.clipboard.dataChanged.connect(self.clipboardChanged)
@@ -156,12 +163,40 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """
         print(self.comboBox.currentText())
 
+    def refreshDisableIndex(self):
+        """刷新源语言/目标语言下拉禁用选项"""
+        # 解除上次禁用选项
+        self.comboBox_2.setItemData(self.comboBox_2DisableIndex, 1 | 32, Qt.UserRole - 1)
+        self.comboBox_3.setItemData(self.comboBox_3DisableIndex, 1 | 32, Qt.UserRole - 1)
+        if source_lang.get(self.comboBox_2.currentText()):
+            self.comboBox_2DisableIndex = self.comboBox_3.currentIndex() + 1
+            self.comboBox_3DisableIndex = self.comboBox_2.currentIndex() - 1
+            self.comboBox_2.setItemData(self.comboBox_2DisableIndex, 0, Qt.UserRole - 1)
+            self.comboBox_3.setItemData(self.comboBox_3DisableIndex, 0, Qt.UserRole - 1)
+        else:
+            self.comboBox_2DisableIndex = self.comboBox_3.currentIndex() + 1
+            self.comboBox_2.setItemData(self.comboBox_2DisableIndex, 0, Qt.UserRole - 1)
+
     def comboBox_2CurrentIndexChanged(self):
-        """ 目标语言下拉列表索引变更
-        切换语言种类时重新发起翻译
+        """ 源语言下拉列表索引变更
+        切换语言种类时刷新下拉禁用选项，并重新发起翻译
         """
+        self.refreshDisableIndex()
         if self.textEdit.toPlainText() and self.baidu_trans_result:
-            to_str = lang.get(self.comboBox_2.currentText())
+            from_str = source_lang.get(self.comboBox_2.currentText())
+            from_ = self.baidu_trans_result['trans_result']['from']
+            if from_ != from_str:  # 防止自动切换源语言时触发翻译
+                self.startTrans()
+        elif self.textEdit.toPlainText():
+            self.startTrans()
+
+    def comboBox_3CurrentIndexChanged(self):
+        """ 目标语言下拉列表索引变更
+        切换语言种类时刷新下拉禁用选项，并重新发起翻译
+        """
+        self.refreshDisableIndex()
+        if self.textEdit.toPlainText() and self.baidu_trans_result:
+            to_str = target_lang.get(self.comboBox_3.currentText())
             to_ = self.baidu_trans_result['trans_result']['to']
             if to_ != to_str:  # 防止自动纠正目标语言时触发翻译
                 self.startTrans()
@@ -169,7 +204,42 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             self.startTrans()
 
     @pyqtSlot()
-    def on_pushButton_3_clicked(self):
+    def on_pushButton_clicked(self):
+        """ 点击置顶按钮
+        点击置顶按钮，使窗口始终显示在最前端
+        """
+        self.staysOnTopHint()
+        style_sheet_transparent = "QPushButton {background-color: transparent; border: 0; font-size: 14px} " \
+                                  "QPushButton:hover {background-color: rgb(220, 220, 220)}"
+        style_sheet_gray = "QPushButton {background-color: rgb(200, 200, 200); border: 0; font-size: 14px}"
+        if self.topHintFlag:
+            self.pushButton.setStyleSheet(style_sheet_gray)
+        else:
+            self.pushButton.setStyleSheet(style_sheet_transparent)
+
+    @pyqtSlot()
+    def on_pushButton_6_clicked(self):
+        """ 点击语言对调按钮
+        调换源语言与目标语言
+        """
+        if source_lang.get(self.comboBox_2.currentText()):
+            combobox_2_index = self.comboBox_2.currentIndex()
+            combobox_3_index = self.comboBox_3.currentIndex()
+            self.comboBox_2.setCurrentIndex(combobox_3_index + 1)
+            self.comboBox_3.setCurrentIndex(combobox_2_index - 1)
+
+    @pyqtSlot()
+    def on_pushButton_4_clicked(self):
+        """ 点击截图翻译按钮
+        隐藏主窗口，启动截屏
+        """
+        self.hide()  # 隐藏主窗口
+        self.screenshot = Screenshot()  # 创建截屏窗口
+        self.screenshot.completed.connect(self.screenshotCompleted)
+        self.screenshot.show()  # 显示截屏窗口
+
+    @pyqtSlot()
+    def on_pushButton_5_clicked(self):
         """ 翻译按钮状态变更
         点击翻译按钮立即发起翻译
         """
@@ -214,9 +284,9 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             self.animation.start()
         # 输入框内容不为空时显示清空按钮，否则隐藏清空按钮
         if self.textEdit.toPlainText():
-            self.pushButton_5.show()
+            self.pushButton_7.show()
         else:
-            self.pushButton_5.hide()
+            self.pushButton_7.hide()
 
     def transImageText(self, text):
         """ OCR线程结束
@@ -241,9 +311,10 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         if not query:
             QMessageBox.information(self, '提示', '请输入翻译内容')
             return None
-        to_str = lang.get(self.comboBox_2.currentText())
+        from_str = source_lang.get(self.comboBox_2.currentText())
+        to_str = target_lang.get(self.comboBox_3.currentText())
         # 通过线程发起翻译
-        self.start_trans_thread = StartTransThread(query, to_str)
+        self.start_trans_thread = StartTransThread(query, to_str, from_str)
         self.start_trans_thread.trigger.connect(self.outResult)
         self.start_trans_thread.start()
         self.trans_started = True
@@ -286,16 +357,20 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             self.animation.setEndValue(QSize(self.width(), MAX_H - h))
             self.animation.finished.connect(lambda: self.change_widget(2))
             self.animation.start()
-        # 自动纠正下拉列表的目标语言选项
+        from_str = data['trans_result']['from']
         to_str = data['trans_result']['to']
-        if to_str != lang.get(self.comboBox_2.currentText()):
-            index = list(lang.values()).index(to_str)
-            self.comboBox_2.setCurrentIndex(index)
-        # 禁用下拉列表的当前源语言选项
-        # from_str = data['trans_result']['from']
-        # self.comboBox_2.setItemData(self.comboBoxDisableIndex, 1 | 32, Qt.UserRole - 1)  # 解禁上次禁用选项
-        # self.comboBoxDisableIndex = list(lang.values()).index(from_str)  # 记录禁用选项
-        # self.comboBox_2.setItemData(self.comboBoxDisableIndex, 0, Qt.UserRole - 1)  # 禁用当前源语言选项
+        # 源语言切换到检测到的语言
+        # if not source_lang.get(self.comboBox_2.currentText()):
+        #     for lang, code in target_lang.items():
+        #         if code == from_str:
+        #             self.comboBox_2.setCurrentIndex(list(source_lang.values()).index(code))
+        #             break
+        # elif from_str != source_lang.get(self.comboBox_2.currentText()):
+        #     pass
+        # 自动纠正目标语言
+        if to_str != target_lang.get(self.comboBox_3.currentText()):
+            index = list(target_lang.values()).index(to_str)
+            self.comboBox_3.setCurrentIndex(index)
 
     def voiceButtonClicked(self):
         """点击语音播报按钮"""
@@ -348,16 +423,6 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         sleep(0.01)  # 延时等待 setMedia 完成。
         # 播放语音
         player.play()
-
-    @pyqtSlot()
-    def on_pushButton_4_clicked(self):
-        """ 点击截图翻译按钮
-        隐藏主窗口，启动截屏
-        """
-        self.hide()  # 隐藏主窗口
-        self.screenshot = Screenshot()  # 创建截屏窗口
-        self.screenshot.completed.connect(self.screenshotCompleted)
-        self.screenshot.show()  # 显示截屏窗口
 
     def screenshotCompleted(self, img):
         """ 截屏完成

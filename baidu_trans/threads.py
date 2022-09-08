@@ -73,14 +73,15 @@ class StartTransThread(QThread):
     """启动百度翻译获取翻译结果"""
     trigger = pyqtSignal(dict)
 
-    def __init__(self, query: str, to_str: str):
+    def __init__(self, query: str, to_str: str, from_str: str):
         super().__init__()
         self.query = query
         self.to_str = to_str
+        self.from_str = from_str
 
     def run(self):
         try:
-            data = BaiDuTrans().start_trans(self.query, self.to_str)
+            data = BaiDuTrans().start_trans(self.query, self.to_str, self.from_str)
         except:
             data = dict()
         self.trigger.emit(data)  # 信号发送翻译结果
