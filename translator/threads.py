@@ -73,7 +73,7 @@ class StartTransThread(QThread):
     """启动百度翻译获取翻译结果"""
     trigger = pyqtSignal(dict)
 
-    def __init__(self, query: str, to_str: str, from_str: str):
+    def __init__(self, query: str, to_str: str, from_str: str = None):
         super().__init__()
         self.query = query
         self.to_str = to_str
