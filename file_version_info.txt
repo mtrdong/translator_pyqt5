@@ -30,12 +30,12 @@ VSVersionInfo(
       StringTable(
         u'080404b0',
         [StringStruct(u'CompanyName', u'mtrdong'),
-        StringStruct(u'FileDescription', u'Translate'),
+        StringStruct(u'FileDescription', u'Translator'),
         StringStruct(u'FileVersion', u'1.0.0'),
-        StringStruct(u'InternalName', u'Translate.exe'),
+        StringStruct(u'InternalName', u'Translator.exe'),
         StringStruct(u'LegalCopyright', u'Copyright (C) 2020 mtrdong'),
-        StringStruct(u'OriginalFilename', u'Translate.exe'),
-        StringStruct(u'ProductName', u'Translate'),
+        StringStruct(u'OriginalFilename', u'Translator.exe'),
+        StringStruct(u'ProductName', u'Translator'),
         StringStruct(u'ProductVersion', u'1.0.0')])
       ]), 
     VarFileInfo([VarStruct(u'Translation', [2052, 1200])])

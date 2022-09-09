@@ -2,10 +2,10 @@
 
 block_cipher = None
 
-a = Analysis(['baidu_trans\\main.py'],
+a = Analysis(['translator\\main.py'],
              pathex=[],
              binaries=[],
-             datas=[('baidu_trans\\res', 'res')],
+             datas=[('translator\\res', 'res')],
              hiddenimports=[],
              hookspath=[],
              hooksconfig={},
@@ -33,7 +33,7 @@ exe = EXE(pyz,
           codesign_identity=None,
           entitlements_file=None,
           version='file_version_info.txt',
-          icon='baidu_trans\\res\\images\\favicon.ico')
+          icon='translator\\res\\images\\favicon.ico')
 
 coll = COLLECT(exe,
                a.binaries,
@@ -42,4 +42,4 @@ coll = COLLECT(exe,
                strip=False,
                upx=True,
                upx_exclude=[],
-               name='Translate')
+               name='Translator')

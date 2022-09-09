@@ -10,7 +10,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from baidu_trans.widgets import MyTextEdit
+from translator.widgets import MyTextEdit
 
 
 class Ui_MainWindow(object):

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import contextlib
 import sys
-import time
 from time import sleep
 
 from PyQt5.QtCore import pyqtSlot, QTranslator, QTimer, QBuffer, QIODevice, QPropertyAnimation, QSize, Qt
@@ -33,12 +32,10 @@ ace_engine = {
 
 class MainWindow(FramelessWidget, Ui_MainWindow):
     def __init__(self, *args, **kwargs):
-        # 通过线程创建百度翻译对象
-        self.baidu_trans_obj = None
-        self.baidu_trans_result = None
-        self.baidu_trans_thread = BaiduTransThread()
-        self.baidu_trans_thread.trigger.connect(self.getBaiduTransObj)
-        self.baidu_trans_thread.start()
+        # 通过线程创建默认翻译引擎
+        self.trans_engine = None
+        self.trans_result = None
+        self.getDefaultEngine()
         # 窗口设置
         super().__init__(*args, **kwargs)
         self.setWindowIcon(QIcon(favicon_ico))
@@ -93,17 +90,24 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.animation = QPropertyAnimation(self, b"size", self)
         self.animation.setDuration(100)  # 动画持续时间
 
-    def getBaiduTransObj(self, obj):
-        """ 创建百度翻译对象的线程结束
-        线程结束时获取返回的百度翻译对象
-        """
+    def getDefaultEngine(self):
+        """通过线程创建默认翻译引擎"""
+        self.baidu_trans_thread = BaiduTransThread()
+        self.baidu_trans_thread.trigger.connect(self.setDefaultEngine)
+        if self.baidu_trans_thread.isRunning:
+            self.baidu_trans_thread.terminate()
+            self.baidu_trans_thread.quit()
+        self.baidu_trans_thread.start()
+
+    def setDefaultEngine(self, obj):
+        """创建翻译引擎的线程结束"""
         if obj is None:
             msg = QMessageBox.question(self, '错误', '程序初始化失败，可能是网络不佳所致。是否重试？', QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
             if msg == QMessageBox.Yes:
-                self.baidu_trans_thread.start()
+                self.getDefaultEngine()
             else:
                 self.close()
-        self.baidu_trans_obj = obj
+        self.trans_engine = obj
 
     @pyqtSlot()
     def on_checkBox_clicked(self):
@@ -182,9 +186,9 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         切换语言种类时刷新下拉禁用选项，并重新发起翻译
         """
         self.refreshDisableIndex()
-        if self.textEdit.toPlainText() and self.baidu_trans_result:
+        if self.textEdit.toPlainText() and self.trans_result:
             from_str = source_lang.get(self.comboBox_2.currentText())
-            from_ = self.baidu_trans_result['trans_result']['from']
+            from_ = self.trans_result['trans_result']['from']
             if from_ != from_str:  # 防止自动切换源语言时触发翻译
                 self.startTrans()
         elif self.textEdit.toPlainText():
@@ -195,9 +199,9 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         切换语言种类时刷新下拉禁用选项，并重新发起翻译
         """
         self.refreshDisableIndex()
-        if self.textEdit.toPlainText() and self.baidu_trans_result:
+        if self.textEdit.toPlainText() and self.trans_result:
             to_str = target_lang.get(self.comboBox_3.currentText())
-            to_ = self.baidu_trans_result['trans_result']['to']
+            to_ = self.trans_result['trans_result']['to']
             if to_ != to_str:  # 防止自动纠正目标语言时触发翻译
                 self.startTrans()
         elif self.textEdit.toPlainText():
@@ -304,7 +308,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.timer.stop()  # 主动发起翻译时关闭定时器
         if self.trans_started:
             return None
-        if self.baidu_trans_obj is None:
+        if self.trans_engine is None:
             QMessageBox.information(self, '提示', '程序正在初始化中，请稍候重试！')
             return None
         query = self.textEdit.toPlainText().strip()
@@ -330,7 +334,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         if not data:
             QMessageBox.information(self, '提示', '翻译结果为空，请重试！')
             return None
-        self.baidu_trans_result = data  # 翻译结果
+        self.trans_result = data  # 翻译结果
         trans_result = get_trans_result(data)  # 直译
         spell_html = get_spell_html(data)  # 音标
         comment_html = get_comment_html(data)  # 释义
@@ -374,8 +378,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
 
     def voiceButtonClicked(self):
         """点击语音播报按钮"""
-        text = self.baidu_trans_result['trans_result']['data'][0].get('dst')
-        lan = self.baidu_trans_result['trans_result'].get('to')
+        text = self.trans_result['trans_result']['data'][0].get('dst')
+        lan = self.trans_result['trans_result'].get('to')
         # 通过线程下载并播放发音
         self.voice_thread = DownloadVoiceThread(lan, text)
         self.voice_thread.trigger.connect(self.playVoice)
@@ -383,7 +387,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
 
     def copyButtonClicked(self):
         """点击复制内容按钮"""
-        text = self.baidu_trans_result['trans_result']['data'][0].get('dst')
+        text = self.trans_result['trans_result']['data'][0].get('dst')
         self.clipboard.setText(text)
 
     def anchorClicked(self, url):
@@ -393,7 +397,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """
         url = url.url().replace('#', '')
         if url in ['英', '美', '音']:  # 点击发音按钮
-            text = self.baidu_trans_result['trans_result']['data'][0].get('src')
+            text = self.trans_result['trans_result']['data'][0].get('src')
             if url == '英':
                 lan = 'en'
             elif url == '美':
