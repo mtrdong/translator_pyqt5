@@ -3,10 +3,10 @@ import contextlib
 import sys
 from time import sleep
 
-from PyQt5.QtCore import pyqtSlot, QTranslator, QTimer, QBuffer, QIODevice, QPropertyAnimation, QSize, Qt
-from PyQt5.QtGui import QIcon, QFont, QCursor
-from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
-from PyQt5.QtWidgets import QApplication, QMessageBox, QDesktopWidget
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtMultimedia
+from PyQt5 import QtWidgets
 from system_hotkey import SystemHotkey
 
 from FloatWindow_ui import Ui_FloatWindow
@@ -30,6 +30,7 @@ ace_engine = {
     '有道翻译': 'youdao',
 }
 
+
 class MainWindow(FramelessWidget, Ui_MainWindow):
     def __init__(self, *args, **kwargs):
         # 通过线程创建默认翻译引擎
@@ -38,14 +39,14 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.getDefaultEngine()
         # 窗口设置
         super().__init__(*args, **kwargs)
-        self.setWindowIcon(QIcon(favicon_ico))
-        font = QFont('微软雅黑')
+        self.setWindowIcon(QtGui.QIcon(favicon_ico))
+        font = QtGui.QFont('微软雅黑')
         font.setPixelSize(14)
         self.setFont(font)
         self.resize(self.minimumSize())
         self.setupUi(self)
-        # 调整分辨率时不改变窗口大小
-        self.sizeChanged.connect(lambda x: self.resize(x[0], x[1]))
+        # 防止屏幕缩放影响窗口布局
+        self.sizeChanged.connect(lambda x: self.resize(self.minimumSize()))
         # 隐藏输入框清空按钮
         self.pushButton_7.hide()
         # 隐藏输出框和输出控件
@@ -73,11 +74,11 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.comboBox_3.currentIndexChanged.connect(self.comboBox_3CurrentIndexChanged)
         self.refreshDisableIndex()
         # 监听剪切板
-        self.clipboard = QApplication.clipboard()
+        self.clipboard = QtWidgets.QApplication.clipboard()
         self.clipboard.dataChanged.connect(self.clipboardChanged)
         self.clipboard_flag = False
         # 翻译定时器
-        self.timer = QTimer(self)
+        self.timer = QtCore.QTimer(self)
         self.timer.timeout.connect(self.startTrans)
         # 文本输入框当前内容
         self.textEditCurrentContent = ''
@@ -87,7 +88,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         # 翻译状态（True-正在翻译；False-翻译结束）
         self.trans_started = False
         # 主窗口尺寸缩放动画
-        self.animation = QPropertyAnimation(self, b"size", self)
+        self.animation = QtCore.QPropertyAnimation(self, b"size", self)
         self.animation.setDuration(100)  # 动画持续时间
 
     def getDefaultEngine(self):
@@ -102,14 +103,20 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
     def setDefaultEngine(self, obj):
         """创建翻译引擎的线程结束"""
         if obj is None:
-            msg = QMessageBox.question(self, '错误', '程序初始化失败，可能是网络不佳所致。是否重试？', QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-            if msg == QMessageBox.Yes:
+            msg = QtWidgets.QMessageBox.question(
+                self,
+                '错误',
+                '程序初始化失败，可能是网络不佳所致。是否重试？',
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                QtWidgets.QMessageBox.Yes
+            )
+            if msg == QtWidgets.QMessageBox.Yes:
                 self.getDefaultEngine()
             else:
                 self.close()
         self.trans_engine = obj
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def on_checkBox_clicked(self):
         """ 复选框状态变更
         勾选状态开启复制翻译
@@ -137,7 +144,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                 self.float_window.pushButtonClicked.connect(self.gotoMainWindow)
                 self.float_window.radioButtonClicked.connect(self.checkBox.click)
                 self.float_window.show()
-                move_widget(self.float_window, QDesktopWidget().screenGeometry(), QCursor.pos(), 10)
+                move_widget(self.float_window, QtWidgets.QDesktopWidget().screenGeometry(), QtGui.QCursor.pos(), 10)
                 # 通过线程关闭悬浮窗
                 self.mouse_check_thread = MouseCheckThread(self.float_window)
                 self.mouse_check_thread.trigger.connect(self.float_window.close)
@@ -170,16 +177,16 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
     def refreshDisableIndex(self):
         """刷新源语言/目标语言下拉禁用选项"""
         # 解除上次禁用选项
-        self.comboBox_2.setItemData(self.comboBox_2DisableIndex, 1 | 32, Qt.UserRole - 1)
-        self.comboBox_3.setItemData(self.comboBox_3DisableIndex, 1 | 32, Qt.UserRole - 1)
+        self.comboBox_2.setItemData(self.comboBox_2DisableIndex, 1 | 32, QtCore.Qt.UserRole - 1)
+        self.comboBox_3.setItemData(self.comboBox_3DisableIndex, 1 | 32, QtCore.Qt.UserRole - 1)
         if source_lang.get(self.comboBox_2.currentText()):
             self.comboBox_2DisableIndex = self.comboBox_3.currentIndex() + 1
             self.comboBox_3DisableIndex = self.comboBox_2.currentIndex() - 1
-            self.comboBox_2.setItemData(self.comboBox_2DisableIndex, 0, Qt.UserRole - 1)
-            self.comboBox_3.setItemData(self.comboBox_3DisableIndex, 0, Qt.UserRole - 1)
+            self.comboBox_2.setItemData(self.comboBox_2DisableIndex, 0, QtCore.Qt.UserRole - 1)
+            self.comboBox_3.setItemData(self.comboBox_3DisableIndex, 0, QtCore.Qt.UserRole - 1)
         else:
             self.comboBox_2DisableIndex = self.comboBox_3.currentIndex() + 1
-            self.comboBox_2.setItemData(self.comboBox_2DisableIndex, 0, Qt.UserRole - 1)
+            self.comboBox_2.setItemData(self.comboBox_2DisableIndex, 0, QtCore.Qt.UserRole - 1)
 
     def comboBox_2CurrentIndexChanged(self):
         """ 源语言下拉列表索引变更
@@ -207,7 +214,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         elif self.textEdit.toPlainText():
             self.startTrans()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def on_pushButton_clicked(self):
         """ 点击置顶按钮
         点击置顶按钮，使窗口始终显示在最前端
@@ -221,7 +228,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         else:
             self.pushButton.setStyleSheet(style_sheet_transparent)
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def on_pushButton_6_clicked(self):
         """ 点击语言对调按钮
         调换源语言与目标语言
@@ -232,7 +239,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             self.comboBox_2.setCurrentIndex(combobox_3_index + 1)
             self.comboBox_3.setCurrentIndex(combobox_2_index - 1)
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def on_pushButton_4_clicked(self):
         """ 点击截图翻译按钮
         隐藏主窗口，启动截屏
@@ -242,14 +249,14 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.screenshot.completed.connect(self.screenshotCompleted)
         self.screenshot.show()  # 显示截屏窗口
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def on_pushButton_5_clicked(self):
         """ 翻译按钮状态变更
         点击翻译按钮立即发起翻译
         """
         self.startTrans()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def on_textEdit_textChanged(self):
         """ 文本输入框内容变更
         文本输入框内容发生变化时对内容进行检查
@@ -264,9 +271,9 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             if text.find('file:///') == 0:  # 如果文本框输入文件则对文件进行检查，如果输入的是图片则进行识别翻译，否则弹窗提示
                 file_name = text.split('\n')[0].replace('file:///', '')
                 self.textEdit.setText('<i>正在识别翻译，请稍候...</i>')
-                QApplication.processEvents()  # 刷新界面
+                QtWidgets.QApplication.processEvents()  # 刷新界面
                 if file_name.split('.')[-1:][0].lower() not in ['jpg', 'png']:
-                    QMessageBox.information(self, '提示', '仅支持 jpg 或 png 格式的图片')
+                    QtWidgets.QMessageBox.information(self, '提示', '仅支持 jpg 或 png 格式的图片')
                     self.textEdit.clear()
                     return None
                 with open(file_name, 'rb') as f:
@@ -284,7 +291,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             self.textBrowser_2.clear()
             # 重设窗口大小
             self.hide_widget()
-            self.animation.setEndValue(QSize(self.width(), MIN_H))
+            self.animation.setEndValue(QtCore.QSize(self.width(), MIN_H))
             self.animation.start()
         # 输入框内容不为空时显示清空按钮，否则隐藏清空按钮
         if self.textEdit.toPlainText():
@@ -300,7 +307,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             self.textEdit.setText(text)
             self.startTrans()
         else:
-            QMessageBox.information(self, '提示', '没有从图片中识别到文字！')
+            QtWidgets.QMessageBox.information(self, '提示', '没有从图片中识别到文字！')
             self.textEdit.clear()
 
     def startTrans(self):
@@ -309,11 +316,11 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         if self.trans_started:
             return None
         if self.trans_engine is None:
-            QMessageBox.information(self, '提示', '程序正在初始化中，请稍候重试！')
+            QtWidgets.QMessageBox.information(self, '提示', '程序正在初始化中，请稍候重试！')
             return None
         query = self.textEdit.toPlainText().strip()
         if not query:
-            QMessageBox.information(self, '提示', '请输入翻译内容')
+            QtWidgets.QMessageBox.information(self, '提示', '请输入翻译内容')
             return None
         from_str = source_lang.get(self.comboBox_2.currentText())
         to_str = target_lang.get(self.comboBox_3.currentText())
@@ -332,7 +339,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             # 输入框没有内容则直接返回
             return None
         if not data:
-            QMessageBox.information(self, '提示', '翻译结果为空，请重试！')
+            QtWidgets.QMessageBox.information(self, '提示', '翻译结果为空，请重试！')
             return None
         self.trans_result = data  # 翻译结果
         trans_result = get_trans_result(data)  # 直译
@@ -348,7 +355,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             self.textBrowser_2.setText(explanation_html)
             # 重设窗口大小
             self.hide_widget()
-            self.animation.setEndValue(QSize(self.width(), MAX_H))
+            self.animation.setEndValue(QtCore.QSize(self.width(), MAX_H))
             self.animation.finished.connect(lambda: self.change_widget(1))
             self.animation.start()
         else:
@@ -358,7 +365,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             # 重设窗口大小
             h = self.widget_3.height() + self.textBrowser.height()
             self.hide_widget()
-            self.animation.setEndValue(QSize(self.width(), MAX_H - h))
+            self.animation.setEndValue(QtCore.QSize(self.width(), MAX_H - h))
             self.animation.finished.connect(lambda: self.change_widget(2))
             self.animation.start()
         from_str = data['trans_result']['from']
@@ -417,13 +424,13 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         获取单词发音并创建播放器进行播放
         """
         # 将语音写入缓冲区
-        buffer = QBuffer(self)
+        buffer = QtCore.QBuffer(self)
         buffer.setData(voice_data)
-        buffer.open(QIODevice.ReadOnly)
+        buffer.open(QtCore.QIODevice.ReadOnly)
         # 创建播放器
-        player = QMediaPlayer(self)
+        player = QtMultimedia.QMediaPlayer(self)
         player.setVolume(100)
-        player.setMedia(QMediaContent(), buffer)
+        player.setMedia(QtMultimedia.QMediaContent(), buffer)
         sleep(0.01)  # 延时等待 setMedia 完成。
         # 播放语音
         player.play()
@@ -437,7 +444,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         img_data = img.data()  # 获取截图
         if img_data:
             self.textEdit.setText('<i>正在识别翻译，请稍候...</i>')
-            QApplication.processEvents()  # 刷新界面
+            QtWidgets.QApplication.processEvents()  # 刷新界面
             # 通过线程进行图像文字识别
             self.ocr_thread = BaiduOCRThread(img_data)
             self.ocr_thread.trigger.connect(self.transImageText)
@@ -469,7 +476,7 @@ class FloatWindow(FloatWidget, Ui_FloatWindow):
         # 窗口初始化
         super().__init__(*args, **kwargs)
         # 窗口设置
-        font = QFont('微软雅黑')
+        font = QtGui.QFont('微软雅黑')
         font.setPixelSize(14)
         self.setFont(font)
         self.setupUi(self)
@@ -524,23 +531,25 @@ class FloatWindow(FloatWidget, Ui_FloatWindow):
         获取单词发音并创建播放器进行播放
         """
         # 将语音写入缓冲区
-        buffer = QBuffer(self)
+        buffer = QtCore.QBuffer(self)
         buffer.setData(voice_data)
-        buffer.open(QIODevice.ReadOnly)
+        buffer.open(QtCore.QIODevice.ReadOnly)
         # 创建播放器
-        player = QMediaPlayer(self)
+        player = QtMultimedia.QMediaPlayer(self)
         player.setVolume(100)
-        player.setMedia(QMediaContent(), buffer)
+        player.setMedia(QtMultimedia.QMediaContent(), buffer)
         sleep(0.01)  # 延时等待 setMedia 完成。
         # 播放语音
         player.play()
 
 
 if __name__ == '__main__':
+    # 高分辨率屏幕自适应
+    QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     # 创建QApplication类的实例
-    app = QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     # 汉化右键菜单
-    translator = QTranslator()
+    translator = QtCore.QTranslator()
     translator.load(widgets_zh_CN_qm)
     app.installTranslator(translator)
     # 创建主窗口
