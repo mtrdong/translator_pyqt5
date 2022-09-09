@@ -278,7 +278,7 @@ class BaiDuTrans(object):
         response = self._post(path, form_data, files)
         data = json.loads(response.content)
         try:
-            return ''.join(data['data'].get('src'))
+            return '\n'.join(data['data'].get('src'))
         except:
             return ''
 
