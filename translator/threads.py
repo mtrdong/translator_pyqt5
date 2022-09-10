@@ -6,7 +6,7 @@ from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QWidget, QGraphicsOpacityEffect, QApplication
 
-from baidu_trans_spider import BaiDuTrans
+from transl_baidu import BaiduTranslate
 from utils import baidu_ocr
 
 __all__ = [
@@ -63,7 +63,7 @@ class BaiduTransThread(QThread):
 
     def run(self):
         try:
-            baidu_trans = BaiDuTrans()
+            baidu_trans = BaiduTranslate()
         except:
             baidu_trans = None
         self.trigger.emit(baidu_trans)  # 信号发送百度翻译对象
@@ -81,7 +81,7 @@ class StartTransThread(QThread):
 
     def run(self):
         try:
-            data = BaiDuTrans().start_trans(self.query, self.to_str, self.from_str)
+            data = BaiduTranslate().start_trans(self.query, self.to_str, self.from_str)
         except:
             data = dict()
         self.trigger.emit(data)  # 信号发送翻译结果
@@ -97,7 +97,7 @@ class DownloadVoiceThread(QThread):
         self.text = text
 
     def run(self):
-        data = BaiDuTrans().get_tts(self.lan, self.text)
+        data = BaiduTranslate().get_tts(self.lan, self.text)
         if data is None:
             data = bytes()
         self.trigger.emit(data)  # 信号发送数据
@@ -113,5 +113,5 @@ class BaiduOCRThread(QThread):
 
     def run(self):
         # text = baidu_ocr(self.image)  # 精度高，推荐
-        text = BaiDuTrans().get_str_from_img(self.image)  # 精度低，备用
+        text = BaiduTranslate().get_str_from_img(self.image)  # 精度低，备用
         self.trigger.emit(text)  # 信号发送文本

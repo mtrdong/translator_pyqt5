@@ -61,7 +61,7 @@ def e(r: str):
     return f'{p}.{p ^ m}'
 
 
-class BaiDuTrans(object):
+class BaiduTranslate(object):
     """ 百度翻译爬虫
     实例化爬虫后调用`start_trans()`方法进行翻译，调用`get_result()`方法获取翻译结果用于控制台输出
     调用`get_tts()`方法可获取发音
@@ -71,7 +71,7 @@ class BaiDuTrans(object):
 
     def __new__(cls, *args, **kwargs):
         with cls._instance_lock:
-            if not hasattr(BaiDuTrans, '_instance'):
+            if not hasattr(BaiduTranslate, '_instance'):
                 cls._instance = object.__new__(cls)
         return cls._instance
 
@@ -284,7 +284,7 @@ class BaiDuTrans(object):
 
 
 if __name__ == '__main__':
-    bt = BaiDuTrans()
+    bt = BaiduTranslate()
     while 1:
         word = input('请输入您要翻译的内容: ')
         if not word:
