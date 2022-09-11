@@ -408,6 +408,10 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.comboBox.currentIndexChanged.connect(self.comboBoxCurrentIndexChanged)
         self.source_lang = None  # 源语言代码
         self.target_lang = None  # 目标语言代码
+        self.comboBox_2DisableIndex = 0
+        self.comboBox_3DisableIndex = 0
+        self.comboBox_2.currentIndexChanged.connect(self.comboBox_2CurrentIndexChanged)
+        self.comboBox_3.currentIndexChanged.connect(self.comboBox_3CurrentIndexChanged)
         self.setLangItems()
         # 通过线程创建翻译引擎对象
         self.transl_engine = None  # 翻译引擎对象
@@ -420,8 +424,6 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         # 翻译定时器
         self.timer = QtCore.QTimer(self)
         self.timer.timeout.connect(self.startTransl)
-        # 跳过标志
-        self.skip_flag = False
         # 文本输入框当前内容
         self.textEditCurrentContent = ''
         # 全局截屏翻译快捷键
@@ -486,7 +488,9 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                 combobox_2_index = self.comboBox_2.currentIndex()
                 combobox_3_index = self.comboBox_3.currentIndex()
                 self.comboBox_2.setCurrentIndex(combobox_3_index + 1)
+                self.comboBox_3.blockSignals(True)  # 关闭信号连接
                 self.comboBox_3.setCurrentIndex(combobox_2_index - 1)
+                self.comboBox_3.blockSignals(False)  # 恢复信号连接
 
     @QtCore.pyqtSlot()
     def on_textEdit_textChanged(self):
@@ -495,21 +499,19 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         如果输入内容为图片，则对图片进行识别并发起翻译
         如果输入内容为文本，则设置一个定时器，定时结束时自动发起翻译
         """
-        if self.skip_flag:
-            self.skip_flag = False
-            return None
         self.timer.stop()  # 文本框内容发生变化时停止定时器
         text = self.textEdit.toPlainText().strip()
         if text:
             if text.find('file:///') == 0:  # 如果文本框输入文件则对文件进行检查，如果输入的是图片则进行识别翻译，否则弹窗提示
                 file_name = text.split('\n')[0].replace('file:///', '')
-                self.skip_flag = True
+                self.textEdit.blockSignals(True)  # 关闭信号连接
                 self.textEdit.setText('<i>正在识别翻译，请稍候...</i>')
                 QtWidgets.QApplication.processEvents()  # 刷新界面
                 if file_name.split('.')[-1:][0].lower() not in ['jpg', 'png']:
                     QtWidgets.QMessageBox.information(self, '提示', '仅支持 jpg 或 png 格式的图片')
                     self.textEdit.clear()
                     return None
+                self.textEdit.blockSignals(False)  # 恢复信号连接
                 with open(file_name, 'rb') as f:
                     img = f.read()
                 # 通过线程进行图像文字识别
@@ -609,17 +611,17 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             target_lang_items = source_lang_items.copy()
             target_lang_items.pop(0)
         # 源语言下拉列表
+        self.comboBox_2.blockSignals(True)  # 关闭信号连接
         self.comboBox_2.clear()
         self.comboBox_2.addItems(source_lang_items)
         self.comboBox_2.setCurrentIndex(0)
-        self.comboBox_2DisableIndex = 0
-        self.comboBox_2.currentIndexChanged.connect(self.comboBox_2CurrentIndexChanged)
+        self.comboBox_2.blockSignals(False)  # 恢复信号连接
         # 目标语言下拉列表
+        self.comboBox_3.blockSignals(True)
         self.comboBox_3.clear()
         self.comboBox_3.addItems(target_lang_items)
         self.comboBox_3.setCurrentIndex(0)
-        self.comboBox_3DisableIndex = 0
-        self.comboBox_3.currentIndexChanged.connect(self.comboBox_3CurrentIndexChanged)
+        self.comboBox_3.blockSignals(False)
         # 设置源语言和目标语言，并刷新源语言/目标语言下拉列表禁用选项
         self.source_lang = eval(f'lang_{engine_val}.get("{source_lang_items[0]}")')
         self.target_lang = eval(f'lang_{engine_val}.get("{target_lang_items[0]}")')
@@ -642,10 +644,9 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.source_lang = eval(f'lang_{engine_val}.get("{self.comboBox_2.currentText()}")')
         if engine_val != 'youdao':
             self.refreshDisableIndex()
-            if self.skip_flag:
-                self.skip_flag = False
-            elif self.textEdit.toPlainText():
-                self.startTransl()
+            if engine_val == 'baidu':  # TODO 暂时仅支持百度翻译
+                if self.textEdit.toPlainText():
+                    self.startTransl()
 
     def comboBox_3CurrentIndexChanged(self):
         """ 目标语言下拉列表索引变更
@@ -657,10 +658,9 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.target_lang = eval(f'lang_{engine_val}.get("{self.comboBox_3.currentText()}")')
         if engine_val != 'youdao':
             self.refreshDisableIndex()
-            if self.skip_flag:
-                self.skip_flag = False
-            elif self.textEdit.toPlainText():
-                self.startTransl()
+            if engine_val == 'baidu':  # TODO 暂时仅支持百度翻译
+                if self.textEdit.toPlainText():
+                    self.startTransl()
 
     def refreshDisableIndex(self):
         """刷新源语言/目标语言下拉禁用选项"""
@@ -685,8 +685,9 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.showNormal()  # 显示主窗口
         img_data = img.data()  # 获取截图
         if img_data:
-            self.skip_flag = True
+            self.textEdit.blockSignals(True)
             self.textEdit.setText('<i>正在识别翻译，请稍候...</i>')
+            self.textEdit.blockSignals(False)
             QtWidgets.QApplication.processEvents()  # 刷新界面
             # 通过线程进行图像文字识别
             self.ocr_thread = BaiduOCRThread(img_data)
@@ -702,12 +703,14 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             self.startTransl()
         else:
             QtWidgets.QMessageBox.information(self, '提示', '没有从图片中识别到文字！')
+            self.textEdit.blockSignals(True)
             self.textEdit.clear()
+            self.textEdit.blockSignals(False)
 
     def startTransl(self):
         """启动翻译并输出翻译结果"""
         self.timer.stop()  # 主动发起翻译时关闭定时器
-        if engine.get(self.comboBox.currentText()) != 'baidu':  # TODO 其他翻译尚未实现
+        if engine.get(self.comboBox.currentText()) != 'baidu':  # TODO 暂时仅支持百度翻译
             QtWidgets.QMessageBox.information(self, '提示', '目前仅支持百度翻译！')
             return None
         if self.transl_started:
@@ -767,8 +770,10 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         to_str = data['trans_result']['to']
         if self.target_lang != to_str:
             index = list(eval(f'lang_{engine.get(self.comboBox.currentText())}.values()')).index(to_str) - 1
-            self.skip_flag = True
+            self.comboBox_3.blockSignals(True)  # 关闭信号连接
             self.comboBox_3.setCurrentIndex(index)
+            self.comboBox_3.blockSignals(False)  # 恢复信号连接
+            self.refreshDisableIndex()
 
     def voiceButtonClicked(self):
         """点击语音播报按钮"""
