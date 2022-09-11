@@ -4,13 +4,6 @@ from hashlib import md5
 
 import requests
 
-lang = {
-    '中英': 'en',
-    '中法': 'fr',
-    '中韩': 'ko',
-    '中日': 'ja',
-}
-
 
 class YoudaoTranslate(object):
     """有道翻译爬虫"""

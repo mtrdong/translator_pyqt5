@@ -7,12 +7,14 @@ from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QWidget, QGraphicsOpacityEffect, QApplication
 
 from transl_baidu import BaiduTranslate
+from transl_google import GoogleTranslate
+from transl_youdao import YoudaoTranslate
 from utils import baidu_ocr
 
 __all__ = [
     'MouseCheckThread',
     'FadeInThread',
-    'BaiduTransThread',
+    'TranslThread',
     'StartTransThread',
     'DownloadVoiceThread',
     'BaiduOCRThread',
@@ -57,16 +59,25 @@ class FadeInThread(QThread):
         self.trigger.emit(True)
 
 
-class BaiduTransThread(QThread):
-    """创建百度翻译对象"""
+class TranslThread(QThread):
+    """创建翻译引擎对象"""
     trigger = pyqtSignal(object)
+
+    def __init__(self, select: str):
+        super().__init__()
+        self.select = select
 
     def run(self):
         try:
-            baidu_trans = BaiduTranslate()
+            if self.select == 'youdao':
+                obj = YoudaoTranslate()
+            elif self.select == 'google':
+                obj = GoogleTranslate()
+            else:
+                obj = BaiduTranslate()
         except:
-            baidu_trans = None
-        self.trigger.emit(baidu_trans)  # 信号发送百度翻译对象
+            obj = None
+        self.trigger.emit(obj)  # 信号发送百度翻译对象
 
 
 class StartTransThread(QThread):
