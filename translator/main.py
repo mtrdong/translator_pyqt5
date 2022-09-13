@@ -9,12 +9,13 @@ from PyQt5 import QtMultimedia
 from PyQt5 import QtWidgets
 from system_hotkey import SystemHotkey
 
-from FloatWindow_ui import Ui_FloatWindow
+from FloatWindow import FloatWindow
 from MainWindow_ui import Ui_MainWindow
-from resource import favicon_ico, widgets_zh_CN_qm
+from ScreenshotWindow import ScreenshotWindow
+from resource import widgets_zh_CN_qm, favicon_ico
 from threads import *
 from utils import *
-from widgets import FramelessWidget, Screenshot, FloatWidget, move_widget
+from widgets import FramelessWidget
 
 # 窗口最大、最小高度
 MAX_H, MIN_H = 692, 259
@@ -467,9 +468,10 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         隐藏主窗口，启动截屏
         """
         self.hide()  # 隐藏主窗口
-        self.screenshot = Screenshot()  # 创建截屏窗口
-        self.screenshot.completed.connect(self.screenshotCompleted)
-        self.screenshot.show()  # 显示截屏窗口
+        self.screenshot_window = ScreenshotWindow()  # 创建截屏窗口
+        self.screenshot_window.completed.connect(self.screenshotCompleted)
+        self.screenshot_window.destroyed.connect(self.deleteScreenshotWindow)
+        self.screenshot_window.show()  # 显示截屏窗口
 
     @QtCore.pyqtSlot()
     def on_pushButton_5_clicked(self):
@@ -550,6 +552,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                 self.float_window = FloatWindow(data.text())
                 self.float_window.pushButtonClicked.connect(self.gotoMainWindow)
                 self.float_window.radioButtonClicked.connect(self.checkBox.click)
+                self.float_window.destroyed.connect(self.deleteFloatWindow)
                 self.float_window.show()
                 # 标记正在翻译
                 self.transl_started = True
@@ -676,7 +679,6 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """ 截屏完成
         获取屏幕截图，并进行文字识别
         """
-        self.screenshot.deleteLater()  # 回收截屏窗口
         self.showNormal()  # 显示主窗口
         img_data = img.data()  # 获取截图
         if img_data:
@@ -842,77 +844,13 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             self.textBrowser_2.show()
             self.fade_in_thread.start()
 
+    def deleteScreenshotWindow(self):
+        """回收截图窗口"""
+        del self.screenshot_window
 
-class FloatWindow(FloatWidget, Ui_FloatWindow):
-    def __init__(self, query: str, *args, **kwargs):
-        # 窗口初始化
-        super().__init__(*args, **kwargs)
-        # 窗口设置
-        font = QtGui.QFont('微软雅黑')
-        font.setPixelSize(14)
-        self.setFont(font)
-        self.setupUi(self)
-        # 翻译内容
-        self.query = query
-        # 信号连接
-        self.radioButton.clicked.connect(lambda x: self.radioButtonClicked.emit(self.radioButton.isChecked()))
-        self.pushButton.clicked.connect(lambda x: self.pushButtonClicked.emit(self.query))
-        self.textBrowser_2.anchorClicked.connect(self.anchorClicked)
-        # 初始化输出
-        self.textBrowser.setText("<strong>{}</strong>".format(self.query))
-        self.textBrowser_2.setText("<i style='color: #606060;'>正在翻译...</i>")
-
-    def outResult(self, data):
-        """输出翻译结果"""
-        trans_result = get_trans_result(data)  # 直译
-        word_means = get_word_means(data)  # 释义
-        spell_html = get_spell_html(data)  # 音标
-        if not (trans_result or word_means):
-            self.textBrowser_3.setText('<div style="color: #FF3C3C;">翻译结果为空，请重试</div>')
-            self.textBrowser_2.hide()
-        elif spell_html:
-            explanation_html = '<div style="color: #3C3C3C;"><p>{}</p></div>'.format(spell_html)
-            word_means_html = '<div style="color: #3C3C3C;">{}</div>'.format(word_means if word_means else trans_result)
-            self.textBrowser_2.setText(explanation_html)
-            self.textBrowser_3.setText(word_means_html)
-        else:
-            trans_result_html = '<div style="color: #3C3C3C;">{}<div>'.format(trans_result)
-            self.textBrowser_3.setText(trans_result_html)
-            self.textBrowser_2.hide()
-
-    def anchorClicked(self, url):
-        """ 点击底部输出框中的链接
-        点击输出框中音标发音按钮时，获取单词发音并播放
-        点击输出框中文本链接的时候，提取文本并进行翻译
-        """
-        url = url.url().replace('#', '')
-        if url in ['英', '美', '音']:  # 点击发音按钮
-            if url == '英':
-                lan = 'en'
-            elif url == '美':
-                lan = 'uk'
-            else:
-                lan = 'zh'
-            # 通过线程下载并播放发音
-            self.voice_thread = DownloadVoiceThread(lan, self.query)
-            self.voice_thread.trigger.connect(self.playVoice)
-            self.voice_thread.start()
-
-    def playVoice(self, voice_data):
-        """ 下载单词发音的线程结束
-        获取单词发音并创建播放器进行播放
-        """
-        # 将语音写入缓冲区
-        buffer = QtCore.QBuffer(self)
-        buffer.setData(voice_data)
-        buffer.open(QtCore.QIODevice.ReadOnly)
-        # 创建播放器
-        player = QtMultimedia.QMediaPlayer(self)
-        player.setVolume(100)
-        player.setMedia(QtMultimedia.QMediaContent(), buffer)
-        sleep(0.01)  # 延时等待 setMedia 完成。
-        # 播放语音
-        player.play()
+    def deleteFloatWindow(self):
+        """回收悬浮窗口"""
+        del self.float_window
 
 
 if __name__ == '__main__':
