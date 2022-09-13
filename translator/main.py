@@ -551,11 +551,6 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                 self.float_window.pushButtonClicked.connect(self.gotoMainWindow)
                 self.float_window.radioButtonClicked.connect(self.checkBox.click)
                 self.float_window.show()
-                move_widget(self.float_window, QtWidgets.QDesktopWidget().screenGeometry(), QtGui.QCursor.pos(), 10)
-                # 通过线程关闭悬浮窗
-                self.mouse_check_thread = MouseCheckThread(self.float_window)
-                self.mouse_check_thread.trigger.connect(self.float_window.close)
-                self.mouse_check_thread.start()
                 # 标记正在翻译
                 self.transl_started = True
 

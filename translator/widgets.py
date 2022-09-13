@@ -1,23 +1,23 @@
 # -*- coding: utf-8 -*-
-from PyQt5.QtCore import pyqtSignal, Qt, QRectF, QBuffer, qAbs, QRect, QIODevice, QPoint, QPropertyAnimation
-from PyQt5.QtGui import QPainter, QPainterPath, QColor, QPen, QKeySequence, QGuiApplication, QCursor
-from PyQt5.QtWidgets import QWidget, QTextEdit, QGraphicsDropShadowEffect, QApplication, QLabel, QDesktopWidget, QShortcut
+from PyQt5 import QtCore, QtWidgets, QtGui
+
+from threads import MouseCheckThread
 
 
-class FramelessWidget(QWidget):
+class FramelessWidget(QtWidgets.QWidget):
     """ 自定义Widget(主窗口)
     1. 无边框、置顶/取消置顶
     2. 添加阴影
     3. 鼠标拖动
     """
-    sizeChanged = pyqtSignal(tuple)
+    sizeChanged = QtCore.pyqtSignal(tuple)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # 背景透明
-        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
         # 无边框
-        self.setWindowFlags(Qt.Window | Qt.FramelessWindowHint | Qt.WindowMinMaxButtonsHint)
+        self.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowMinMaxButtonsHint)
         # 初始化变量
         self.topHintFlag = False
         self.currentWidth = 0
@@ -27,13 +27,13 @@ class FramelessWidget(QWidget):
 
     def staysOnTopHint(self):
         """置顶/取消置顶"""
-        default = Qt.Window | Qt.FramelessWindowHint | Qt.WindowMinMaxButtonsHint
+        default = QtCore.Qt.Window | QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowMinMaxButtonsHint
         windowHandle = self.windowHandle()
         if self.topHintFlag:
             windowHandle.setFlags(default)
             self.topHintFlag = False
         else:
-            windowHandle.setFlags(default | Qt.WindowStaysOnTopHint)
+            windowHandle.setFlags(default | QtCore.Qt.WindowStaysOnTopHint)
             self.topHintFlag = True
         windowHandle.show()
 
@@ -45,23 +45,23 @@ class FramelessWidget(QWidget):
             self.currentWidth = self.size().width()
             self.currentHeight = self.size().height()
         # 窗口阴影
-        painter = QPainter(self)
+        painter = QtGui.QPainter(self)
         painter.setRenderHint(painter.Antialiasing)
-        color = QColor(Qt.gray)
+        color = QtGui.QColor(QtCore.Qt.gray)
         num = 11  # 阴影宽度 = 内边距 + 2
         for i in range(num):
-            painterPath = QPainterPath()
-            painterPath.setFillRule(Qt.WindingFill)
-            ref = QRectF(num - i, num - i, self.width() - (num - i) * 2, self.height() - (num - i) * 2)
+            painterPath = QtGui.QPainterPath()
+            painterPath.setFillRule(QtCore.Qt.WindingFill)
+            ref = QtCore.QRectF(num - i, num - i, self.width() - (num - i) * 2, self.height() - (num - i) * 2)
             painterPath.addRoundedRect(ref, 0, 0)
             color.setAlpha(int(150 - i ** 0.5 * 50))
             painter.setPen(color)
             painter.drawPath(painterPath)
         # 窗口背景
-        painter_2 = QPainter(self)
+        painter_2 = QtGui.QPainter(self)
         painter_2.setRenderHint(painter_2.Antialiasing)
-        painter_2.setBrush(QColor(240, 240, 240, 255))
-        painter_2.setPen(Qt.transparent)
+        painter_2.setBrush(QtGui.QColor(240, 240, 240, 255))
+        painter_2.setPen(QtCore.Qt.transparent)
         rect = self.rect()
         rect.setLeft(num)
         rect.setTop(num)
@@ -70,13 +70,13 @@ class FramelessWidget(QWidget):
         painter_2.drawRoundedRect(rect, 0, 0)
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
+        if event.button() == QtCore.Qt.LeftButton:
             self.mPos = event.globalPos() - self.pos()  # 鼠标相对窗口的位置
             self.mFlag = True
             event.accept()
 
     def mouseMoveEvent(self, event):
-        if Qt.LeftButton and self.mFlag:
+        if QtCore.Qt.LeftButton and self.mFlag:
             self.move(event.globalPos() - self.mPos)  # 窗口跟随鼠标移动
             event.accept()
 
@@ -84,7 +84,7 @@ class FramelessWidget(QWidget):
         self.mFlag = False
 
 
-class MyTextEdit(QTextEdit):
+class MyTextEdit(QtWidgets.QTextEdit):
     """ 自定义TextEdit
     1. 自定义右键菜单
     2. 插入文件时清空文本框
@@ -93,31 +93,31 @@ class MyTextEdit(QTextEdit):
     def __init__(self, *args):
         super().__init__(*args)
         # 阴影设置
-        self.effect = QGraphicsDropShadowEffect(self)
+        self.effect = QtWidgets.QGraphicsDropShadowEffect(self)
         self.effect.setOffset(0, 2)
         self.effect.setBlurRadius(10)
         # 变量初始化
-        self.clipboard = QApplication.clipboard()
+        self.clipboard = QtWidgets.QApplication.clipboard()
         self.currentHeight = 0
 
     # def contextMenuEvent(self, event):
     #     """自定义右键菜单"""
-    #     menu = QMenu()
+    #     menu = QtWidgets.QMenu()
     #     undo = menu.addAction("撤销")
-    #     undo.setShortcut(QKeySequence.Undo)
+    #     undo.setShortcut(QtGui.QKeySequence.Undo)
     #     redo = menu.addAction("恢复")
-    #     redo.setShortcut(QKeySequence.Redo)
+    #     redo.setShortcut(QtGui.QKeySequence.Redo)
     #     menu.addSeparator()
     #     cut = menu.addAction("剪切")
-    #     cut.setShortcut(QKeySequence.Cut)
+    #     cut.setShortcut(QtGui.QKeySequence.Cut)
     #     copy = menu.addAction("复制")
-    #     copy.setShortcut(QKeySequence.Copy)
+    #     copy.setShortcut(QtGui.QKeySequence.Copy)
     #     paste = menu.addAction("粘贴")
-    #     paste.setShortcut(QKeySequence.Paste)
+    #     paste.setShortcut(QtGui.QKeySequence.Paste)
     #     delete = menu.addAction("删除")
     #     menu.addSeparator()
     #     select_all = menu.addAction("选择全部")
-    #     select_all.setShortcut(QKeySequence.SelectAll)
+    #     select_all.setShortcut(QtGui.QKeySequence.SelectAll)
     #
     #     if self.textCursor().selectedText():
     #         cut.setEnabled(True)
@@ -173,19 +173,19 @@ class MyTextEdit(QTextEdit):
         super().paintEvent(event)
         if self.height() == self.maximumHeight() and self.currentHeight != self.maximumHeight():
             # 添加阴影
-            self.effect.setColor(QColor(240, 240, 240))
+            self.effect.setColor(QtGui.QColor(240, 240, 240))
             self.setGraphicsEffect(self.effect)
             self.currentHeight = self.height()
         elif self.height() == self.minimumHeight() and self.currentHeight != self.minimumHeight():
             # 去除阴影
-            self.effect.setColor(Qt.transparent)
+            self.effect.setColor(QtCore.Qt.transparent)
             self.setGraphicsEffect(self.effect)
             self.currentHeight = self.height()
         else:
             self.currentHeight = self.height()
 
 
-class MyLabel(QLabel):
+class MyLabel(QtWidgets.QLabel):
     """ 自定义Label
     鼠标移入隐藏，移出显示
     """
@@ -201,63 +201,63 @@ class MyLabel(QLabel):
         self.show()
 
 
-class Screenshot(QWidget):
+class Screenshot(QtWidgets.QWidget):
     """ 自定义Widget(屏幕截图)
     1. 启动截图时获取整个屏幕
     2. 按住鼠标左键移动选择截取区域
     3. 松开鼠标左键获取截图，并通过信号发送
     4. 按下鼠标右键或Esc键取消截图
     """
-    completed = pyqtSignal(QBuffer)
+    completed = QtCore.pyqtSignal(QtCore.QBuffer)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # 初始化窗口
         self.setMouseTracking(True)  # 鼠标追踪
-        self.setCursor(Qt.CrossCursor)  # 十字光标
-        self.setWindowFlags(Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)  # 无边框置顶
+        self.setCursor(QtCore.Qt.CrossCursor)  # 十字光标
+        self.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)  # 无边框置顶
         # 屏幕分宽高
-        self._screenGeometry = QDesktopWidget().screenGeometry()
+        self.screenGeometry = QtWidgets.QDesktopWidget().screenGeometry()
         # 初始化变量
-        self._pressLeftButton = False
-        self._beginPos = None
-        self._endPos = None
-        self._captureImage = None
-        self._fullScreenImage = None
-        self._painter = QPainter()
-        self._pen = QPen(QColor(30, 144, 245), 1, Qt.SolidLine, Qt.RoundCap)
+        self.pressLeftButton = False
+        self.beginPos = None
+        self.endPos = None
+        self.captureImage = None
+        self.fullScreenImage = None
+        self.painter = QtGui.QPainter()
+        self.pen = QtGui.QPen(QtGui.QColor(30, 144, 245), 1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap)
         # 创建提示框
-        self._createTipBox()
+        self.createTipBox()
         # Esc 键取消截屏
-        QShortcut(QKeySequence(self.tr("Esc")), self, self.cancel)
+        QtWidgets.QShortcut(QtGui.QKeySequence(self.tr("Esc")), self, self.cancel)
 
     def _createTipBox(self):
         """创建提示框"""
-        self._label = MyLabel(self)
-        self._label.setText("按住鼠标左键选择翻译区域<br>按下鼠标右键或Esc键取消截屏")
-        self._label.setStyleSheet("QLabel {background-color: rgba(0, 0, 0, 100); border: 1px solid transparent; font: 14px \"微软雅黑\"; color: rgb(255, 255, 255)}")
-        self._label.setObjectName("label")
+        self.label = MyLabel(self)
+        self.label.setText("按住鼠标左键选择翻译区域<br>按下鼠标右键或Esc键取消截屏")
+        self.label.setStyleSheet("QLabel {background-color: rgba(0, 0, 0, 100); border: 1px solid transparent; font: 14px \"微软雅黑\"; color: rgb(255, 255, 255)}")
+        self.label.setObjectName("label")
 
     def mousePressEvent(self, event):
         """ 鼠标按键按下
         左键按下记录鼠标按下位置
         """
-        if event.button() == Qt.LeftButton:
+        if event.button() == QtCore.Qt.LeftButton:
             # 关闭提示框
-            self._label.close()
+            self.label.close()
             # 点击鼠标左键开始截图
-            self._beginPos = event.pos()
-            self._pressLeftButton = True
+            self.beginPos = event.pos()
+            self.pressLeftButton = True
 
     def mouseReleaseEvent(self, event):
         """ 鼠标按键抬起
         记录鼠标抬起位置
         退出截图，并发送结束信号和截图
         """
-        if event.button() == Qt.LeftButton:
-            self._endPos = event.pos()
+        if event.button() == QtCore.Qt.LeftButton:
+            self.endPos = event.pos()
             self.finished()  # 截屏完成
-        elif event.button() == Qt.RightButton:
+        elif event.button() == QtCore.Qt.RightButton:
             self.cancel()  # 取消截屏
 
     def mouseMoveEvent(self, event):
@@ -265,32 +265,32 @@ class Screenshot(QWidget):
         更新鼠标移动位置
         提示框跟随鼠标移动
         """
-        if self._pressLeftButton:
-            self._endPos = event.pos()
+        if self.pressLeftButton:
+            self.endPos = event.pos()
             self.update()
         else:
-            move_widget(self._label, self._screenGeometry, event.pos())  # 提示框跟随鼠标移动
+            move_widget(self.label, self.screenGeometry, event.pos())  # 提示框跟随鼠标移动
 
     def paintEvent(self, event):
         """绘制屏幕选区"""
-        self._painter.begin(self)  # 开始重绘
-        self._painter.drawPixmap(0, 0, self._fullScreenImage)
-        self._painter.fillRect(self._fullScreenImage.rect(), QColor(0, 0, 0, 60))  # 黑色半透明遮罩
-        self._painter.setPen(self._pen)  # 蓝色画笔
-        if self._pressLeftButton and self._beginPos is not None and self._endPos is not None:
-            pickRect = self._getRectangle(self._beginPos, self._endPos)  # 获得要截图的矩形框
-            self._captureImage = self._fullScreenImage.copy(pickRect)  # 获取矩形框内的图片
-            self._painter.drawPixmap(pickRect.topLeft(), self._captureImage)  # 填充截取的图片
-            self._painter.drawRect(pickRect)  # 画矩形边框
-        self._painter.end()  # 结束重绘
+        self.painter.begin(self)  # 开始重绘
+        self.painter.drawPixmap(0, 0, self.fullScreenImage)
+        self.painter.fillRect(self.fullScreenImage.rect(), QtGui.QColor(0, 0, 0, 60))  # 黑色半透明遮罩
+        self.painter.setPen(self.pen)  # 蓝色画笔
+        if self.pressLeftButton and self.beginPos is not None and self.endPos is not None:
+            pickRect = self.getRectangle(self.beginPos, self.endPos)  # 获得要截图的矩形框
+            self.captureImage = self.fullScreenImage.copy(pickRect)  # 获取矩形框内的图片
+            self.painter.drawPixmap(pickRect.topLeft(), self.captureImage)  # 填充截取的图片
+            self.painter.drawRect(pickRect)  # 画矩形边框
+        self.painter.end()  # 结束重绘
 
     def _getRectangle(self, beginPoint, endPoint):
         """获取屏幕选区"""
-        pickRectWidth = int(qAbs(beginPoint.x() - endPoint.x()))
-        pickRectHeight = int(qAbs(beginPoint.y() - endPoint.y()))
+        pickRectWidth = int(QtCore.qAbs(beginPoint.x() - endPoint.x()))
+        pickRectHeight = int(QtCore.qAbs(beginPoint.y() - endPoint.y()))
         pickRectTop = beginPoint.x() if beginPoint.x() < endPoint.x() else endPoint.x()
         pickRectLeft = beginPoint.y() if beginPoint.y() < endPoint.y() else endPoint.y()
-        pickRect = QRect(pickRectTop, pickRectLeft, pickRectWidth if pickRectWidth > 0 else 1, pickRectHeight if pickRectHeight > 0 else 1)
+        pickRect = QtCore.QRect(pickRectTop, pickRectLeft, pickRectWidth if pickRectWidth > 0 else 1, pickRectHeight if pickRectHeight > 0 else 1)
         return pickRect
 
     def show(self):
@@ -301,9 +301,9 @@ class Screenshot(QWidget):
         获取屏幕，显示截屏窗口
         """
         if not self.isVisible():
-            self._fullScreenImage = QGuiApplication.primaryScreen().grabWindow(QApplication.desktop().winId())  # 获取整个屏幕
-            self._label.show()  # 显示提示框
-            move_widget(self._label, self._screenGeometry, QCursor.pos())  # 刷新提示框位置
+            self.fullScreenImage = QtGui.QGuiApplication.primaryScreen().grabWindow(QtWidgets.QApplication.desktop().winId())
+            self.label.show()  # 显示提示框
+            move_widget(self.label, self.screenGeometry, QtGui.QCursor.pos())  # 刷新提示框位置
             super().showFullScreen()  # 全屏显示截图窗口
 
     def finished(self):
@@ -311,10 +311,10 @@ class Screenshot(QWidget):
         通过信号发送截取的图片，并重置变量
         """
         # 截图转 QBuffer，并通过信号发送截图数据
-        buffer = QBuffer(self)
-        buffer.open(QIODevice.WriteOnly)
-        if self._captureImage:
-            self._captureImage.save(buffer, 'JPG')
+        buffer = QtCore.QBuffer(self)
+        buffer.open(QtCore.QIODevice.WriteOnly)
+        if self.captureImage:
+            self.captureImage.save(buffer, 'JPG')
         self.completed.emit(buffer)  # 发送信号
         # 重置变量
         self.reset()
@@ -323,49 +323,50 @@ class Screenshot(QWidget):
         """ 取消截屏
         丢弃截图并退出截屏
         """
-        self._captureImage = None  # 清除截图
+        self.captureImage = None  # 清除截图
         self.finished()
 
     def reset(self):
         """重置变量"""
-        self._pressLeftButton = False
-        self._beginPos = None
-        self._endPos = None
-        self._captureImage = None
-        self._fullScreenImage = None
+        self.pressLeftButton = False
+        self.beginPos = None
+        self.endPos = None
+        self.captureImage = None
+        self.fullScreenImage = None
 
 
-class FloatWidget(QWidget):
-    """ 自定义Widget(悬浮窗口)
+class FloatWidget(QtWidgets.QWidget):
+    """ 自定义Widget(悬浮窗)
     1. 无边框、圆角、置顶
     2. 添加阴影
     3. 淡入/淡出
+    4. 自动关闭
     """
-    radioButtonClicked = pyqtSignal(bool)
-    pushButtonClicked = pyqtSignal(str)
+    radioButtonClicked = QtCore.pyqtSignal(bool)
+    pushButtonClicked = QtCore.pyqtSignal(str)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # 无边框置顶
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
         # 背景透明
-        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
         # 阴影效果
-        self.effect = QGraphicsDropShadowEffect(self)
+        self.effect = QtWidgets.QGraphicsDropShadowEffect(self)
         self.effect.setOffset(0, 0)
         self.effect.setBlurRadius(10)
-        self.effect.setColor(QColor(200, 200, 200))
+        self.effect.setColor(QtGui.QColor(200, 200, 200))
         self.setGraphicsEffect(self.effect)
         # 淡入/淡出动画
-        self.animation = QPropertyAnimation(self, b"windowOpacity", self)
+        self.animation = QtCore.QPropertyAnimation(self, b"windowOpacity", self)
         self.animation.setDuration(200)  # 动画持续时间
 
     def paintEvent(self, event):
         # 窗口背景
-        painter = QPainter(self)
+        painter = QtGui.QPainter(self)
         painter.setRenderHint(painter.Antialiasing)
-        painter.setBrush(Qt.white)
-        painter.setPen(Qt.transparent)
+        painter.setBrush(QtCore.Qt.white)
+        painter.setPen(QtCore.Qt.transparent)
         rect = self.rect()
         rect.setLeft(10)
         rect.setTop(10)
@@ -378,22 +379,33 @@ class FloatWidget(QWidget):
 
     def show(self):
         """窗口淡入"""
-        if not self.isVisible():
-            # 先显示窗口再执行动画
-            super().show()
-            self.animation.setStartValue(0)
-            self.animation.setEndValue(1)
-            self.animation.start()
+        # 先显示窗口再执行动画
+        super().show()
+        move_widget(self, QtWidgets.QDesktopWidget().screenGeometry(), QtGui.QCursor.pos(), 10)  # 移动窗口到鼠标的位置
+        self.animation.setStartValue(0)
+        self.animation.setEndValue(1)
+        self.animation.start()
+        # 自动关闭窗口
+        self.auto_close()
 
     def close(self):
         """窗口淡出"""
+        # 先执行动画再回收窗口
         self.animation.setStartValue(1)
         self.animation.setEndValue(0)
         self.animation.start()
-        self.animation.finished.connect(self.deleteLater)  # 动画执行完毕再销毁窗口
+        self.animation.finished.connect(self.deleteLater)
+
+    def auto_close(self):
+        """ 自动关闭悬浮窗
+        通过线程扫描鼠标位置，当鼠标超出一定范围后自动关闭悬浮窗
+        """
+        self.mouse_check_thread = MouseCheckThread(self)
+        self.mouse_check_thread.trigger.connect(self.close)
+        self.mouse_check_thread.start()
 
 
-def move_widget(widget: QWidget, geometry: QRect, pos: QPoint = None, offset: int = 20):
+def move_widget(widget: QtWidgets.QWidget, geometry: QtCore.QRect, pos: QtCore.QPoint = None, offset: int = 20):
     """ 移动部件
     保持部件始终显示在屏幕内
     :param widget: 移动部件
