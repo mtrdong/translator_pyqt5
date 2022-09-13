@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import sys
+
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 from threads import MouseCheckThread
@@ -83,6 +85,11 @@ class FramelessWidget(QtWidgets.QWidget):
 
     def mouseReleaseEvent(self, event):
         self.mFlag = False
+
+    def closeEvent(self, event):
+        """关闭主窗口同时关闭所有子窗口"""
+        event.accept()
+        sys.exit(0)
 
 
 class FloatWidget(QtWidgets.QWidget):
