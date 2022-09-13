@@ -31,13 +31,14 @@ class MouseCheckThread(QThread):
     def run(self):
         widget_pos = self.widget.pos()
         with contextlib.suppress(Exception):
-            while 1:
+            while True:
                 mouse_pos = QCursor.pos()
                 pos = mouse_pos - widget_pos
                 if not (-20 <= pos.x() <= self.widget.width() + 20 and -20 <= pos.y() <= self.widget.height() + 20):
                     # 鼠标超出悬浮窗范围，发送信号并结束循环
                     self.trigger.emit(True)
                     break
+                sleep(0.1)
 
 
 class FadeInThread(QThread):
