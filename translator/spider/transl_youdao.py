@@ -1,28 +1,33 @@
 # -*- coding: utf-8 -*-
-import threading
 from hashlib import md5
+from threading import Lock
 
 import requests
 
 
 class YoudaoTranslate(object):
     """有道翻译爬虫"""
-    _instance_lock = threading.Lock()
+    _lock = Lock()
+    _instance = None
+    _init_flag = False
 
     def __new__(cls, *args, **kwargs):
-        with cls._instance_lock:
-            if not hasattr(YoudaoTranslate, '_instance'):
+        with cls._lock:
+            if cls._instance is None:
                 cls._instance = object.__new__(cls)
         return cls._instance
 
     def __init__(self):
-        self.url = 'https://dict.youdao.com/jsonapi_s?doctype=json&jsonversion=4'
-        self.headers = {
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                          'AppleWebKit/537.36 (KHTML, like Gecko) '
-                          'Chrome/105.0.0.0 Safari/537.36',
-        }
-        self.data = None
+        if not self._init_flag:
+            self._init_flag = True
+            self.session = requests.Session()
+            self.url = 'https://dict.youdao.com/jsonapi_s?doctype=json&jsonversion=4'
+            self.headers = {
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                              'AppleWebKit/537.36 (KHTML, like Gecko) '
+                              'Chrome/105.0.0.0 Safari/537.36',
+            }
+            self.data = None
 
     @staticmethod
     def get_form_data(text, le):
@@ -65,14 +70,14 @@ class YoudaoTranslate(object):
     def get_voice(self, params):
         """获取发音"""
         url = 'https://dict.youdao.com/dictvoice'
-        response = requests.get(url, params=params, headers=self.headers)
+        response = self.session.get(url, params=params, headers=self.headers)
         content = response.content
         return content
 
     def translate(self, query, le):
         """翻译"""
         form_data = self.get_form_data(query, le)
-        response = requests.post(self.url, data=form_data, headers=self.headers)
+        response = self.session.post(self.url, data=form_data, headers=self.headers)
         self.data = response.json()
 
 

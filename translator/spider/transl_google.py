@@ -1,27 +1,32 @@
 # -*- coding: utf-8 -*-
 import json
-import threading
+from threading import Lock
 
 import requests
 
 
 class GoogleTranslate(object):
     """谷歌翻译爬虫"""
-    _instance_lock = threading.Lock()
+    _lock = Lock()
+    _instance = None
+    _init_flag = False
 
     def __new__(cls, *args, **kwargs):
-        with cls._instance_lock:
-            if not hasattr(GoogleTranslate, '_instance'):
+        with cls._lock:
+            if cls._instance is None:
                 cls._instance = object.__new__(cls)
         return cls._instance
 
     def __init__(self):
-        self.url = 'https://translate.google.cn/_/TranslateWebserverUi/data/batchexecute'
-        self.headers = {
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                          'AppleWebKit/537.36 (KHTML, like Gecko) '
-                          'Chrome/105.0.0.0 Safari/537.36',
-        }
+        if not self._init_flag:
+            self._init_flag = True
+            self.session = requests.Session()
+            self.url = 'https://translate.google.cn/_/TranslateWebserverUi/data/batchexecute'
+            self.headers = {
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                              'AppleWebKit/537.36 (KHTML, like Gecko) '
+                              'Chrome/105.0.0.0 Safari/537.36',
+            }
 
     @staticmethod
     def get_form_data(query, from_str, to_str):
@@ -34,7 +39,7 @@ class GoogleTranslate(object):
     def translate(self, query, from_str, to_str):
         """翻译"""
         form_data = self.get_form_data(query, from_str, to_str)
-        response = requests.post(self.url, data=form_data, headers=self.headers)
+        response = self.session.post(self.url, data=form_data, headers=self.headers)
         content = response.content.decode().split('\n\n')[-1]
         data = json.loads(json.loads(content)[0][2])
         print()

@@ -579,7 +579,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """通过线程创建翻译引擎对象"""
         self.transl_thread = TranslThread(engine.get(self.comboBox.currentText()))
         self.transl_thread.trigger.connect(self.setTranslEngine)
-        if self.transl_thread.isRunning:
+        if self.transl_thread.isRunning():
             self.transl_thread.terminate()
             self.transl_thread.quit()
         self.transl_thread.start()

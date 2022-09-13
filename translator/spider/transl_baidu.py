@@ -2,7 +2,7 @@
 import json
 import math
 import re
-import threading
+from threading import Lock
 
 import requests
 from retrying import retry
@@ -67,38 +67,43 @@ class BaiduTranslate(object):
     调用`get_tts()`方法可获取发音
     调用`get_str_from_img()`方法可获取图片中的文字
     """
-    _instance_lock = threading.Lock()
+    _lock = Lock()
+    _instance = None
+    _init_flag = False
 
     def __new__(cls, *args, **kwargs):
-        with cls._instance_lock:
-            if not hasattr(BaiduTranslate, '_instance'):
+        with cls._lock:
+            if cls._instance is None:
                 cls._instance = object.__new__(cls)
         return cls._instance
 
     def __init__(self):
-        self._trans_flag = False
-        self._result = {}
-        self._url = 'https://fanyi.baidu.com'
-        self._headers = {
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                          'AppleWebKit/537.36 (KHTML, like Gecko) '
-                          'Chrome/88.0.4324.182 Safari/537.36',
-        }
-        response = requests.get(url=self._url, headers=self._headers)
-        self._cookie = response.headers.get('Set-Cookie')
-        self._headers['cookie'] = self._cookie
-        response = requests.get(url=self._url, headers=self._headers)
-        self._token = re.findall(r'token:[\s\'\"]+([a-z0-9]+)[\'\"]', response.content.decode())
+        if not self._init_flag:
+            self._init_flag = True
+            self.session = requests.Session()
+            self._url = 'https://fanyi.baidu.com'
+            self._headers = {
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                              'AppleWebKit/537.36 (KHTML, like Gecko) '
+                              'Chrome/88.0.4324.182 Safari/537.36',
+            }
+            response = self.session.get(self._url, headers=self._headers)
+            self._cookie = response.headers.get('Set-Cookie')
+            self._headers['cookie'] = self._cookie
+            response = self.session.get(url=self._url, headers=self._headers)
+            self._token = re.findall(r'token:[\s\'\"]+([a-z0-9]+)[\'\"]', response.content.decode())
+            self._result = {}
+            self._trans_flag = False
 
     @retry(stop_max_attempt_number=3)
     def _post(self, path='', form_data=None, files=None):
         """发送请求"""
-        return requests.post(url=self._url + path, headers=self._headers, data=form_data, files=files, timeout=5)
+        return self.session.post(url=self._url + path, headers=self._headers, data=form_data, files=files, timeout=5)
 
     @retry(stop_max_attempt_number=3)
     def _get(self, path=''):
         """发送请求"""
-        return requests.post(url=self._url + path, headers=self._headers, timeout=5)
+        return self.session.post(url=self._url + path, headers=self._headers, timeout=5)
 
     def _get_lan(self, query):
         """查询语言种类"""
