@@ -88,11 +88,11 @@ class ScreenshotWindow(QWidget):
 
     def getRectangle(self, beginPoint, endPoint):
         """获取屏幕选区"""
-        pickRectWidth = int(qAbs(beginPoint.x() - endPoint.x()))
-        pickRectHeight = int(qAbs(beginPoint.y() - endPoint.y()))
+        pickRectWidth = int(qAbs(beginPoint.x() - endPoint.x())) + 1
+        pickRectHeight = int(qAbs(beginPoint.y() - endPoint.y())) + 1
         pickRectTop = beginPoint.x() if beginPoint.x() < endPoint.x() else endPoint.x()
         pickRectLeft = beginPoint.y() if beginPoint.y() < endPoint.y() else endPoint.y()
-        pickRect = QRect(pickRectTop, pickRectLeft, pickRectWidth if pickRectWidth > 0 else 1, pickRectHeight if pickRectHeight > 0 else 1)
+        pickRect = QRect(pickRectTop, pickRectLeft, pickRectWidth, pickRectHeight)
         return pickRect
 
     def show(self):

@@ -467,11 +467,12 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """ 点击截图翻译按钮
         隐藏主窗口，启动截屏
         """
-        self.hide()  # 隐藏主窗口
-        self.screenshot_window = ScreenshotWindow()  # 创建截屏窗口
-        self.screenshot_window.completed.connect(self.screenshotCompleted)
-        self.screenshot_window.destroyed.connect(self.deleteScreenshotWindow)
-        self.screenshot_window.show()  # 显示截屏窗口
+        if not hasattr(self, 'screenshot_window'):
+            self.hide()  # 隐藏主窗口
+            self.screenshot_window = ScreenshotWindow()  # 创建截屏窗口
+            self.screenshot_window.completed.connect(self.screenshotCompleted)
+            self.screenshot_window.destroyed.connect(self.deleteScreenshotWindow)
+            self.screenshot_window.show()  # 显示截屏窗口
 
     @QtCore.pyqtSlot()
     def on_pushButton_5_clicked(self):
@@ -548,12 +549,13 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                 self.start_trans_thread = StartTransThread(data.text(), self.target_lang)
                 self.start_trans_thread.trigger.connect(self.outToFloatWindow)
                 self.start_trans_thread.start()
-                # 显示悬浮窗
-                self.float_window = FloatWindow(data.text())
-                self.float_window.pushButtonClicked.connect(self.gotoMainWindow)
-                self.float_window.radioButtonClicked.connect(self.checkBox.click)
-                self.float_window.destroyed.connect(self.deleteFloatWindow)
-                self.float_window.show()
+                if not hasattr(self, 'float_window'):
+                    # 显示悬浮窗
+                    self.float_window = FloatWindow(data.text())
+                    self.float_window.pushButtonClicked.connect(self.gotoMainWindow)
+                    self.float_window.radioButtonClicked.connect(self.checkBox.click)
+                    self.float_window.destroyed.connect(self.deleteFloatWindow)
+                    self.float_window.show()
                 # 标记正在翻译
                 self.transl_started = True
 
