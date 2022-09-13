@@ -6,10 +6,9 @@ from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QWidget, QGraphicsOpacityEffect, QApplication
 
-from transl_baidu import BaiduTranslate
-from transl_google import GoogleTranslate
-from transl_youdao import YoudaoTranslate
-from utils import baidu_ocr
+from spider.transl_baidu import BaiduTranslate
+from spider.transl_google import GoogleTranslate
+from spider.transl_youdao import YoudaoTranslate
 
 __all__ = [
     'MouseCheckThread',

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import contextlib
 import sys
 from time import sleep
 
@@ -9,13 +8,13 @@ from PyQt5 import QtMultimedia
 from PyQt5 import QtWidgets
 from system_hotkey import SystemHotkey
 
-from FloatWindow import FloatWindow
-from MainWindow_ui import Ui_MainWindow
-from ScreenshotWindow import ScreenshotWindow
 from resource import widgets_zh_CN_qm, favicon_ico
 from threads import *
+from ui.MainWindow_ui import Ui_MainWindow
 from utils import *
 from widgets import FramelessWidget
+from window.FloatWindow import FloatWindow
+from window.ScreenshotWindow import ScreenshotWindow
 
 # 窗口最大、最小高度
 MAX_H, MIN_H = 692, 259
@@ -379,6 +378,7 @@ engine = {
 
 
 class MainWindow(FramelessWidget, Ui_MainWindow):
+    """主窗口"""
     def __init__(self, *args, **kwargs):
         # 窗口设置
         super().__init__(*args, **kwargs)
@@ -563,7 +563,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """翻译结果输出到悬浮窗口"""
         # 标记翻译结束
         self.transl_started = False
-        with contextlib.suppress(Exception):
+        if hasattr(self, 'float_window'):
             self.float_window.outResult(data)
 
     def gotoMainWindow(self, s):

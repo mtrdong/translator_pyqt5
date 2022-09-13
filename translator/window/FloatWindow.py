@@ -5,7 +5,7 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtWidgets import QApplication
 
-from FloatWindow_ui import Ui_FloatWindow
+from ui.FloatWindow_ui import Ui_FloatWindow
 from threads import DownloadVoiceThread
 from utils import get_trans_result, get_word_means, get_spell_html
 from widgets import FloatWidget
