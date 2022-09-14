@@ -13,7 +13,7 @@ class FramelessWidget(QtWidgets.QWidget):
     2. 添加阴影
     3. 鼠标拖动
     """
-    sizeChanged = QtCore.pyqtSignal(tuple)
+    sizeChanged = QtCore.pyqtSignal(bool)
 
     def __init__(self, *args, **kwargs):
         super(FramelessWidget, self).__init__(*args, **kwargs)
@@ -23,10 +23,8 @@ class FramelessWidget(QtWidgets.QWidget):
         self.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowMinMaxButtonsHint)
         # 初始化变量
         self.topHintFlag = False
-        self.currentWidth = 0
-        self.currentHeight = 0
-        self.mFlag = False
-        self.mPos = None
+        self.moveFlag = False
+        self.initPos = None
 
     def staysOnTopHint(self):
         """置顶/取消置顶"""
@@ -41,12 +39,6 @@ class FramelessWidget(QtWidgets.QWidget):
         windowHandle.show()
 
     def paintEvent(self, event):
-        # 检测窗口变化
-        if self.currentWidth != self.size().width() and self.currentWidth != 0:
-            self.sizeChanged.emit((self.currentWidth, self.currentHeight))  # 发送窗口的宽和高
-        else:
-            self.currentWidth = self.size().width()
-            self.currentHeight = self.size().height()
         # 窗口阴影
         painter = QtGui.QPainter(self)
         painter.setRenderHint(painter.Antialiasing)
@@ -73,18 +65,34 @@ class FramelessWidget(QtWidgets.QWidget):
         painter_2.drawRoundedRect(rect, 0, 0)
 
     def mousePressEvent(self, event):
+        """ 按下鼠标按键
+        获取鼠标相对窗口的位置
+        开启窗口跟随鼠标移动
+        """
+        print('按下')
         if event.button() == QtCore.Qt.LeftButton:
-            self.mPos = event.globalPos() - self.pos()  # 鼠标相对窗口的位置
-            self.mFlag = True
+            self.initPos = event.globalPos() - self.pos()  # 鼠标相对窗口的位置
+            self.moveFlag = True
             event.accept()
 
     def mouseMoveEvent(self, event):
-        if QtCore.Qt.LeftButton and self.mFlag:
-            self.move(event.globalPos() - self.mPos)  # 窗口跟随鼠标移动
+        """ 鼠标移动
+        窗口跟随鼠标移动
+        """
+        if QtCore.Qt.LeftButton and self.moveFlag:
+            self.move(event.globalPos() - self.initPos)  # 窗口跟随鼠标移动
             event.accept()
 
     def mouseReleaseEvent(self, event):
-        self.mFlag = False
+        """ 抬起鼠标按键
+        关闭窗口跟随鼠标移动
+        """
+        self.moveFlag = False
+
+    def resizeEvent(self, event):
+        """大小变化时发送信号"""
+        super(FramelessWidget, self).resizeEvent(event)
+        self.sizeChanged.emit(True)  # 发送信号
 
     def closeEvent(self, event):
         """关闭主窗口同时关闭所有子窗口"""
@@ -181,7 +189,6 @@ class MyTextEdit(QtWidgets.QTextEdit):
         self.effect.setBlurRadius(10)
         # 变量初始化
         self.clipboard = QtWidgets.QApplication.clipboard()
-        self.currentHeight = 0
 
     # def contextMenuEvent(self, event):
     #     """自定义右键菜单"""
@@ -252,20 +259,17 @@ class MyTextEdit(QtWidgets.QTextEdit):
                 self.clear()
         super(MyTextEdit, self).insertFromMimeData(mime_data)
 
-    def paintEvent(self, event):
-        super(MyTextEdit, self).paintEvent(event)
-        if self.height() == self.maximumHeight() and self.currentHeight != self.maximumHeight():
-            # 添加阴影
-            self.effect.setColor(QtGui.QColor(240, 240, 240))
-            self.setGraphicsEffect(self.effect)
-            self.currentHeight = self.height()
-        elif self.height() == self.minimumHeight() and self.currentHeight != self.minimumHeight():
+    def resizeEvent(self, event):
+        """大小变化时调整阴影效果"""
+        super(MyTextEdit, self).resizeEvent(event)
+        if self.height() == self.minimumHeight():
             # 去除阴影
             self.effect.setColor(QtCore.Qt.transparent)
             self.setGraphicsEffect(self.effect)
-            self.currentHeight = self.height()
         else:
-            self.currentHeight = self.height()
+            # 添加阴影
+            self.effect.setColor(QtGui.QColor(240, 240, 240))
+            self.setGraphicsEffect(self.effect)
 
 
 class MyLabel(QtWidgets.QLabel):
