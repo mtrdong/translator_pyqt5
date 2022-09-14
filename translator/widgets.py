@@ -32,10 +32,10 @@ class FramelessWidget(QtWidgets.QWidget):
     def staysOnTopHint(self):
         """置顶/取消置顶"""
         if self.topHintFlag:
-            SetWindowPos(int(self.winId()), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW)
-            self.topHintFlag =False
-        else:
             SetWindowPos(int(self.winId()), HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW)
+            self.topHintFlag = False
+        else:
+            SetWindowPos(int(self.winId()), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW)
             self.topHintFlag = True
 
     def paintEvent(self, event):
