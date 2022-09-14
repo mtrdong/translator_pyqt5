@@ -388,12 +388,10 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.setFont(font)
         self.resize(self.minimumSize())
         self.setupUi(self)
-        # 防止屏幕缩放影响窗口布局
-        self.sizeChanged.connect(lambda x: self.resize(self.minimumSize()))
         # 隐藏输入框清空按钮
         self.pushButton_7.hide()
         # 隐藏输出框和输出控件
-        self.hide_widget()
+        self.hideWidget()
         # 通过线程调整部件透明度实现淡入效果
         self.fade_in_thread = FadeInThread(self.widget_2)
         # 语音和复制按钮点击事件
@@ -432,9 +430,11 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.screen_trans_hot_key.register(['f1'], callback=lambda x: self.pushButton_4.click())
         # 翻译状态（True-正在翻译；False-翻译结束）
         self.transl_started = False
-        # 主窗口尺寸缩放动画
+        # 主窗口大小变化动画
         self.animation = QtCore.QPropertyAnimation(self, b"size", self)
         self.animation.setDuration(100)  # 动画持续时间
+        # 屏幕缩放时自动调整窗口尺寸
+        self.sizeChanged.connect(lambda x: self.resize(self.minimumSize()))
 
     @QtCore.pyqtSlot()
     def on_checkBox_clicked(self):
@@ -529,7 +529,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             self.textBrowser.clear()
             self.textBrowser_2.clear()
             # 重设窗口大小
-            self.hide_widget()
+            self.hideWidget()
             self.animation.setEndValue(QtCore.QSize(self.width(), MIN_H))
             self.animation.start()
         # 输入框内容不为空时显示清空按钮，否则隐藏清空按钮
@@ -748,20 +748,13 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             self.textBrowser.setText(trans_result_html)
             self.textBrowser_2.setText(explanation_html)
             # 重设窗口大小
-            self.hide_widget()
-            self.animation.setEndValue(QtCore.QSize(self.width(), MAX_H))
-            self.animation.finished.connect(lambda: self.change_widget(1))
-            self.animation.start()
+            self.modifyUI(0)
         else:
             trans_result_html = '<div style="font-size: 16px; color: #3C3C3C;">{}<div>'.format(trans_result)
             # 设置输出内容
             self.textBrowser_2.setText(trans_result_html)
             # 重设窗口大小
-            h = self.widget_3.height() + self.textBrowser.height()
-            self.hide_widget()
-            self.animation.setEndValue(QtCore.QSize(self.width(), MAX_H - h))
-            self.animation.finished.connect(lambda: self.change_widget(2))
-            self.animation.start()
+            self.modifyUI(1)
         # 自动纠正目标语言
         to_str = data['trans_result']['to']
         if self.target_lang != to_str:
@@ -823,22 +816,36 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         # 播放语音
         player.play()
 
-    def hide_widget(self):
+    def hideWidget(self):
         """隐藏部件"""
         self.textBrowser.hide()
         self.textBrowser_2.hide()
         self.widget_3.hide()
         self.widget_4.hide()
 
-    def change_widget(self, mode=0):
-        """调整部件"""
+    def modifyUI(self, mode):
+        """布局调整"""
+        size = None
+        if mode == 0:
+            size = QtCore.QSize(self.width(), MAX_H)
+        elif mode == 1:
+            h = self.widget_3.height() + self.textBrowser.height()
+            size = QtCore.QSize(self.width(), MAX_H - h)
+        if size is not None:
+            self.hideWidget()
+            self.animation.setEndValue(size)
+            self.animation.finished.connect(lambda: self.animationFinished(mode))
+            self.animation.start()
+
+    def animationFinished(self, i):
+        """动画完成后调整布局"""
         self.animation.disconnect()  # 断开信号连接
-        if mode == 1:
+        if i == 0:
             self.widget_3.show()
             self.textBrowser.show()
             self.textBrowser_2.show()
             self.fade_in_thread.start()  # 开启淡入效果
-        elif mode == 2:
+        elif i == 1:
             self.widget_4.show()
             self.textBrowser_2.show()
             self.fade_in_thread.start()
