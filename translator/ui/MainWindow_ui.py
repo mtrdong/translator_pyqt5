@@ -42,7 +42,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.line = QtWidgets.QFrame(MainWindow)
         self.line.setMinimumSize(QtCore.QSize(400, 3))
-        self.line.setStyleSheet("border: 1px solid rgb(230, 230, 230); border-left-color: transparent; border-right-color: transparent; border-bottom-color: transparent;")
+        self.line.setStyleSheet("border: 1px solid rgb(220, 220, 220); border-left-color: transparent; border-right-color: transparent; border-bottom-color: transparent;")
         self.line.setFrameShadow(QtWidgets.QFrame.Plain)
         self.line.setFrameShape(QtWidgets.QFrame.HLine)
         self.line.setObjectName("line")

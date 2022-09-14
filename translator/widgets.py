@@ -25,7 +25,7 @@ class FramelessWidget(QtWidgets.QWidget):
         self.topHintFlag = False
         self.moveFlag = False
         self.initPos = None
-        self.currentSize = self.size()
+        self.initWidth = 0
 
     def staysOnTopHint(self):
         """置顶/取消置顶"""
@@ -41,9 +41,11 @@ class FramelessWidget(QtWidgets.QWidget):
 
     def paintEvent(self, event):
         # 检测窗口变化
-        if self.currentSize != self.size():
-            self.sizeChanged.emit(True)  # 发送信号
-            self.currentSize = self.size()
+        if self.initWidth > 0:
+            if self.initWidth != self.width():
+                self.sizeChanged.emit(True)  # 发送信号
+        else:
+            self.initWidth = self.width()
         # 窗口阴影
         painter = QtGui.QPainter(self)
         painter.setRenderHint(painter.Antialiasing)
