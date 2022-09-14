@@ -25,6 +25,7 @@ class FramelessWidget(QtWidgets.QWidget):
         self.topHintFlag = False
         self.moveFlag = False
         self.initPos = None
+        self.currentSize = self.size()
 
     def staysOnTopHint(self):
         """置顶/取消置顶"""
@@ -39,6 +40,10 @@ class FramelessWidget(QtWidgets.QWidget):
         windowHandle.show()
 
     def paintEvent(self, event):
+        # 检测窗口变化
+        if self.currentSize != self.size():
+            self.sizeChanged.emit(True)  # 发送信号
+            self.currentSize = self.size()
         # 窗口阴影
         painter = QtGui.QPainter(self)
         painter.setRenderHint(painter.Antialiasing)
@@ -69,7 +74,6 @@ class FramelessWidget(QtWidgets.QWidget):
         获取鼠标相对窗口的位置
         开启窗口跟随鼠标移动
         """
-        print('按下')
         if event.button() == QtCore.Qt.LeftButton:
             self.initPos = event.globalPos() - self.pos()  # 鼠标相对窗口的位置
             self.moveFlag = True
@@ -88,11 +92,6 @@ class FramelessWidget(QtWidgets.QWidget):
         关闭窗口跟随鼠标移动
         """
         self.moveFlag = False
-
-    def resizeEvent(self, event):
-        """大小变化时发送信号"""
-        super(FramelessWidget, self).resizeEvent(event)
-        self.sizeChanged.emit(True)  # 发送信号
 
     def closeEvent(self, event):
         """关闭主窗口同时关闭所有子窗口"""
