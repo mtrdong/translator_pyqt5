@@ -31,15 +31,12 @@
       <widget class="QPushButton" name="pushButton">
        <property name="minimumSize">
         <size>
-         <width>42</width>
+         <width>30</width>
          <height>30</height>
         </size>
        </property>
        <property name="styleSheet">
-        <string notr="true">QPushButton {background-color: transparent; border: 0; font-size: 14px} QPushButton:hover {background-color: rgb(220, 220, 220);} QPushButton:pressed {background-color: rgb(200, 200, 200);}</string>
-       </property>
-       <property name="text">
-        <string>📌</string>
+        <string notr="true">QPushButton {border-image: url(&quot;:images/top_hint_off.png&quot;); border: 0; font-size: 14px} QPushButton:hover {background-color: rgb(220, 220, 220);} QPushButton:pressed {background-color: rgb(200, 200, 200);}</string>
        </property>
       </widget>
      </item>
@@ -47,7 +44,7 @@
       <widget class="QPushButton" name="pushButton_2">
        <property name="minimumSize">
         <size>
-         <width>42</width>
+         <width>30</width>
          <height>30</height>
         </size>
        </property>
@@ -63,7 +60,7 @@
       <widget class="QPushButton" name="pushButton_3">
        <property name="minimumSize">
         <size>
-         <width>42</width>
+         <width>30</width>
          <height>30</height>
         </size>
        </property>

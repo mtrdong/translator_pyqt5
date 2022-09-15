@@ -10,7 +10,8 @@ from system_hotkey import SystemHotkey
 from win32con import HWND_TOPMOST, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW, HWND_NOTOPMOST
 from win32gui import SetWindowPos
 
-from resource import widgets_zh_CN_qm, favicon_ico
+from rc import images_rc  # 导入图片资源
+from res import widgets_zh_CN_qm
 from threads import *
 from ui.MainWindow_ui import Ui_MainWindow
 from utils import *
@@ -384,12 +385,12 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
     def __init__(self, *args, **kwargs):
         # 窗口设置
         super().__init__(*args, **kwargs)
-        self.setWindowIcon(QtGui.QIcon(favicon_ico))
+        self.setupUi(self)
+        self.setWindowIcon(QtGui.QIcon(':icon/favicon.ico'))
         font = QtGui.QFont('微软雅黑')
         font.setPixelSize(14)
         self.setFont(font)
         self.resize(self.minimumSize())
-        self.setupUi(self)
         # 隐藏输入框清空按钮
         self.pushButton_7.hide()
         # 隐藏输出框和输出控件
@@ -464,14 +465,13 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             SetWindowPos(int(self.winId()), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW)
         self.topHintFlag = ~self.topHintFlag
         # 设置置顶按钮样式
-        style_sheet_transparent = "QPushButton {background-color: transparent; border: 0; font-size: 14px;} " \
-                                  "QPushButton:hover {background-color: rgb(220, 220, 220);} " \
-                                  "QPushButton:pressed {background-color: rgb(200, 200, 200);}"
-        style_sheet_gray = "QPushButton {background-color: rgb(200, 200, 200); border: 0; font-size: 14px;}"
+        style_sheet = "QPushButton {border-image: url(\"%s\"); border: 0; font-size: 14px;} " \
+                      "QPushButton:hover {background-color: rgb(220, 220, 220);} " \
+                      "QPushButton:pressed {background-color: rgb(200, 200, 200);}"
         if self.topHintFlag:
-            self.pushButton.setStyleSheet(style_sheet_gray)
+            self.pushButton.setStyleSheet(style_sheet % ':images/top_hint_on.png')
         else:
-            self.pushButton.setStyleSheet(style_sheet_transparent)
+            self.pushButton.setStyleSheet(style_sheet % ':images/top_hint_off.png')
 
     @QtCore.pyqtSlot()
     def on_pushButton_4_clicked(self):

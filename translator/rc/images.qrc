@@ -1,0 +1,11 @@
+<RCC>
+  <qresource prefix="icon">
+    <file>favicon.ico</file>
+  </qresource>
+  <qresource prefix="images">
+    <file>top_hint_off.png</file>
+  </qresource>
+  <qresource prefix="images">
+    <file>top_hint_on.png</file>
+  </qresource>
+</RCC>
