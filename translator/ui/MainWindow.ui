@@ -36,7 +36,7 @@
         </size>
        </property>
        <property name="styleSheet">
-        <string notr="true">QPushButton {background-color: transparent; border: 0; font-size: 14px} QPushButton:hover {background-color: rgb(220, 220, 220);}</string>
+        <string notr="true">QPushButton {background-color: transparent; border: 0; font-size: 14px} QPushButton:hover {background-color: rgb(220, 220, 220);} QPushButton:pressed {background-color: rgb(200, 200, 200);}</string>
        </property>
        <property name="text">
         <string>📌</string>
@@ -172,7 +172,7 @@
           <string>截屏翻译（F1）</string>
          </property>
          <property name="styleSheet">
-          <string notr="true">QPushButton {background-color: transparent; border: 0; font-size: 20px}</string>
+          <string notr="true">QPushButton {background-color: transparent; border: 0; font-size: 20px;}</string>
          </property>
          <property name="text">
           <string>📸</string>
@@ -249,7 +249,7 @@
           <cursorShape>PointingHandCursor</cursorShape>
          </property>
          <property name="styleSheet">
-          <string notr="true">QPushButton {background-color: transparent; border: 0; font-size: 25px}</string>
+          <string notr="true">QPushButton {background-color: transparent; border: 0; font-size: 25px;}</string>
          </property>
          <property name="text">
           <string>⇌</string>
@@ -396,7 +396,7 @@
         <item>
          <widget class="QWidget" name="widget_2" native="true">
           <property name="styleSheet">
-           <string notr="true">QPushButton {background-color: transparent; border: 0; font-size: 16px}</string>
+           <string notr="true">QPushButton {background-color: transparent; border: 0; font-size: 16px;}</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_5">
            <property name="spacing">

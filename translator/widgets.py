@@ -2,8 +2,6 @@
 import sys
 
 from PyQt5 import QtCore, QtWidgets, QtGui
-from win32con import HWND_TOPMOST, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW, HWND_NOTOPMOST
-from win32gui import SetWindowPos
 
 from threads import MouseCheckThread
 from utils import move_widget
@@ -24,19 +22,9 @@ class FramelessWidget(QtWidgets.QWidget):
         # 无边框
         self.setWindowFlags(QtCore.Qt.Widget | QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowMinMaxButtonsHint)
         # 初始化变量
-        self.topHintFlag = False
         self.moveFlag = False
         self.initPos = None
         self.initWidth = 0
-
-    def staysOnTopHint(self):
-        """置顶/取消置顶"""
-        if self.topHintFlag:
-            SetWindowPos(int(self.winId()), HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW)
-            self.topHintFlag = False
-        else:
-            SetWindowPos(int(self.winId()), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW)
-            self.topHintFlag = True
 
     def paintEvent(self, event):
         # 检测窗口变化

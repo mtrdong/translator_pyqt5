@@ -7,6 +7,8 @@ from PyQt5 import QtGui
 from PyQt5 import QtMultimedia
 from PyQt5 import QtWidgets
 from system_hotkey import SystemHotkey
+from win32con import HWND_TOPMOST, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW, HWND_NOTOPMOST
+from win32gui import SetWindowPos
 
 from resource import widgets_zh_CN_qm, favicon_ico
 from threads import *
@@ -435,6 +437,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.animation.setDuration(100)  # 动画持续时间
         # 屏幕缩放时自动调整窗口尺寸
         self.sizeChanged.connect(lambda x: self.resize(self.minimumSize()))
+        # 置顶标志
+        self.topHintFlag = False
 
     @QtCore.pyqtSlot()
     def on_checkBox_clicked(self):
@@ -453,10 +457,17 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """ 点击置顶按钮
         点击置顶按钮，使窗口始终显示在最前端
         """
-        self.staysOnTopHint()
-        style_sheet_transparent = "QPushButton {background-color: transparent; border: 0; font-size: 14px} " \
-                                  "QPushButton:hover {background-color: rgb(220, 220, 220)}"
-        style_sheet_gray = "QPushButton {background-color: rgb(200, 200, 200); border: 0; font-size: 14px}"
+        # 设置置顶/取消置顶
+        if self.topHintFlag:
+            SetWindowPos(int(self.winId()), HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW)
+        else:
+            SetWindowPos(int(self.winId()), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW)
+        self.topHintFlag = ~self.topHintFlag
+        # 设置置顶按钮样式
+        style_sheet_transparent = "QPushButton {background-color: transparent; border: 0; font-size: 14px;} " \
+                                  "QPushButton:hover {background-color: rgb(220, 220, 220);} " \
+                                  "QPushButton:pressed {background-color: rgb(200, 200, 200);}"
+        style_sheet_gray = "QPushButton {background-color: rgb(200, 200, 200); border: 0; font-size: 14px;}"
         if self.topHintFlag:
             self.pushButton.setStyleSheet(style_sheet_gray)
         else:
