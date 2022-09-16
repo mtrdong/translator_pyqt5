@@ -19,9 +19,6 @@ from widgets import FramelessWidget
 from window.FloatWindow import FloatWindow
 from window.ScreenshotWindow import ScreenshotWindow
 
-# 窗口最大、最小高度
-MAX_H, MIN_H = 692, 259
-
 # 百度翻译语言选项
 lang_baidu = {
     '自动检测': '',
@@ -391,6 +388,9 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.setFont(font)
         self.setupUi(self)
         self.resize(self.minimumSize())
+        # 窗口最大、最小高度
+        self.minimumHeight = self.minimumHeight()
+        self.maximumHeight = 735
         # 隐藏输入框清空按钮
         self.pushButton_7.hide()
         # 隐藏输出框和输出控件
@@ -435,7 +435,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.transl_started = False
         # 主窗口大小变化动画
         self.animation = QtCore.QPropertyAnimation(self, b"size", self)
-        self.animation.setDuration(100)  # 动画持续时间
+        self.animation.setDuration(200)  # 动画持续时间
         # 屏幕缩放时自动调整窗口尺寸
         self.sizeChanged.connect(lambda x: self.resize(self.minimumSize()))
         # 置顶标志
@@ -541,7 +541,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             self.textBrowser_2.clear()
             # 重设窗口大小
             self.hideWidget()
-            self.animation.setEndValue(QtCore.QSize(self.width(), MIN_H))
+            self.animation.setEndValue(QtCore.QSize(self.width(), self.minimumHeight))
             self.animation.start()
         # 输入框内容不为空时显示清空按钮，否则隐藏清空按钮
         if self.textEdit.toPlainText():
@@ -838,10 +838,10 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """布局调整"""
         size = None
         if mode == 0:
-            size = QtCore.QSize(self.width(), MAX_H)
+            size = QtCore.QSize(self.width(), self.maximumHeight)
         elif mode == 1:
             h = self.widget_3.height() + self.textBrowser.height()
-            size = QtCore.QSize(self.width(), MAX_H - h)
+            size = QtCore.QSize(self.width(), self.maximumHeight - h)
         if size is not None:
             self.hideWidget()
             self.animation.setEndValue(size)
