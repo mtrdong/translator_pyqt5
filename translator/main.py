@@ -376,6 +376,9 @@ engine = {
     '谷歌翻译': 'google',
 }
 
+# 窗口最大高度
+MAX_H = 735
+
 
 class MainWindow(FramelessWidget, Ui_MainWindow):
     """主窗口"""
@@ -388,9 +391,6 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.setFont(font)
         self.setupUi(self)
         self.resize(self.minimumSize())
-        # 窗口最大、最小高度
-        self.minimumHeight = self.minimumHeight()
-        self.maximumHeight = 735
         # 隐藏输入框清空按钮
         self.pushButton_7.hide()
         # 隐藏输出框和输出控件
@@ -540,9 +540,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             self.textBrowser.clear()
             self.textBrowser_2.clear()
             # 重设窗口大小
-            self.hideWidget()
-            self.animation.setEndValue(QtCore.QSize(self.width(), self.minimumHeight))
-            self.animation.start()
+            self.modifyUI()
         # 输入框内容不为空时显示清空按钮，否则隐藏清空按钮
         if self.textEdit.toPlainText():
             self.pushButton_7.show()
@@ -759,13 +757,13 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             self.textBrowser.setText(trans_result_html)
             self.textBrowser_2.setText(explanation_html)
             # 重设窗口大小
-            self.modifyUI(0)
+            self.modifyUI(1)
         else:
             trans_result_html = '<div style="font-size: 16px; color: #3C3C3C;">{}<div>'.format(trans_result)
             # 设置输出内容
             self.textBrowser_2.setText(trans_result_html)
             # 重设窗口大小
-            self.modifyUI(1)
+            self.modifyUI(2)
         # 自动纠正目标语言
         to_str = data['trans_result']['to']
         if self.target_lang != to_str:
@@ -834,14 +832,16 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.widget_3.hide()
         self.widget_4.hide()
 
-    def modifyUI(self, mode):
+    def modifyUI(self, mode=0):
         """布局调整"""
         size = None
         if mode == 0:
-            size = QtCore.QSize(self.width(), self.maximumHeight)
+            size = QtCore.QSize(QtCore.QSize(self.width(), 0))
         elif mode == 1:
+            size = QtCore.QSize(self.width(), MAX_H)
+        elif mode == 2:
             h = self.widget_3.height() + self.textBrowser.height()
-            size = QtCore.QSize(self.width(), self.maximumHeight - h)
+            size = QtCore.QSize(self.width(), MAX_H - h)
         if size is not None:
             self.hideWidget()
             self.animation.setEndValue(size)
@@ -851,12 +851,12 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
     def animationFinished(self, i):
         """动画完成后调整布局"""
         self.animation.disconnect()  # 断开信号连接
-        if i == 0:
+        if i == 1:
             self.widget_3.show()
             self.textBrowser.show()
             self.textBrowser_2.show()
             self.fade_in_thread.start()  # 开启淡入效果
-        elif i == 1:
+        elif i == 2:
             self.widget_4.show()
             self.textBrowser_2.show()
             self.fade_in_thread.start()
