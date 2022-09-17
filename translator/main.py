@@ -395,8 +395,6 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.pushButton_7.hide()
         # 隐藏输出框和输出控件
         self.hideWidget()
-        # 通过线程调整部件透明度实现淡入效果
-        self.fade_in_thread = FadeInThread(self.widget_2)
         # 语音和复制按钮点击事件
         self.pushButton_8.clicked.connect(self.voiceButtonClicked)
         self.pushButton_10.clicked.connect(self.voiceButtonClicked)
@@ -807,7 +805,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         player = QtMultimedia.QMediaPlayer(self)
         player.setVolume(100)
         player.setMedia(QtMultimedia.QMediaContent(), buffer)
-        sleep(0.01)  # 延时等待 setMedia 完成。
+        sleep(0.1)  # 延时等待 setMedia 完成。
         # 播放语音
         player.play()
 
@@ -841,11 +839,31 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             self.widget_3.show()
             self.textBrowser.show()
             self.textBrowser_2.show()
-            self.fade_in_thread.start()  # 开启淡入效果
+            self.fadeIn(self.widget_2)
         elif i == 2:
             self.widget_4.show()
             self.textBrowser_2.show()
-            self.fade_in_thread.start()
+            self.fadeIn(self.widget_2)
+
+    def fadeIn(self, widget):
+        """控件淡入"""
+        opacity = QtWidgets.QGraphicsOpacityEffect()
+        opacity.setOpacity(0)
+        widget.setGraphicsEffect(opacity)
+        opacity.i = 1
+
+        def timeout():
+            opacity.setOpacity(opacity.i / 50)
+            widget.setGraphicsEffect(opacity)
+            opacity.i += 1
+            if opacity.i >= 50:
+                self.temp_timer.stop()
+                self.temp_timer.deleteLater()
+
+        self.temp_timer = QtCore.QTimer()
+        self.temp_timer.setInterval(1)
+        self.temp_timer.timeout.connect(timeout)
+        self.temp_timer.start()
 
     def deleteScreenshotWindow(self):
         """回收截图窗口"""

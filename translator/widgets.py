@@ -25,6 +25,16 @@ class FramelessWidget(QtWidgets.QWidget):
         self.moveFlag = False
         self.initPos = None
         self.lastSize = None
+        self.shadowWidth = 11  # 阴影宽度 = 内边距 + 2
+        # 设置阴影效果
+        self.setShadowEffect()
+
+    def setShadowEffect(self):
+        shadow = QtWidgets.QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(self.shadowWidth)
+        shadow.setColor(QtCore.Qt.gray)
+        shadow.setOffset(0, 0)
+        self.setGraphicsEffect(shadow)
 
     def paintEvent(self, event):
         # 检测窗口变化
@@ -32,30 +42,17 @@ class FramelessWidget(QtWidgets.QWidget):
             self.resize(self.lastSize)
         else:
             self.lastSize = self.size()
-        # 窗口阴影
+        # 绘制窗口背景
         painter = QtGui.QPainter(self)
         painter.setRenderHint(painter.Antialiasing)
-        color = QtGui.QColor(QtCore.Qt.gray)
-        num = 11  # 阴影宽度 = 内边距 + 2
-        for i in range(num):
-            painterPath = QtGui.QPainterPath()
-            painterPath.setFillRule(QtCore.Qt.WindingFill)
-            ref = QtCore.QRectF(num - i, num - i, self.width() - (num - i) * 2, self.height() - (num - i) * 2)
-            painterPath.addRoundedRect(ref, 0, 0)
-            color.setAlpha(int(150 - i ** 0.5 * 50))
-            painter.setPen(color)
-            painter.drawPath(painterPath)
-        # 窗口背景
-        painter_2 = QtGui.QPainter(self)
-        painter_2.setRenderHint(painter_2.Antialiasing)
-        painter_2.setBrush(QtGui.QColor(240, 240, 240, 255))
-        painter_2.setPen(QtCore.Qt.transparent)
+        painter.setBrush(QtGui.QColor(240, 240, 240, 255))
+        painter.setPen(QtCore.Qt.transparent)
         rect = self.rect()
-        rect.setLeft(num)
-        rect.setTop(num)
-        rect.setWidth(rect.width() - num)
-        rect.setHeight(rect.height() - num)
-        painter_2.drawRoundedRect(rect, 0, 0)
+        rect.setLeft(self.shadowWidth)
+        rect.setTop(self.shadowWidth)
+        rect.setWidth(rect.width() - self.shadowWidth)
+        rect.setHeight(rect.height() - self.shadowWidth)
+        painter.drawRoundedRect(rect, 0, 0)
 
     def mousePressEvent(self, event):
         """ 按下鼠标按键

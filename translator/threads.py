@@ -4,7 +4,7 @@ from time import sleep
 
 from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QWidget, QGraphicsOpacityEffect, QApplication
+from PyQt5.QtWidgets import QWidget
 
 from spider.transl_baidu import BaiduTranslate
 from spider.transl_google import GoogleTranslate
@@ -12,7 +12,6 @@ from spider.transl_youdao import YoudaoTranslate
 
 __all__ = [
     'MouseCheckThread',
-    'FadeInThread',
     'TranslThread',
     'StartTransThread',
     'DownloadVoiceThread',
@@ -39,24 +38,6 @@ class MouseCheckThread(QThread):
                     self.trigger.emit(True)
                     break
                 sleep(0.1)
-
-
-class FadeInThread(QThread):
-    """部件淡入效果"""
-    trigger = pyqtSignal(bool)
-
-    def __init__(self, widget: QWidget):
-        super().__init__()
-        self.widget = widget
-        self.opacity = QGraphicsOpacityEffect()
-
-    def run(self):
-        for i in range(0, 11):
-            self.opacity.setOpacity(i / 10)
-            self.widget.setGraphicsEffect(self.opacity)
-            QApplication.processEvents()
-            sleep(0.01)
-        self.trigger.emit(True)
 
 
 class TranslThread(QThread):
