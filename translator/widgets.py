@@ -29,7 +29,7 @@ class FramelessWidget(QtWidgets.QWidget):
     def paintEvent(self, event):
         # 检测窗口变化
         if self.lastSize is not None and self.lastSize.width() != self.width():
-            self.sizeChanged.emit(self.lastSize)  # 发送信号
+            self.resize(self.lastSize)
         else:
             self.lastSize = self.size()
         # 窗口阴影
