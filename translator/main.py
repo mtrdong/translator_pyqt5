@@ -377,7 +377,7 @@ engine = {
 }
 
 # 窗口最大高度
-MAX_H = 735
+MAX_H = 680
 
 
 class MainWindow(FramelessWidget, Ui_MainWindow):
