@@ -36,7 +36,13 @@
         </size>
        </property>
        <property name="styleSheet">
-        <string notr="true">QPushButton {border-image: url(&quot;:images/top_hint_off.png&quot;); font: 0px normal;} QPushButton:hover {background-color: rgb(220, 220, 220);} QPushButton:pressed {background-color: rgb(200, 200, 200);}</string>
+        <string notr="true">QPushButton {background-color: transparent; border: 0;} QPushButton:hover {background-color: rgb(220, 220, 220);} QPushButton:pressed, QPushButton:checked {background-color: rgb(200, 200, 200);}</string>
+       </property>
+       <property name="text">
+        <string>📌</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -49,7 +55,7 @@
         </size>
        </property>
        <property name="styleSheet">
-        <string notr="true">QPushButton {background-color: transparent; border: 0; font: 0px normal;} QPushButton:hover {background-color: rgb(220, 220, 220);} QPushButton:pressed {background-color: rgb(200, 200, 200);}</string>
+        <string notr="true">QPushButton {background-color: transparent; border: 0;} QPushButton:hover {background-color: rgb(220, 220, 220);} QPushButton:pressed {background-color: rgb(200, 200, 200);}</string>
        </property>
        <property name="text">
         <string>─</string>
@@ -65,7 +71,7 @@
         </size>
        </property>
        <property name="styleSheet">
-        <string notr="true">QPushButton {background-color: transparent; border: 0; font: 0px normal;} QPushButton:hover {background-color: rgb(228, 104, 85);} QPushButton:pressed {background-color: rgb(196, 94, 74);}</string>
+        <string notr="true">QPushButton {background-color: transparent; border: 0;} QPushButton:hover {background-color: rgb(228, 104, 85);} QPushButton:pressed {background-color: rgb(196, 94, 74);}</string>
        </property>
        <property name="text">
         <string>╳</string>

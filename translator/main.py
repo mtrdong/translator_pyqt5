@@ -438,8 +438,6 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.animation.setDuration(200)  # 动画持续时间
         # 屏幕缩放时自动调整窗口尺寸
         self.sizeChanged.connect(lambda x: self.resize(self.minimumSize()))
-        # 置顶标志
-        self.topHintFlag = False
 
     @QtCore.pyqtSlot()
     def on_checkBox_clicked(self):
@@ -456,22 +454,12 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
     @QtCore.pyqtSlot()
     def on_pushButton_clicked(self):
         """ 点击置顶按钮
-        点击置顶按钮，使窗口始终显示在最前端
+        设置窗口置顶/取消置顶
         """
-        # 设置置顶/取消置顶
-        if self.topHintFlag:
-            SetWindowPos(int(self.winId()), HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW)
-        else:
+        if self.pushButton.isChecked():
             SetWindowPos(int(self.winId()), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW)
-        self.topHintFlag = ~self.topHintFlag
-        # 设置置顶按钮样式
-        style_sheet = "QPushButton {border-image: url(\"%s\"); font: 0px normal;} " \
-                      "QPushButton:hover {background-color: rgb(220, 220, 220);} " \
-                      "QPushButton:pressed {background-color: rgb(200, 200, 200);}"
-        if self.topHintFlag:
-            self.pushButton.setStyleSheet(style_sheet % ':images/top_hint_on.png')
         else:
-            self.pushButton.setStyleSheet(style_sheet % ':images/top_hint_off.png')
+            SetWindowPos(int(self.winId()), HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW)
 
     @QtCore.pyqtSlot()
     def on_pushButton_4_clicked(self):
