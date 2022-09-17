@@ -13,7 +13,7 @@ class FramelessWidget(QtWidgets.QWidget):
     2. 添加阴影
     3. 鼠标拖动
     """
-    sizeChanged = QtCore.pyqtSignal(bool)
+    sizeChanged = QtCore.pyqtSignal(QtCore.QSize)
 
     def __init__(self, *args, **kwargs):
         super(FramelessWidget, self).__init__(*args, **kwargs)
@@ -24,15 +24,14 @@ class FramelessWidget(QtWidgets.QWidget):
         # 初始化变量
         self.moveFlag = False
         self.initPos = None
-        self.initWidth = 0
+        self.lastSize = None
 
     def paintEvent(self, event):
         # 检测窗口变化
-        if self.initWidth > 0:
-            if self.initWidth != self.width():
-                self.sizeChanged.emit(True)  # 发送信号
+        if self.lastSize is not None and self.lastSize.width() != self.width():
+            self.sizeChanged.emit(self.lastSize)  # 发送信号
         else:
-            self.initWidth = self.width()
+            self.lastSize = self.size()
         # 窗口阴影
         painter = QtGui.QPainter(self)
         painter.setRenderHint(painter.Antialiasing)

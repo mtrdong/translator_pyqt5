@@ -437,7 +437,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.animation = QtCore.QPropertyAnimation(self, b"size", self)
         self.animation.setDuration(200)  # 动画持续时间
         # 屏幕缩放时自动调整窗口尺寸
-        self.sizeChanged.connect(lambda x: self.resize(self.minimumSize()))
+        self.sizeChanged.connect(lambda x: self.resize(x))
 
     @QtCore.pyqtSlot()
     def on_checkBox_clicked(self):
