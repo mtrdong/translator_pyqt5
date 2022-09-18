@@ -10,6 +10,7 @@ from system_hotkey import SystemHotkey
 from win32con import HWND_TOPMOST, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW, HWND_NOTOPMOST
 from win32gui import SetWindowPos
 
+from rc import images_rc  # 导入图片资源
 from res import widgets_zh_CN_qm
 from threads import *
 from ui.MainWindow_ui import Ui_MainWindow
@@ -17,7 +18,6 @@ from utils import *
 from widgets import FramelessWidget
 from window.FloatWindow import FloatWindow
 from window.ScreenshotWindow import ScreenshotWindow
-exec("from rc import images_rc")  # 导入图片资源
 
 # 百度翻译语言选项
 lang_baidu = {
@@ -675,12 +675,12 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         获取屏幕截图，并进行文字识别
         """
         self.showNormal()  # 显示主窗口
+        QtWidgets.QApplication.processEvents()  # 刷新界面
         img_data = img.data()  # 获取截图
         if img_data:
             self.textEdit.blockSignals(True)
             self.textEdit.setText('<i>正在识别翻译，请稍候...</i>')
             self.textEdit.blockSignals(False)
-            QtWidgets.QApplication.processEvents()  # 刷新界面
             # 通过线程进行图像文字识别
             self.ocr_thread = BaiduOCRThread(img_data)
             self.ocr_thread.trigger.connect(self.translImageText)

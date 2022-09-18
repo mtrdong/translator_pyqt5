@@ -37,4 +37,4 @@ exe = EXE(pyz,
           codesign_identity=None,
           entitlements_file=None,
           version='file_version_info.txt',
-          icon='translator\\res\\images\\favicon.ico')
+          icon='translator\\rc\\favicon.ico')
