@@ -10,7 +10,6 @@ from system_hotkey import SystemHotkey
 from win32con import HWND_TOPMOST, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW, HWND_NOTOPMOST
 from win32gui import SetWindowPos
 
-from rc import images_rc  # 导入图片资源
 from res import widgets_zh_CN_qm
 from threads import *
 from ui.MainWindow_ui import Ui_MainWindow
@@ -18,6 +17,7 @@ from utils import *
 from widgets import FramelessWidget
 from window.FloatWindow import FloatWindow
 from window.ScreenshotWindow import ScreenshotWindow
+exec("from rc import images_rc")  # 导入图片资源
 
 # 百度翻译语言选项
 lang_baidu = {
@@ -565,8 +565,11 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         if self.isMinimized() or not self.isVisible():  # 窗口最小化或不可见
             self.hide()
             self.showNormal()
+            QtWidgets.QApplication.processEvents()
+        else:
+            self.raise_()
         self.textEdit.setText(s)
-        self.startTransl()
+        QtWidgets.QApplication.processEvents()
 
     def getTranslEngine(self):
         """通过线程创建翻译引擎对象"""
