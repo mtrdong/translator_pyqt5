@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QWidget
 from spider.transl_baidu import BaiduTranslate
 from spider.transl_google import GoogleTranslate
 from spider.transl_youdao import YoudaoTranslate
+from utils import check_network, baidu_ocr
 
 __all__ = [
     'MouseCheckThread',
@@ -49,16 +50,15 @@ class TranslThread(QThread):
         self.select = select
 
     def run(self):
-        try:
-            if self.select == 'youdao':
-                obj = YoudaoTranslate()
-            elif self.select == 'google':
-                obj = GoogleTranslate()
-            else:
-                obj = BaiduTranslate()
-        except:
+        if not check_network():  # 检查网络连接
             obj = None
-        self.trigger.emit(obj)  # 信号发送百度翻译对象
+        elif self.select == 'youdao':
+            obj = YoudaoTranslate()  # 创建有道翻译
+        elif self.select == 'google':
+            obj = GoogleTranslate()  # 创建谷歌翻译
+        else:
+            obj = BaiduTranslate()  # 创建百度翻译
+        self.trigger.emit(obj)  # 发送信号
 
 
 class StartTransThread(QThread):

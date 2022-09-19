@@ -1,6 +1,6 @@
 from time import sleep
 
-from PyQt5.QtCore import QIODevice, QBuffer
+from PyQt5.QtCore import QIODevice, QBuffer, pyqtSignal
 from PyQt5.QtGui import QFont
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtWidgets import QApplication
@@ -13,6 +13,9 @@ from widgets import FloatWidget
 
 class FloatWindow(FloatWidget, Ui_FloatWindow):
     """悬浮窗口"""
+    radioButtonClicked = pyqtSignal(bool)
+    pushButtonClicked = pyqtSignal(str)
+
     def __init__(self, query: str, *args, **kwargs):
         # 窗口初始化
         super().__init__(*args, **kwargs)
@@ -28,8 +31,14 @@ class FloatWindow(FloatWidget, Ui_FloatWindow):
         self.pushButton.clicked.connect(lambda x: self.pushButtonClicked.emit(self.query))
         self.textBrowser_2.anchorClicked.connect(self.anchorClicked)
         # 初始化输出
-        self.textBrowser.setText("<strong>{}</strong>".format(self.query))
+        self.setQuery(self.query)
+
+    def setQuery(self, s):
+        self.query = s
+        self.textBrowser.setText("<strong>{}</strong>".format(s))
         self.textBrowser_2.setText("<i style='color: #606060;'>正在翻译...</i>")
+        self.textBrowser_2.show()
+        self.textBrowser_3.clear()
 
     def outResult(self, data):
         """输出翻译结果"""

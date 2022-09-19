@@ -3,12 +3,14 @@ import json
 import random
 import re
 
+import requests
 from PyQt5.QtCore import QRect, QPoint
 from PyQt5.QtWidgets import QWidget
 from aip import AipOcr
 
 __all__ = [
     'move_widget',
+    'check_network',
     'baidu_ocr',
     'get_trans_result',
     'get_word_means',
@@ -46,6 +48,17 @@ def move_widget(widget: QWidget, geometry: QRect, pos: QPoint = None, offset: in
         if y + widget.height() > screen_h:  # 部件底部超出边界
             y = screen_h - widget.height() if y - widget.height() < offset * 2 else y - widget.height() - offset * 2
     widget.move(x, y)  # 移动部件
+
+
+def check_network():
+    """检查网络是否可用"""
+    url = 'https://www.baidu.com/'
+    try:
+        requests.get(url, timeout=3)
+    except requests.exceptions.ConnectionError:
+        return False
+
+    return True
 
 
 def baidu_ocr(img_bytes):

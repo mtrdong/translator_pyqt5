@@ -408,32 +408,29 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.comboBox.currentIndexChanged.connect(self.comboBoxCurrentIndexChanged)
         self.source_lang = None  # 源语言代码
         self.target_lang = None  # 目标语言代码
-        self.comboBox_2DisableIndex = 0
-        self.comboBox_3DisableIndex = 0
+        self.comboBox_2DisableIndex = 0  # 源语言下拉列表禁用的的索引
+        self.comboBox_3DisableIndex = 0  # 目标语言下拉列表禁用的的索引
         self.comboBox_2.currentIndexChanged.connect(self.comboBox_2CurrentIndexChanged)
         self.comboBox_3.currentIndexChanged.connect(self.comboBox_3CurrentIndexChanged)
-        self.setLangItems()
+        self.setLangItems()  # 设置源语言/目标语言下拉选项
         # 通过线程创建翻译引擎对象
         self.transl_engine = None  # 翻译引擎对象
         self.transl_result = None  # 翻译结果
-        self.getTranslEngine()
-        # 监听剪切板
+        self.getTranslEngine()  # 创建翻译引擎对象
+        # 监听剪切板。开启监听时，当剪切板内容发生变化时，自动获取剪切板文本发起翻译（伪划词翻译）
         self.clipboard = QtWidgets.QApplication.clipboard()
         self.clipboard.dataChanged.connect(self.clipboardChanged)
-        self.clipboard_flag = False
-        # 翻译定时器
+        self.clipboard_flag = False  # 监听标志（True-开启监听；False-关闭监听）
+        # 翻译定时器。输入框内容发生变化时，延时一定时间后自动发起翻译
         self.timer = QtCore.QTimer(self)
         self.timer.timeout.connect(self.startTransl)
-        # 文本输入框当前内容
+        # 文本输入框当前内容。记录当前翻译内容，防止连续输入相同内容时，再次触发自动翻译（不影响主动翻译）
         self.textEditCurrentContent = ''
         # 全局截屏翻译快捷键
         self.screen_trans_hot_key = SystemHotkey()
         self.screen_trans_hot_key.register(['f1'], callback=lambda x: self.pushButton_4.click())
-        # 翻译状态（True-正在翻译；False-翻译结束）
+        # 翻译状态（True-正在翻译；False-翻译结束）。当有正在进行的翻译时，不允许发起二次翻译
         self.transl_started = False
-        # 主窗口大小变化动画
-        self.animation = QtCore.QPropertyAnimation(self, b"size", self)
-        self.animation.setDuration(200)  # 动画持续时间
 
     @QtCore.pyqtSlot()
     def on_checkBox_clicked(self):
@@ -463,10 +460,27 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         隐藏主窗口，启动截屏
         """
         if not hasattr(self, 'screenshot_window'):
+
+            def completed(img_data):
+                """截屏完成，显示主窗口哦并启动识别翻译"""
+                self.activateWindow()  # 主窗口变为活动窗口
+                self.showNormal()  # 显示主窗口
+                QtWidgets.QApplication.processEvents()  # 刷新界面
+                if img_data:
+                    self.textEdit.blockSignals(True)
+                    self.textEdit.setText('<i>正在识别翻译，请稍候...</i>')
+                    self.textEdit.blockSignals(False)
+                    # 识别图片中的文本并发起翻译
+                    self.ocr(img_data)
+
+            def destroyed():
+                """回收截图窗口"""
+                del self.screenshot_window
+
             self.hide()  # 隐藏主窗口
             self.screenshot_window = ScreenshotWindow()  # 创建截屏窗口
-            self.screenshot_window.completed.connect(self.screenshotCompleted)
-            self.screenshot_window.destroyed.connect(self.deleteScreenshotWindow)
+            self.screenshot_window.completed.connect(completed)
+            self.screenshot_window.destroyed.connect(destroyed)
             self.screenshot_window.show()  # 显示截屏窗口
 
     @QtCore.pyqtSlot()
@@ -499,10 +513,10 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """
         self.timer.stop()  # 文本框内容发生变化时停止定时器
         text = self.textEdit.toPlainText().strip()
-        if text:
-            if text.find('file:///') == 0:  # 如果文本框输入文件则对文件进行检查，如果输入的是图片则进行识别翻译，否则弹窗提示
+        if text:  # 有内容输入
+            if text.find('file:///') == 0:  # 输入内容为文件时，如果输入的是图片则进行识别翻译，否则弹窗提示
                 file_name = text.split('\n')[0].replace('file:///', '')
-                self.textEdit.blockSignals(True)  # 关闭信号连接
+                self.textEdit.blockSignals(True)  # 关闭信号连接。在恢复信号连接之前，修改输入框内容时不会触发信号
                 self.textEdit.setText('<i>正在识别翻译，请稍候...</i>')
                 QtWidgets.QApplication.processEvents()  # 刷新界面
                 if file_name.split('.')[-1:][0].lower() not in ['jpg', 'png']:
@@ -511,15 +525,13 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                     return None
                 self.textEdit.blockSignals(False)  # 恢复信号连接
                 with open(file_name, 'rb') as f:
-                    img = f.read()
-                # 通过线程进行图像文字识别
-                self.ocr_thread = BaiduOCRThread(img)
-                self.ocr_thread.trigger.connect(self.translImageText)
-                self.ocr_thread.start()
-            elif text != self.textEditCurrentContent:
-                self.timer.start(1000)  # 如果文本框输入的不是文件且内容不为空则启动 1000ms 定时器
-            self.textEditCurrentContent = text
-        else:
+                    img_data = f.read()
+                # 识别图片中的文本并发起翻译
+                self.ocr(img_data)
+            elif text != self.textEditCurrentContent:  # 输入内容为文本时，启动定时翻译
+                self.timer.start(1000)
+            self.textEditCurrentContent = text  # 记录当前输入内容
+        else:  # 清空输入框
             # 清空输出框内容
             self.textBrowser.clear()
             self.textBrowser_2.clear()
@@ -536,62 +548,69 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         开启复制翻译时，获取剪切板内容并发起翻译
         """
         if self.clipboard_flag and not self.transl_started:
-            data = self.clipboard.mimeData()
-            if 'text/plain' in data.formats():
-                # 通过线程发起翻译
-                self.start_trans_thread = StartTransThread(data.text(), self.target_lang)
-                self.start_trans_thread.trigger.connect(self.outToFloatWindow)
-                self.start_trans_thread.start()
+            mime_data = self.clipboard.mimeData()
+
+            if 'text/plain' in mime_data.formats():
+
                 if not hasattr(self, 'float_window'):
+
+                    def clicked(s):
+                        """从悬浮窗口转到主窗口"""
+                        self.float_window.deleteLater()
+                        self.activateWindow()
+                        self.showNormal()
+                        self.textEdit.setText(s)
+                        QtWidgets.QApplication.processEvents()
+
+                    def destroyed():
+                        """回收悬浮窗口"""
+                        del self.float_window
+
                     # 显示悬浮窗
-                    self.float_window = FloatWindow(data.text())
-                    self.float_window.pushButtonClicked.connect(self.gotoMainWindow)
+                    self.float_window = FloatWindow(mime_data.text())  # 创建悬浮窗
+                    self.float_window.pushButtonClicked.connect(clicked)
                     self.float_window.radioButtonClicked.connect(self.checkBox.click)
-                    self.float_window.destroyed.connect(self.deleteFloatWindow)
+                    self.float_window.destroyed.connect(destroyed)
                     self.float_window.show()
+                else:
+                    self.float_window.setQuery(mime_data.text())
+
+                def trigger(data):
+                    """翻译结果输出到悬浮窗口"""
+                    self.start_trans_thread.deleteLater()
+                    self.transl_started = False  # 标记本次翻译结束
+                    if hasattr(self, 'float_window'):
+                        self.float_window.outResult(data)  # 将结果输出到悬浮窗
+
+                # 通过线程发起翻译
+                self.start_trans_thread = StartTransThread(mime_data.text(), self.target_lang)
+                self.start_trans_thread.trigger.connect(trigger)
+                self.start_trans_thread.start()
                 # 标记正在翻译
                 self.transl_started = True
 
-    def outToFloatWindow(self, data):
-        """翻译结果输出到悬浮窗口"""
-        # 标记翻译结束
-        self.transl_started = False
-        if hasattr(self, 'float_window'):
-            self.float_window.outResult(data)
-
-    def gotoMainWindow(self, s):
-        """从悬浮窗口转到主窗口"""
-        self.float_window.close()
-        if self.isMinimized() or not self.isVisible():  # 窗口最小化或不可见
-            self.hide()
-            self.showNormal()
-            QtWidgets.QApplication.processEvents()
-        else:
-            self.raise_()
-        self.textEdit.setText(s)
-        QtWidgets.QApplication.processEvents()
-
     def getTranslEngine(self):
         """通过线程创建翻译引擎对象"""
-        self.transl_thread = TranslThread(engine.get(self.comboBox.currentText()))
-        self.transl_thread.trigger.connect(self.setTranslEngine)
-        self.transl_thread.start()
+        def trigger(obj):
+            """设置翻译引擎"""
+            self.transl_thread.deleteLater()
+            if obj is None:
+                msg = QtWidgets.QMessageBox.information(
+                    self,
+                    '程序初始化失败',
+                    '网络似乎不可用，请检查网络后重试！',
+                    QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Close,
+                    QtWidgets.QMessageBox.Ok
+                )
+                if msg == QtWidgets.QMessageBox.Ok:
+                    self.getTranslEngine()
+                else:
+                    self.close()
+            self.transl_engine = obj
 
-    def setTranslEngine(self, obj):
-        """创建翻译引擎对象的线程结束"""
-        if obj is None:
-            msg = QtWidgets.QMessageBox.question(
-                self,
-                '错误',
-                '程序初始化失败，可能是网络不佳所致。是否重试？',
-                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-                QtWidgets.QMessageBox.Yes
-            )
-            if msg == QtWidgets.QMessageBox.Yes:
-                self.getTranslEngine()
-            else:
-                self.close()
-        self.transl_engine = obj
+        self.transl_thread = TranslThread(engine.get(self.comboBox.currentText()))
+        self.transl_thread.trigger.connect(trigger)
+        self.transl_thread.start()
 
     def setLangItems(self):
         """设置源语言和目标语言下拉列表"""
@@ -670,95 +689,66 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                 self.comboBox_2DisableIndex = self.comboBox_3.currentIndex() + 1
                 self.comboBox_2.setItemData(self.comboBox_2DisableIndex, 0, QtCore.Qt.UserRole - 1)
 
-    def screenshotCompleted(self, img):
-        """ 截屏完成
-        获取屏幕截图，并进行文字识别
-        """
-        self.showNormal()  # 显示主窗口
-        QtWidgets.QApplication.processEvents()  # 刷新界面
-        img_data = img.data()  # 获取截图
-        if img_data:
-            self.textEdit.blockSignals(True)
-            self.textEdit.setText('<i>正在识别翻译，请稍候...</i>')
-            self.textEdit.blockSignals(False)
-            # 通过线程进行图像文字识别
-            self.ocr_thread = BaiduOCRThread(img_data)
-            self.ocr_thread.trigger.connect(self.translImageText)
-            self.ocr_thread.start()
-
-    def translImageText(self, text):
-        """ OCR线程结束
-        获取识别文本，并进行翻译
-        """
-        if text:
-            self.textEdit.setText(text)
-            self.startTransl()
-        else:
-            QtWidgets.QMessageBox.information(self, '提示', '没有从图片中识别到文字！')
-            self.textEdit.blockSignals(True)
-            self.textEdit.clear()
-            self.textEdit.blockSignals(False)
-
     def startTransl(self):
         """启动翻译并输出翻译结果"""
-        self.timer.stop()  # 主动发起翻译时关闭定时器
+        self.timer.stop()  # 主动发起翻译时，关闭自动翻译定时器
         if engine.get(self.comboBox.currentText()) != 'baidu':  # TODO 暂时仅支持百度翻译
             QtWidgets.QMessageBox.information(self, '提示', '目前仅支持百度翻译！')
             return None
-        if self.transl_started:
+        if self.transl_started:  # 上一次翻译上尚未结束
             return None
-        if self.transl_engine is None:
+        if self.transl_engine is None:  # 翻译引擎为空
             QtWidgets.QMessageBox.information(self, '提示', '程序正在初始化中，请稍候重试！')
             return None
         query = self.textEdit.toPlainText().strip()
-        if not query:
+        if not query:  # 没有翻译内容
             QtWidgets.QMessageBox.information(self, '提示', '请输入翻译内容')
             return None
+
+        def trigger(data):
+            """输出翻译结果"""
+            self.transl_started = False  # 标记本次翻译结束
+            if not self.textEdit.toPlainText().strip():  # 没有翻译内容
+                return None
+            if not data:  # 没有翻译结果
+                QtWidgets.QMessageBox.information(self, '提示', '翻译结果为空，请重试！')
+                return None
+            self.transl_result = data  # 翻译结果
+            trans_result = get_trans_result(data)  # 直译
+            spell_html = get_spell_html(data)  # 音标
+            comment_html = get_comment_html(data)  # 释义
+            exchange_html = get_exchange_html(data)  # 形态
+            example_html = get_example_html(data)  # 例句
+            if spell_html or comment_html:
+                trans_result_html = '<div style="font-size: 16px; color: #3C3C3C;"><h4>{}</h4></div>'.format(
+                    trans_result)
+                explanation_html = '<div style="font-size: 16px; color: #3C3C3C;"><p>{}</p><p>{}</p><p>{}</p><p>{}</p></div>'.format(
+                    spell_html, comment_html, exchange_html, example_html)
+                # 设置输出内容
+                self.textBrowser.setText(trans_result_html)
+                self.textBrowser_2.setText(explanation_html)
+                # 重设窗口大小
+                self.modifyUI(1)
+            else:
+                trans_result_html = '<div style="font-size: 16px; color: #3C3C3C;">{}<div>'.format(trans_result)
+                # 设置输出内容
+                self.textBrowser_2.setText(trans_result_html)
+                # 重设窗口大小
+                self.modifyUI(2)
+            # 自动纠正目标语言选项
+            to_str = data['trans_result']['to']
+            if self.target_lang != to_str:
+                index = list(eval(f'lang_{engine.get(self.comboBox.currentText())}.values()')).index(to_str) - 1
+                self.comboBox_3.blockSignals(True)  # 关闭信号连接
+                self.comboBox_3.setCurrentIndex(index)
+                self.comboBox_3.blockSignals(False)  # 恢复信号连接
+                self.refreshDisableIndex()
+
         # 通过线程发起翻译
         self.start_trans_thread = StartTransThread(query, self.target_lang, self.source_lang)
-        self.start_trans_thread.trigger.connect(self.outResult)
+        self.start_trans_thread.trigger.connect(trigger)
         self.start_trans_thread.start()
-        self.transl_started = True
-
-    def outResult(self, data):
-        """ 发起翻译的线程结束
-        线程结束时获取翻译结果并输出
-        """
-        self.transl_started = False
-        if not self.textEdit.toPlainText().strip():
-            # 输入框没有内容则直接返回
-            return None
-        if not data:
-            QtWidgets.QMessageBox.information(self, '提示', '翻译结果为空，请重试！')
-            return None
-        self.transl_result = data  # 翻译结果
-        trans_result = get_trans_result(data)  # 直译
-        spell_html = get_spell_html(data)  # 音标
-        comment_html = get_comment_html(data)  # 释义
-        exchange_html = get_exchange_html(data)  # 形态
-        example_html = get_example_html(data)  # 例句
-        if spell_html or comment_html:
-            trans_result_html = '<div style="font-size: 16px; color: #3C3C3C;"><h4>{}</h4></div>'.format(trans_result)
-            explanation_html = '<div style="font-size: 16px; color: #3C3C3C;"><p>{}</p><p>{}</p><p>{}</p><p>{}</p></div>'.format(spell_html, comment_html, exchange_html, example_html)
-            # 设置输出内容
-            self.textBrowser.setText(trans_result_html)
-            self.textBrowser_2.setText(explanation_html)
-            # 重设窗口大小
-            self.modifyUI(1)
-        else:
-            trans_result_html = '<div style="font-size: 16px; color: #3C3C3C;">{}<div>'.format(trans_result)
-            # 设置输出内容
-            self.textBrowser_2.setText(trans_result_html)
-            # 重设窗口大小
-            self.modifyUI(2)
-        # 自动纠正目标语言
-        to_str = data['trans_result']['to']
-        if self.target_lang != to_str:
-            index = list(eval(f'lang_{engine.get(self.comboBox.currentText())}.values()')).index(to_str) - 1
-            self.comboBox_3.blockSignals(True)  # 关闭信号连接
-            self.comboBox_3.setCurrentIndex(index)
-            self.comboBox_3.blockSignals(False)  # 恢复信号连接
-            self.refreshDisableIndex()
+        self.transl_started = True  # 标记本次翻译正在进行
 
     def voiceButtonClicked(self):
         """点击语音播报按钮"""
@@ -829,24 +819,28 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         elif mode == 2:
             h = self.widget_3.height() + self.textBrowser.height()
             size = QtCore.QSize(self.width(), MAX_H - h)
+
+        def finished():
+            """调整输出框"""
+            self.animation.deleteLater()
+            if mode == 1:
+                self.widget_3.show()
+                self.textBrowser.show()
+                self.textBrowser_2.show()
+                self.fadeIn(self.widget_2)
+            elif mode == 2:
+                self.widget_4.show()
+                self.textBrowser_2.show()
+                self.fadeIn(self.widget_2)
+
         if size is not None:
             self.hideWidget()
+            # 窗口大小变化动画
+            self.animation = QtCore.QPropertyAnimation(self, b"size", self)
+            self.animation.setDuration(200)  # 动画持续时间
             self.animation.setEndValue(size)
-            self.animation.finished.connect(lambda: self.animationFinished(mode))
+            self.animation.finished.connect(finished)
             self.animation.start()
-
-    def animationFinished(self, i):
-        """动画完成后调整布局"""
-        self.animation.disconnect()  # 断开信号连接
-        if i == 1:
-            self.widget_3.show()
-            self.textBrowser.show()
-            self.textBrowser_2.show()
-            self.fadeIn(self.widget_2)
-        elif i == 2:
-            self.widget_4.show()
-            self.textBrowser_2.show()
-            self.fadeIn(self.widget_2)
 
     def fadeIn(self, widget):
         """控件淡入"""
@@ -854,12 +848,14 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         opacity.setOpacity(0)
         widget.setGraphicsEffect(opacity)
         opacity.i = 1
+        num = 30
 
         def timeout():
-            opacity.setOpacity(opacity.i / 50)
+            """设置控件透明度"""
+            opacity.setOpacity(opacity.i / num)
             widget.setGraphicsEffect(opacity)
             opacity.i += 1
-            if opacity.i >= 50:
+            if opacity.i >= num:
                 self.temp_timer.stop()
                 self.temp_timer.deleteLater()
 
@@ -868,13 +864,25 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.temp_timer.timeout.connect(timeout)
         self.temp_timer.start()
 
-    def deleteScreenshotWindow(self):
-        """回收截图窗口"""
-        del self.screenshot_window
+    def ocr(self, img_data):
+        """ 文字识别
+        识别图片中的文本并发起翻译
+        """
+        def trigger(text):
+            """将识别到的文本设置到输入框进行翻译。如果没有识别到文本则弹窗提示"""
+            self.ocr_thread.deleteLater()
+            if text:
+                self.textEdit.setText(text)
+            else:
+                QtWidgets.QMessageBox.information(self, '提示', '没有从图片中识别到文字！')
+                self.textEdit.blockSignals(True)
+                self.textEdit.clear()
+                self.textEdit.blockSignals(False)
 
-    def deleteFloatWindow(self):
-        """回收悬浮窗口"""
-        del self.float_window
+        # 通过线程进行图像文字识别
+        self.ocr_thread = BaiduOCRThread(img_data)
+        self.ocr_thread.trigger.connect(trigger)
+        self.ocr_thread.start()
 
 
 if __name__ == '__main__':

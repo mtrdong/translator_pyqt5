@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QRect, qAbs, Qt, pyqtSignal, QBuffer, QIODevice
+from PyQt5.QtCore import QRect, qAbs, Qt, pyqtSignal, QBuffer, QIODevice, QByteArray
 from PyQt5.QtGui import QCursor, QColor, QKeySequence, QPen, QPainter, QGuiApplication
 from PyQt5.QtWidgets import QWidget, QShortcut, QDesktopWidget, QApplication
 
@@ -8,7 +8,7 @@ from widgets import MyLabel
 
 class ScreenshotWindow(QWidget):
     """截图窗口"""
-    completed = pyqtSignal(QBuffer)
+    completed = pyqtSignal(QByteArray)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -116,7 +116,7 @@ class ScreenshotWindow(QWidget):
         buffer.open(QIODevice.WriteOnly)
         if self.captureImage:
             self.captureImage.save(buffer, 'PNG')
-        self.completed.emit(buffer)  # 发送信号
+        self.completed.emit(buffer.data())  # 发送信号
         self.deleteLater()  # 回收窗口
 
     def cancel(self):

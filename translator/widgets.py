@@ -91,8 +91,6 @@ class FloatWidget(QtWidgets.QWidget):
     3. 淡入/淡出
     4. 自动关闭
     """
-    radioButtonClicked = QtCore.pyqtSignal(bool)
-    pushButtonClicked = QtCore.pyqtSignal(str)
 
     def __init__(self, *args, **kwargs):
         super(FloatWidget, self).__init__(*args, **kwargs)
