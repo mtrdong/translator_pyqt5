@@ -599,10 +599,10 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                     self,
                     '程序初始化失败',
                     '网络似乎不可用，请检查网络后重试！',
-                    QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Close,
-                    QtWidgets.QMessageBox.Ok
+                    QtWidgets.QMessageBox.Retry | QtWidgets.QMessageBox.Close,
+                    QtWidgets.QMessageBox.Retry
                 )
-                if msg == QtWidgets.QMessageBox.Ok:
+                if msg == QtWidgets.QMessageBox.Retry:
                     self.getTranslEngine()
                 else:
                     self.close()
