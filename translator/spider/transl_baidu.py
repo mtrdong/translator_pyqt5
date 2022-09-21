@@ -78,7 +78,7 @@ class BaiduTranslate(object):
         return cls._instance
 
     def __init__(self):
-        if not self._init_flag:
+        if not self._init_flag:  # 只初始化一次
             self._init_flag = True
             self.session = requests.Session()
             self._url = 'https://fanyi.baidu.com'

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from hashlib import md5
 from threading import Lock
+from urllib.parse import parse_qs
 
 import requests
 
@@ -18,7 +19,7 @@ class YoudaoTranslate(object):
         return cls._instance
 
     def __init__(self):
-        if not self._init_flag:
+        if not self._init_flag:  # 只初始化一次
             self._init_flag = True
             self.session = requests.Session()
             self.url = 'https://dict.youdao.com/jsonapi_s?doctype=json&jsonversion=4'
@@ -28,6 +29,52 @@ class YoudaoTranslate(object):
                               'Chrome/105.0.0.0 Safari/537.36',
             }
             self.data = None
+
+    def get_spell(self):
+        """获取单词的音标/拼音"""
+        spell_dict = {}
+        try:
+            spell_dict['英'] = {
+                'spell': f'[{self.data["simple"]["word"][0]["ukphone"]}]',
+                'speech': [self.data['simple']['query'], '', 1]
+            }
+            spell_dict['美'] = {
+                'spell': f'[{self.data["simple"]["word"][0]["usphone"]}]',
+                'speech': [self.data['simple']['query']]
+            }
+        except:
+            try:
+                spell_dict['音'] = {
+                    'spell': f'[{self.data["simple"]["word"][0]["phone"]}]',
+                    'speech': [self.data['simple']['query']]
+                }
+            except:
+                pass
+        return spell_dict
+
+    def get_voice(self, audio, le='', type_=2):
+        """获取发音"""
+        url = 'https://dict.youdao.com/dictvoice'
+        params = {'audio': audio, 'le': le, 'type': type_}
+        response = self.session.get(url, params=params, headers=self.headers)
+        content = response.content
+        return content
+
+    def get_sentence(self):
+        """获取例句"""
+        sentence_list = []
+        try:
+            sentence_pair = self.data["blng_sents_part"]["sentence-pair"]
+            for item in sentence_pair:
+                speech = parse_qs('audio=' + (item.get('sentence-speech') or item.get('sentence-translation-speech')))
+                sentence_list.append({
+                    'sentence': item.get('sentence-eng') or item.get('sentence'),
+                    'translation': item.get('sentence-translation'),
+                    'speech': [speech.get('audio', [''])[0], speech.get('le', [''])[0], speech.get('type', [''])[0]],
+                })
+        except:
+            return sentence_list
+        return sentence_list
 
     @staticmethod
     def get_form_data(text, le):
@@ -52,28 +99,6 @@ class YoudaoTranslate(object):
         }
         return form_data
 
-    def get_sentence(self):
-        """获取例句"""
-        sentence_list = []
-        try:
-            sentence_pair = self.data["blng_sents_part"]["sentence-pair"]
-            for item in sentence_pair:
-                sentence_list.append({
-                    'sentence': item.get('sentence-eng') or item.get('sentence'),
-                    'translation': item.get('sentence-translation'),
-                    'speech': 'audio=' + (item.get('sentence-speech') or item.get('sentence-translation-speech')),
-                })
-        except KeyError:
-            return sentence_list
-        return sentence_list
-
-    def get_voice(self, params):
-        """获取发音"""
-        url = 'https://dict.youdao.com/dictvoice'
-        response = self.session.get(url, params=params, headers=self.headers)
-        content = response.content
-        return content
-
     def translate(self, query, le):
         """翻译"""
         form_data = self.get_form_data(query, le)
@@ -83,5 +108,9 @@ class YoudaoTranslate(object):
 
 if __name__ == '__main__':
     yt = YoudaoTranslate()
-    yt.translate('你好', 'en')
+    yt.translate('废物', 'en')
+    spell = yt.get_spell()
+    # voice_uk = yt.get_voice(*spell['英']['speech'])
+    # voice_us = yt.get_voice(*spell['美']['speech'])
     sentence = yt.get_sentence()
+    print(yt.data)
