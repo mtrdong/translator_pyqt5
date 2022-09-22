@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from contextlib import suppress
 from hashlib import md5
 from threading import Lock
 from urllib.parse import parse_qs
@@ -42,14 +43,12 @@ class YoudaoTranslate(object):
                 'spell': f'[{self.data["simple"]["word"][0]["usphone"]}]',
                 'speech': [self.data['simple']['query']]
             }
-        except:
-            try:
+        except (KeyError, TypeError):
+            with suppress(KeyError, TypeError):
                 spell_dict['音'] = {
                     'spell': f'[{self.data["simple"]["word"][0]["phone"]}]',
                     'speech': [self.data['simple']['query']]
                 }
-            except:
-                pass
         return spell_dict
 
     def get_voice(self, audio, le='', type_=2):
@@ -60,10 +59,21 @@ class YoudaoTranslate(object):
         content = response.content
         return content
 
+    def get_explanation(self):
+        """获取释义"""
+        explanation_dict = {}
+        try:
+            word = (self.data.get('ce') or self.data.get('ec') or
+                    self.data.get('cf') or self.data.get('fc') or
+                    self.data.get('ck') or self.data.get('kc') or
+                    self.data.get('cj') or self.data.get('jc'))['word']
+        except (AttributeError, TypeError):
+            return explanation_dict
+
     def get_sentence(self):
         """获取例句"""
         sentence_list = []
-        try:
+        with suppress(KeyError, TypeError):
             sentence_pair = self.data["blng_sents_part"]["sentence-pair"]
             for item in sentence_pair:
                 speech = parse_qs('audio=' + (item.get('sentence-speech') or item.get('sentence-translation-speech')))
@@ -72,8 +82,6 @@ class YoudaoTranslate(object):
                     'translation': item.get('sentence-translation'),
                     'speech': [speech.get('audio', [''])[0], speech.get('le', [''])[0], speech.get('type', [''])[0]],
                 })
-        except:
-            return sentence_list
         return sentence_list
 
     @staticmethod
@@ -108,9 +116,10 @@ class YoudaoTranslate(object):
 
 if __name__ == '__main__':
     yt = YoudaoTranslate()
-    yt.translate('废物', 'en')
+    yt.translate('你好', 'ja')
     spell = yt.get_spell()
     # voice_uk = yt.get_voice(*spell['英']['speech'])
     # voice_us = yt.get_voice(*spell['美']['speech'])
+    explanation = yt.get_explanation()
     sentence = yt.get_sentence()
     print(yt.data)

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import base64
 import json
+from contextlib import suppress
 from threading import Lock
 
 import requests
@@ -30,13 +31,20 @@ class GoogleTranslate(object):
             }
             self.data = None
 
+    def get_translation(self):
+        """获取译文"""
+        translation_dict = {}
+        with suppress(IndexError, TypeError):
+            text = self.data[1][0][0][5][0][0]
+            translation_dict['translation'] = text
+            translation_dict['speech'] = [text, self.data[1][1]]
+        return translation_dict
+
     def get_spell(self):
-        """获取单词的音标/拼音"""
+        """获取音标/拼音"""
         spell_dict = {}
-        try:
+        with suppress(IndexError, TypeError):
             spell_dict['音'] = {'spell': f'[{self.data[0][0]}]', 'speech': [self.data[0][4][0][0], self.data[0][2]]}
-        except:
-            pass
         return spell_dict
 
     def get_voice(self, text, lang):
@@ -48,18 +56,24 @@ class GoogleTranslate(object):
         data = json.loads(json.loads(content)[0][2])
         return base64.b64decode(data[0])
 
+    def get_explanation(self):
+        """获取释义"""
+        explanation_dict = {}
+        with suppress(IndexError, TypeError):
+            for i in self.data[3][5][0]:
+                explanation_dict[i[0]] = [[n[0], '；'.join(n[2])] for n in i[1]]
+        return explanation_dict
+
     def get_sentence(self):
         """获取例句"""
         sentence_list = []
-        try:
+        with suppress(IndexError, TypeError):
             sentence_pair = self.data[3][2][0]
             for item in sentence_pair:
                 sentence_list.append({
                     'sentence': item[1],
                     'speech': [item[1], 'en'],
                 })
-        except:
-            return sentence_list
         return sentence_list
 
     @staticmethod
@@ -81,8 +95,10 @@ class GoogleTranslate(object):
 
 if __name__ == '__main__':
     gt = GoogleTranslate()
-    gt.translate('word', 'auto', 'zh-CN')
+    gt.translate('你好', 'auto', 'en')
     spell = gt.get_spell()
-    # voice = gt.get_voice(*spell['音']['speech'])
+    translation = gt.get_translation()
+    # voice = gt.get_voice(*translation['speech'])
+    explanation = gt.get_explanation()
     sentence = gt.get_sentence()
     print(gt.data)
