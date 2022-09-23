@@ -738,6 +738,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             # 自动纠正目标语言选项
             to_str = data['trans_result']['to']
             if self.target_lang != to_str:
+                self.target_lang = to_str
                 index = list(eval(f'lang_{engine.get(self.comboBox.currentText())}.values()')).index(to_str) - 1
                 self.comboBox_3.blockSignals(True)  # 关闭信号连接
                 self.comboBox_3.setCurrentIndex(index)
