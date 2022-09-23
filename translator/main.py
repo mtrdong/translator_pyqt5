@@ -226,6 +226,7 @@ lang_baidu = {
 }
 # 有道词典语言选项
 lang_youdao = {
+    '自动检测语言': '',
     '中英': 'en',
     '中法': 'fr',
     '中韩': 'ko',
@@ -372,7 +373,7 @@ lang_google = {
 # 翻译引擎
 engine = {
     '百度翻译': 'baidu',
-    '有道翻译': 'youdao',
+    '有道词典': 'youdao',
     '谷歌翻译': 'google',
 }
 
@@ -616,8 +617,9 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """设置源语言和目标语言下拉列表"""
         engine_val = engine.get(self.comboBox.currentText())
         if engine_val == 'youdao':
-            source_lang_items = ['自动检测语言']
-            target_lang_items = list(lang_youdao.keys())
+            youdao_keys = list(lang_youdao.keys())
+            source_lang_items = [youdao_keys.pop(0)]
+            target_lang_items = youdao_keys
         else:
             source_lang_items = list(eval(f'lang_{engine_val}.keys()'))
             target_lang_items = source_lang_items.copy()
@@ -654,7 +656,13 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """
         engine_val = engine.get(self.comboBox.currentText())
         self.source_lang = eval(f'lang_{engine_val}.get("{self.comboBox_2.currentText()}")')
-        if engine_val != 'youdao':
+        if engine_val == 'youdao':
+            # TODO 切换有道翻译中日互译时的输出结果
+            if self.comboBox_2.currentIndex() == 0:  # 输出“中译日”结果
+                pass
+            else:  # 输出“日译中”结果
+                pass
+        else:
             self.refreshDisableIndex()
             if engine_val == 'baidu':  # TODO 暂时仅支持百度翻译
                 if self.textEdit.toPlainText():
@@ -668,11 +676,20 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """
         engine_val = engine.get(self.comboBox.currentText())
         self.target_lang = eval(f'lang_{engine_val}.get("{self.comboBox_3.currentText()}")')
-        if engine_val != 'youdao':
-            self.refreshDisableIndex()
-            if engine_val == 'baidu':  # TODO 暂时仅支持百度翻译
-                if self.textEdit.toPlainText():
-                    self.startTransl()
+        if engine_val == 'youdao':
+            # 有道词典切换目标语言为“中日”时，由于翻译结果会有“中译日”和“日译中”两种
+            # 因此源语言选项修改为 ['中文 >> 日语', '日语 >> 中文']，用于切换输出结果
+            # TODO 此处还需根据翻译结果判断是否需要修改源语言下拉选项
+            items = ['中文 >> 日语', '日语 >> 中文'] if self.target_lang == 'ja' else [list(lang_youdao.keys())[0]]
+            self.comboBox_2.blockSignals(True)
+            self.comboBox_2.clear()
+            self.comboBox_2.addItems(items)
+            self.comboBox_2.setCurrentIndex(0)
+            self.comboBox_2.blockSignals(False)
+        self.refreshDisableIndex()
+        if engine_val == 'baidu':  # TODO 暂时仅支持百度翻译
+            if self.textEdit.toPlainText():
+                self.startTransl()
 
     def refreshDisableIndex(self):
         """刷新源语言/目标语言下拉禁用选项"""

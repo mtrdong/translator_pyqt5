@@ -35,6 +35,9 @@
          <height>30</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string>置顶/取消置顶</string>
+       </property>
        <property name="styleSheet">
         <string notr="true">QPushButton {background-color: transparent; border: 0;} QPushButton:hover {background-color: rgb(220, 220, 220);} QPushButton:pressed, QPushButton:checked {background-color: rgb(200, 200, 200);}</string>
        </property>
@@ -54,6 +57,9 @@
          <height>30</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string>最小化</string>
+       </property>
        <property name="styleSheet">
         <string notr="true">QPushButton {background-color: transparent; border: 0;} QPushButton:hover {background-color: rgb(220, 220, 220);} QPushButton:pressed {background-color: rgb(200, 200, 200);}</string>
        </property>
@@ -69,6 +75,9 @@
          <width>45</width>
          <height>30</height>
         </size>
+       </property>
+       <property name="toolTip">
+        <string>关闭</string>
        </property>
        <property name="styleSheet">
         <string notr="true">QPushButton {background-color: transparent; border: 0;} QPushButton:hover {background-color: rgb(228, 104, 85);} QPushButton:pressed {background-color: rgb(196, 94, 74);}</string>
@@ -135,6 +144,9 @@
            <height>28</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>翻译引擎</string>
+         </property>
         </widget>
        </item>
        <item>
@@ -193,6 +205,9 @@
          <property name="cursor">
           <cursorShape>PointingHandCursor</cursorShape>
          </property>
+         <property name="toolTip">
+          <string>开始翻译</string>
+         </property>
          <property name="styleSheet">
           <string notr="true">QPushButton {background-color: rgb(67, 149, 255); color: rgb(255, 255, 255); border-radius: 5px;} QPushButton:pressed {background-color: rgb(52, 133, 251);}</string>
          </property>
@@ -233,7 +248,7 @@
           </size>
          </property>
          <property name="toolTip">
-          <string>目标语言</string>
+          <string>源语言</string>
          </property>
          <property name="editable">
           <bool>true</bool>
@@ -250,6 +265,9 @@
          </property>
          <property name="cursor">
           <cursorShape>PointingHandCursor</cursorShape>
+         </property>
+         <property name="toolTip">
+          <string>交换源语言和目标语言</string>
          </property>
          <property name="styleSheet">
           <string notr="true">QPushButton {background-color: transparent; border: 0; font-size: 25px;}</string>
@@ -375,6 +393,9 @@
                </property>
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>清空</string>
                </property>
                <property name="styleSheet">
                 <string notr="true">QPushButton {background-color: rgba(0, 0, 0, 80); border-radius: 9px; font-size: 8px; color: rgb(255, 255, 255);}</string>
