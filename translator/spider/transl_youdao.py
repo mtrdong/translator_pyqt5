@@ -205,7 +205,7 @@ class YoudaoTranslate(object):
 
 if __name__ == '__main__':
     yt = YoudaoTranslate()
-    yt.translate('막다', 'ko')
+    yt.translate('good', 'en')
     explanation = yt.get_explanation()
     # voice_uk = yt.get_voice(*explanation[0][0][0][1])
     # voice_us = yt.get_voice(*explanation[0][0][1][1])

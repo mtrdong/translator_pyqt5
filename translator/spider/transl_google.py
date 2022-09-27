@@ -40,13 +40,6 @@ class GoogleTranslate(object):
             translation_data.append([text, self.data[1][1]])
         return translation_data
 
-    def get_spell(self):
-        """获取音标/拼音"""
-        spell_data = []
-        with suppress(IndexError, TypeError):
-            spell_data.append([self.data[0][0], [self.data[0][4][0][0], self.data[0][2]]])
-        return spell_data
-
     def get_voice(self, text, lang):
         """获取发音"""
         rpcids = 'jQ1olc'
@@ -100,7 +93,6 @@ if __name__ == '__main__':
     gt.translate('good', 'auto', 'zh-CN')
     translation = gt.get_translation()
     explanation = gt.get_explanation()
-    a = explanation[0][0][0][1]
     # voice = gt.get_voice(*explanation[0][0][0][1])
     sentence = gt.get_sentence()
     print(gt.data)
