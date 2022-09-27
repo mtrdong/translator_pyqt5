@@ -33,19 +33,19 @@ class GoogleTranslate(object):
 
     def get_translation(self):
         """获取译文"""
-        translation_dict = {}
+        translation_data = []
         with suppress(IndexError, TypeError):
             text = self.data[1][0][0][5][0][0]
-            translation_dict['translation'] = text
-            translation_dict['speech'] = [text, self.data[1][1]]
-        return translation_dict
+            translation_data.append(text)
+            translation_data.append([text, self.data[1][1]])
+        return translation_data
 
     def get_spell(self):
         """获取音标/拼音"""
-        spell_dict = {}
+        spell_data = []
         with suppress(IndexError, TypeError):
-            spell_dict['音'] = {'spell': f'[{self.data[0][0]}]', 'speech': [self.data[0][4][0][0], self.data[0][2]]}
-        return spell_dict
+            spell_data.append([self.data[0][0], [self.data[0][4][0][0], self.data[0][2]]])
+        return spell_data
 
     def get_voice(self, text, lang):
         """获取发音"""
@@ -58,23 +58,25 @@ class GoogleTranslate(object):
 
     def get_explanation(self):
         """获取释义"""
-        explanation_dict = {}
+        explanation_data = []
         with suppress(IndexError, TypeError):
+            # 解析读音和释义
+            spell_data, trs_data = [], []
+            spell_data.append([self.data[0][0], [self.data[0][4][0][0], self.data[0][2]]])
             for i in self.data[3][5][0]:
-                explanation_dict[i[0]] = [[n[0], '；'.join(n[2])] for n in i[1]]
-        return explanation_dict
+                trs_data.append([i[0], [[n[0], '；'.join(n[2])] for n in i[1]]])
+            # 添加数据
+            explanation_data.append([spell_data, explanation_data])
+        return explanation_data
 
     def get_sentence(self):
         """获取例句"""
-        sentence_list = []
+        sentence_data = []
         with suppress(IndexError, TypeError):
             sentence_pair = self.data[3][2][0]
             for item in sentence_pair:
-                sentence_list.append({
-                    'sentence': item[1],
-                    'speech': [item[1], 'en'],
-                })
-        return sentence_list
+                sentence_data.append([item[1], [item[1], 'en'], ''])
+        return sentence_data
 
     @staticmethod
     def get_form_data(rpcids, query, from_str, to_str=None):
@@ -95,10 +97,10 @@ class GoogleTranslate(object):
 
 if __name__ == '__main__':
     gt = GoogleTranslate()
-    gt.translate('你好', 'auto', 'en')
-    spell = gt.get_spell()
+    gt.translate('good', 'auto', 'zh-CN')
     translation = gt.get_translation()
-    # voice = gt.get_voice(*translation['speech'])
     explanation = gt.get_explanation()
+    a = explanation[0][0][0][1]
+    # voice = gt.get_voice(*explanation[0][0][0][1])
     sentence = gt.get_sentence()
     print(gt.data)
