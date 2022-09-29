@@ -63,7 +63,7 @@ class TranslThread(QThread):
 
 class StartTransThread(QThread):
     """启动百度翻译获取翻译结果"""
-    trigger = pyqtSignal(bool)
+    trigger = pyqtSignal(dict)
 
     def __init__(self, engine, **kwargs):
         super().__init__()
@@ -75,7 +75,7 @@ class StartTransThread(QThread):
             data = self.engine.translate(**self.kwargs)
         except:
             data = dict()
-        self.trigger.emit(True)  # 信号发送翻译结果
+        self.trigger.emit(data)  # 信号发送翻译结果
 
 
 class DownloadVoiceThread(QThread):
