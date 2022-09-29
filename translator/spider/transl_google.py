@@ -50,16 +50,38 @@ class GoogleTranslate(object):
         return base64.b64decode(data[0])
 
     def get_explanation(self):
-        """获取释义"""
+        """ 获取释义
+        [{
+            "symbols": [
+                ["音 [ɡo͝od]", ["good", "en"]]
+            ],
+            "explains": [
+                {
+                    "part": "形容词",
+                    "means": [
+                        ["好", "good"],
+                        ["良好", "good, well, favorable, fine, favourable"]
+                    ]
+                },
+                {
+                    "part": "名词",
+                    "means": [
+                        ["益处", "benefit, good, profit"],
+                        ["甜头", "good, sweet taste, pleasant flavor"]
+                    ]
+                }
+            ]
+        }]
+        """
         explanation_data = []
         with suppress(IndexError, TypeError):
             # 解析读音和释义
-            spell_data, trs_data = [], []
-            spell_data.append([self.data[0][0], [self.data[0][4][0][0], self.data[0][2]]])
+            symbol_list, explain_list = [], []
+            symbol_list.append([f'音 [{self.data[0][0]}]', [self.data[0][4][0][0], self.data[0][2]]])
             for i in self.data[3][5][0]:
-                trs_data.append([i[0], [[n[0], '；'.join(n[2])] for n in i[1]]])
+                explain_list.append({'part': i[0], 'means': [[n[0], '；'.join(n[2])] for n in i[1]]})
             # 添加数据
-            explanation_data.append([spell_data, explanation_data])
+            explanation_data.append({'symbols': symbol_list, 'explains': explain_list})
         return explanation_data
 
     def get_sentence(self):
