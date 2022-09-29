@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from contextlib import suppress
 from hashlib import md5
 from threading import Lock
 from urllib.parse import parse_qs
@@ -188,18 +187,26 @@ class YoudaoTranslate(object):
 
         return explanation_data
 
-    def get_sentence(self):
+    def get_sentence(self, more=False):
         """获取例句"""
         sentence_data = []
-        with suppress(KeyError, TypeError):
-            sentence_pair = self.data["blng_sents_part"]["sentence-pair"]
-            for item in sentence_pair:
-                speech = parse_qs('audio=' + (item.get('sentence-speech') or item.get('sentence-translation-speech')))
-                sentence_data.append([
-                    item.get('sentence-eng') or item.get('sentence'),
-                    [speech.get('audio', [''])[0], speech.get('le', [''])[0], speech.get('type', [''])[0]],
-                    item.get('sentence-translation'),
-                ])
+        if more:
+            query = f'lj:{self.data["meta"]["input"]}'
+            le = self.data['meta']['le']
+            form_data = self.get_form_data(query, le)
+            response = self.session.post(self.url, data=form_data, headers=self.headers)
+            body = response.json()
+            sentence_pair = body.get('blng_sents', {}).get('sentence-pair', [])
+        else:
+            sentence_pair = self.data.get('blng_sents_part', {}).get('sentence-pair', [])
+        for item in sentence_pair:
+            # 补全获取例句语音的参数，然后再通过 urllib.parse.parse_qs 解析参数
+            speech = parse_qs('audio=' + (item.get('sentence-speech') or item.get('sentence-translation-speech')))
+            sentence_data.append([
+                item.get('sentence-eng') or item.get('sentence'),  # 例句
+                item.get('sentence-translation'),  # 例句翻译
+                [speech.get('audio', [''])[0], speech.get('le', [''])[0]]  # 例句语音获取参数
+            ])
         return sentence_data
 
     @staticmethod
@@ -242,5 +249,5 @@ if __name__ == '__main__':
     explanation = yt.get_explanation()
     # voice_uk = yt.get_voice(*explanation[0]['symbols'][0][1])
     # voice_us = yt.get_voice(*explanation[0]['symbols'][1][1])
-    sentence = yt.get_sentence()
+    sentence = yt.get_sentence(True)
     print(yt.data)
