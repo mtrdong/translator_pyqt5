@@ -94,16 +94,18 @@ class GoogleTranslate(object):
         return sentence_data
 
     @staticmethod
-    def get_form_data(rpcids, query, from_str, to_str=None):
+    def get_form_data(rpcids, query, from_lang, to_lang=None):
         """构建表单参数"""
-        s = f'[["{query}","{from_str}","{to_str}",true],[null]]' if to_str else f'["{query}","{from_str}",null,null]'
-        form_data = {'f.req': json.dumps([[[rpcids, s, None, "generic"]]])}
+        list_ = [query, from_lang, to_lang, bool(to_lang) or None]
+        if to_lang:
+            list_ = [list_, [None]]
+        form_data = {'f.req': json.dumps([[[rpcids, json.dumps(list_), None, "generic"]]])}
         return form_data
 
-    def translate(self, query, from_str, to_str):
+    def translate(self, query, from_lang, to_lang):
         """翻译"""
         rpcids = 'MkEWBc'
-        form_data = self.get_form_data(rpcids, query, from_str, to_str)
+        form_data = self.get_form_data(rpcids, query, from_lang, to_lang)
         response = self.session.post(self.url, data=form_data, headers=self.headers)
         content = response.content.decode().split('\n\n')[-1]
         data = json.loads(json.loads(content)[0][2])
@@ -115,6 +117,6 @@ if __name__ == '__main__':
     gt.translate('good', 'auto', 'zh-CN')
     translation = gt.get_translation()
     explanation = gt.get_explanation()
-    # voice = gt.get_voice(*explanation[0][0][0][1])
+    # voice = gt.get_voice(*explanation[0]['symbols'][0][1])
     sentence = gt.get_sentence()
     print(gt.data)

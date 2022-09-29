@@ -463,7 +463,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         if not hasattr(self, 'screenshot_window'):
 
             def completed(img_data):
-                """截屏完成，显示主窗口哦并启动识别翻译"""
+                """截屏完成，显示主窗口并启动识别翻译"""
                 self.activateWindow()  # 主窗口变为活动窗口
                 self.showNormal()  # 显示主窗口
                 QtWidgets.QApplication.processEvents()  # 刷新界面
@@ -763,7 +763,10 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                 self.refreshDisableIndex()
 
         # 通过线程发起翻译
-        self.start_trans_thread = StartTransThread(query, self.target_lang, self.source_lang)
+        kwargs = {'query': query, 'to_lang': self.target_lang}
+        if engine.get(self.comboBox.currentText()) != 'youdao':
+            kwargs['from_lang'] = self.source_lang
+        self.start_trans_thread = StartTransThread(self.transl_engine, **kwargs)
         self.start_trans_thread.trigger.connect(trigger)
         self.start_trans_thread.start()
         self.transl_started = True  # 标记本次翻译正在进行

@@ -62,11 +62,7 @@ def e(r: str):
 
 
 class BaiduTranslate(object):
-    """ 百度翻译爬虫
-    实例化爬虫后调用`start_trans()`方法进行翻译，调用`get_result()`方法获取翻译结果用于控制台输出
-    调用`get_tts()`方法可获取发音
-    调用`get_str_from_img()`方法可获取图片中的文字
-    """
+    """百度翻译爬虫"""
     _lock = Lock()
     _instance = None
     _init_flag = False
@@ -91,7 +87,7 @@ class BaiduTranslate(object):
             self._cookie = response.headers.get('Set-Cookie')
             self._headers['cookie'] = self._cookie
             response = self.session.get(url=self._url, headers=self._headers)
-            self._token = re.findall(r'token:[\s\'\"]+([a-z0-9]+)[\'\"]', response.content.decode())
+            self._token = re.findall(r'token:[\s\'\"]+([a-z\d]+)[\'\"]', response.content.decode())
             self._result = {}
             self._trans_flag = False
 
@@ -232,20 +228,20 @@ class BaiduTranslate(object):
         zh_str = ''.join([s[0] for s in example[1]])
         return en_str.strip(), zh_str
 
-    def start_trans(self, query: str, to_str: str, from_str: str = None):
+    def translate(self, query, to_lang, from_lang=None):
         """ 启动翻译
         翻译成功后返回百度翻译的源数据
         :param query: 翻译内容
-        :param to_str: 目标语言
-        :param from_str: 源语言
+        :param from_lang: 目标语言
+        :param to_lang: 源语言
         """
         self._result = {}
-        if not from_str:
-            from_str = self._get_lan(query)  # 自动检测源语言
-        if from_str == to_str:
-            to_str = 'en' if from_str == 'zh' else 'zh'
-        path = f'/v2transapi?from={from_str}&to={to_str}'
-        form_data = self._get_form_data(query, from_str, to_str)
+        if not from_lang:
+            from_lang = self._get_lan(query)  # 自动检测源语言
+        if from_lang == to_lang:
+            to_lang = 'en' if from_lang == 'zh' else 'zh'
+        path = f'/v2transapi?from={from_lang}&to={to_lang}'
+        form_data = self._get_form_data(query, from_lang, to_lang)
         response = self._post(path, form_data)
         self._result = json.loads(response.content)
         if self._result.get('error'):
@@ -255,7 +251,7 @@ class BaiduTranslate(object):
 
     def get_result(self):
         """ 获取翻译结果
-        获取翻译结果前须调用 start_trans(query, to_str) 方法启动翻译
+        获取翻译结果前须调用 translate 方法启动翻译
         返回结果分别为：直译、释义、例句
         """
         if self._trans_flag:
@@ -299,7 +295,7 @@ if __name__ == '__main__':
         else:
             to_lan = 'zh' if re.findall('[\u4e00-\u9fa5]', word) else 'en'
             try:
-                bt.start_trans(word, to_lan)
+                bt.translate(word, to_lan)
             except Exception as e:
                 print(f'【翻译出错啦】: {e}')
             else:

@@ -225,12 +225,12 @@ class YoudaoTranslate(object):
         }
         return form_data
 
-    def translate(self, query, le):
+    def translate(self, query, to_lang):
         """翻译"""
-        form_data = self.get_form_data(query, le)
+        form_data = self.get_form_data(query, to_lang)
         response = self.session.post(self.url, data=form_data, headers=self.headers)
         self.data = response.json()
-        if le == 'ja':  # 【中日】互译时检查是否有两种结果
+        if to_lang == 'ja':  # 【中日】互译时检查是否有两种结果
             newjc = self.data.get('newjc', {}).get('word')
             cj = self.data.get('cj', {}).get('word')
             self.reverse_flag = True if newjc and cj else False
@@ -240,7 +240,7 @@ if __name__ == '__main__':
     yt = YoudaoTranslate()
     yt.translate('good', 'en')
     explanation = yt.get_explanation()
-    # voice_uk = yt.get_voice(*explanation[0][0][0][1])
-    # voice_us = yt.get_voice(*explanation[0][0][1][1])
+    # voice_uk = yt.get_voice(*explanation[0]['symbols'][0][1])
+    # voice_us = yt.get_voice(*explanation[0]['symbols'][1][1])
     sentence = yt.get_sentence()
     print(yt.data)
