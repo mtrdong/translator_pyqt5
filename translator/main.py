@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os.path
+import os
 import sys
 from time import sleep
 
@@ -785,8 +785,13 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
 
     def copyButtonClicked(self):
         """点击复制内容按钮"""
-        text = self.transl_result['trans_result']['data'][0].get('dst')
-        self.clipboard.setText(text)
+        text = ''
+        if self.pushButton_9.hasFocus():  # 点击译文输出框复制按钮
+            text = self.textBrowser.toPlainText()
+        elif self.pushButton_11.hasFocus():  # 点击释义输出框复制按钮
+            text = self.textBrowser_2.toPlainText()
+        if text:  # 文本不为空则添加到剪切板
+            self.clipboard.setText(text)
 
     def anchorClicked(self, url):
         """ 点击底部输出框中的链接
