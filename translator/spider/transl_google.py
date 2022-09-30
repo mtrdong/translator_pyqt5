@@ -31,6 +31,24 @@ class GoogleTranslate(object):
             }
             self.data = None
 
+    @staticmethod
+    def _get_form_data(rpcids, query, from_lan, to_lan=None):
+        """构建表单参数"""
+        list_ = [query, from_lan, to_lan, bool(to_lan) or None]
+        if to_lan:
+            list_ = [list_, [None]]
+        form_data = {'f.req': json.dumps([[[rpcids, json.dumps(list_), None, "generic"]]])}
+        return form_data
+
+    def translate(self, query, from_lan, to_lan):
+        """翻译"""
+        rpcids = 'MkEWBc'
+        form_data = self._get_form_data(rpcids, query, from_lan, to_lan)
+        response = self.session.post(self.url, data=form_data, headers=self.headers)
+        content = response.content.decode().split('\n\n')[-1]
+        data = json.loads(json.loads(content)[0][2])
+        self.data = data
+
     def get_translation(self):
         """获取译文"""
         translation_data = []
@@ -39,15 +57,6 @@ class GoogleTranslate(object):
             translation_data.append(text)
             translation_data.append([text, self.data[1][1]])
         return translation_data
-
-    def get_voice(self, text, lang):
-        """获取发音"""
-        rpcids = 'jQ1olc'
-        form_data = self.get_form_data(rpcids, text, lang)
-        response = self.session.post(self.url, data=form_data, headers=self.headers)
-        content = response.content.decode().split('\n\n')[-1]
-        data = json.loads(json.loads(content)[0][2])
-        return base64.b64decode(data[0])
 
     def get_explanation(self):
         """ 获取释义
@@ -75,7 +84,7 @@ class GoogleTranslate(object):
         """
         explanation_data = []
         with suppress(IndexError, TypeError):
-            # 解析读音和释义
+            # 解析音标和释义
             symbol_list, explain_list = [], []
             symbol_list.append([f'音 [{self.data[0][0]}]', [self.data[0][4][0][0], self.data[0][2]]])
             for i in self.data[3][5][0]:
@@ -93,30 +102,21 @@ class GoogleTranslate(object):
                 sentence_data.append([item[1], [item[1], 'en'], ''])
         return sentence_data
 
-    @staticmethod
-    def get_form_data(rpcids, query, from_lang, to_lang=None):
-        """构建表单参数"""
-        list_ = [query, from_lang, to_lang, bool(to_lang) or None]
-        if to_lang:
-            list_ = [list_, [None]]
-        form_data = {'f.req': json.dumps([[[rpcids, json.dumps(list_), None, "generic"]]])}
-        return form_data
-
-    def translate(self, query, from_lang, to_lang):
-        """翻译"""
-        rpcids = 'MkEWBc'
-        form_data = self.get_form_data(rpcids, query, from_lang, to_lang)
+    def get_tts(self, text, lang):
+        """获取发音"""
+        rpcids = 'jQ1olc'
+        form_data = self._get_form_data(rpcids, text, lang)
         response = self.session.post(self.url, data=form_data, headers=self.headers)
         content = response.content.decode().split('\n\n')[-1]
         data = json.loads(json.loads(content)[0][2])
-        self.data = data
+        return base64.b64decode(data[0])
 
 
 if __name__ == '__main__':
     gt = GoogleTranslate()
     gt.translate('good', 'auto', 'zh-CN')
-    translation = gt.get_translation()
-    explanation = gt.get_explanation()
-    # voice = gt.get_voice(*explanation[0]['symbols'][0][1])
-    sentence = gt.get_sentence()
+    translations = gt.get_translation()
+    explanations = gt.get_explanation()
+    # tts = gt.get_tts(*explanations[0]['symbols'][0][1])
+    sentences = gt.get_sentence()
     print(gt.data)

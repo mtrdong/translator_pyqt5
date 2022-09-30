@@ -88,7 +88,7 @@ class DownloadVoiceThread(QThread):
         self.text = text
 
     def run(self):
-        data = BaiduTranslate().get_tts(self.lan, self.text)
+        data = BaiduTranslate().get_tts(self.text, self.lan)
         if data is None:
             data = bytes()
         self.trigger.emit(data)  # 信号发送数据
@@ -104,5 +104,5 @@ class BaiduOCRThread(QThread):
 
     def run(self):
         # text = baidu_ocr(self.image)  # 精度高，推荐
-        text = BaiduTranslate().get_str_from_img(self.image)  # 精度低，备用
+        text = BaiduTranslate().get_ocr(self.image)  # 精度低，备用
         self.trigger.emit(text)  # 信号发送文本

@@ -21,7 +21,7 @@ from window.FloatWindow import FloatWindow
 from window.ScreenshotWindow import ScreenshotWindow
 
 # 百度翻译语言选项
-lang_baidu = {
+lan_baidu = {
     '自动检测': '',
     '中文(简体)': 'zh',
     '英语': 'en',
@@ -226,7 +226,7 @@ lang_baidu = {
     '塞尔维亚语(西里尔文)': 'src'
 }
 # 有道词典语言选项
-lang_youdao = {
+lan_youdao = {
     '自动检测语言': '',
     '中英': 'en',
     '中法': 'fr',
@@ -234,7 +234,7 @@ lang_youdao = {
     '中日': 'ja',
 }
 # 谷歌翻译语言选项
-lang_google = {
+lan_google = {
     '检测语言': 'auto',
     '阿尔巴尼亚语': 'sq',
     '阿拉伯语': 'ar',
@@ -408,8 +408,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.comboBox.addItems(engine.keys())
         self.comboBox.setCurrentIndex(0)
         self.comboBox.currentIndexChanged.connect(self.comboBoxCurrentIndexChanged)
-        self.source_lang = None  # 源语言代码
-        self.target_lang = None  # 目标语言代码
+        self.source_lan = None  # 源语言代码
+        self.target_lan = None  # 目标语言代码
         self.comboBox_2DisableIndex = 0  # 源语言下拉列表禁用的的索引
         self.comboBox_3DisableIndex = 0  # 目标语言下拉列表禁用的的索引
         self.comboBox_2.currentIndexChanged.connect(self.comboBox_2CurrentIndexChanged)
@@ -498,7 +498,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         调换源语言与目标语言
         """
         if engine.get(self.comboBox.currentText()) != 'youdao':
-            if self.source_lang and self.source_lang != 'auto':
+            if self.source_lan and self.source_lan != 'auto':
                 combobox_2_index = self.comboBox_2.currentIndex()
                 combobox_3_index = self.comboBox_3.currentIndex()
                 # 保持源语言信号连接，暂停目标语言信号连接，防止自动触发两次翻译
@@ -587,7 +587,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                         self.float_window.outResult(data)  # 将结果输出到悬浮窗
 
                 # 通过线程发起翻译
-                self.start_trans_thread = StartTransThread(mime_data.text(), self.target_lang)
+                self.start_trans_thread = StartTransThread(mime_data.text(), self.target_lan)
                 self.start_trans_thread.trigger.connect(trigger)
                 self.start_trans_thread.start()
                 # 标记正在翻译
@@ -620,28 +620,28 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """设置源语言和目标语言下拉列表"""
         engine_val = engine.get(self.comboBox.currentText())
         if engine_val == 'youdao':
-            youdao_keys = list(lang_youdao.keys())
-            source_lang_items = [youdao_keys.pop(0)]
-            target_lang_items = youdao_keys
+            youdao_keys = list(lan_youdao.keys())
+            source_lan_items = [youdao_keys.pop(0)]
+            target_lan_items = youdao_keys
         else:
-            source_lang_items = list(eval(f'lang_{engine_val}.keys()'))
-            target_lang_items = source_lang_items.copy()
-            target_lang_items.pop(0)
+            source_lan_items = list(eval(f'lan_{engine_val}.keys()'))
+            target_lan_items = source_lan_items.copy()
+            target_lan_items.pop(0)
         # 源语言下拉列表
         self.comboBox_2.blockSignals(True)  # 关闭信号连接
         self.comboBox_2.clear()
-        self.comboBox_2.addItems(source_lang_items)
+        self.comboBox_2.addItems(source_lan_items)
         self.comboBox_2.setCurrentIndex(0)
         self.comboBox_2.blockSignals(False)  # 恢复信号连接
         # 目标语言下拉列表
         self.comboBox_3.blockSignals(True)
         self.comboBox_3.clear()
-        self.comboBox_3.addItems(target_lang_items)
+        self.comboBox_3.addItems(target_lan_items)
         self.comboBox_3.setCurrentIndex(0)
         self.comboBox_3.blockSignals(False)
         # 设置源语言和目标语言，并刷新源语言/目标语言下拉列表禁用选项
-        self.source_lang = eval(f'lang_{engine_val}.get("{source_lang_items[0]}")')
-        self.target_lang = eval(f'lang_{engine_val}.get("{target_lang_items[0]}")')
+        self.source_lan = eval(f'lan_{engine_val}.get("{source_lan_items[0]}")')
+        self.target_lan = eval(f'lan_{engine_val}.get("{target_lan_items[0]}")')
         self.refreshDisableIndex()
 
     def comboBoxCurrentIndexChanged(self):
@@ -658,7 +658,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         3. 发起翻译
         """
         engine_val = engine.get(self.comboBox.currentText())
-        self.source_lang = eval(f'lang_{engine_val}.get("{self.comboBox_2.currentText()}")')
+        self.source_lan = eval(f'lan_{engine_val}.get("{self.comboBox_2.currentText()}")')
         if engine_val == 'youdao':
             # TODO 切换有道翻译中日互译时的输出结果
             if self.comboBox_2.currentIndex() == 0:  # 输出“中译日”结果
@@ -678,12 +678,12 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         3. 发起翻译
         """
         engine_val = engine.get(self.comboBox.currentText())
-        self.target_lang = eval(f'lang_{engine_val}.get("{self.comboBox_3.currentText()}")')
+        self.target_lan = eval(f'lan_{engine_val}.get("{self.comboBox_3.currentText()}")')
         if engine_val == 'youdao':
             # 有道词典切换目标语言为“中日”时，由于翻译结果会有“中译日”和“日译中”两种
             # 因此源语言选项修改为 ['中文 >> 日语', '日语 >> 中文']，用于切换输出结果
             # TODO 此处还需根据翻译结果判断是否需要修改源语言下拉选项
-            items = ['中文 >> 日语', '日语 >> 中文'] if self.target_lang == 'ja' else [list(lang_youdao.keys())[0]]
+            items = ['中文 >> 日语', '日语 >> 中文'] if self.target_lan == 'ja' else [list(lan_youdao.keys())[0]]
             self.comboBox_2.blockSignals(True)
             self.comboBox_2.clear()
             self.comboBox_2.addItems(items)
@@ -700,7 +700,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             # 解除上次禁用选项
             self.comboBox_2.setItemData(self.comboBox_2DisableIndex, 1 | 32, QtCore.Qt.UserRole - 1)
             self.comboBox_3.setItemData(self.comboBox_3DisableIndex, 1 | 32, QtCore.Qt.UserRole - 1)
-            if self.source_lang and self.source_lang != 'auto':
+            if self.source_lan and self.source_lan != 'auto':
                 self.comboBox_2DisableIndex = self.comboBox_3.currentIndex() + 1
                 self.comboBox_3DisableIndex = self.comboBox_2.currentIndex() - 1
                 self.comboBox_2.setItemData(self.comboBox_2DisableIndex, 0, QtCore.Qt.UserRole - 1)
@@ -757,18 +757,18 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                 self.modifyUI(2)
             # 自动纠正目标语言选项
             to_str = data['trans_result']['to']
-            if self.target_lang != to_str:
-                self.target_lang = to_str
-                index = list(eval(f'lang_{engine.get(self.comboBox.currentText())}.values()')).index(to_str) - 1
+            if self.target_lan != to_str:
+                self.target_lan = to_str
+                index = list(eval(f'lan_{engine.get(self.comboBox.currentText())}.values()')).index(to_str) - 1
                 self.comboBox_3.blockSignals(True)  # 关闭信号连接
                 self.comboBox_3.setCurrentIndex(index)
                 self.comboBox_3.blockSignals(False)  # 恢复信号连接
                 self.refreshDisableIndex()
 
         # 通过线程发起翻译
-        kwargs = {'query': query, 'to_lang': self.target_lang}
+        kwargs = {'query': query, 'to_lan': self.target_lan}
         if engine.get(self.comboBox.currentText()) != 'youdao':
-            kwargs['from_lang'] = self.source_lang
+            kwargs['from_lan'] = self.source_lan
         self.start_trans_thread = StartTransThread(self.transl_engine, **kwargs)
         self.start_trans_thread.trigger.connect(trigger)
         self.start_trans_thread.start()
@@ -782,16 +782,6 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.voice_thread = DownloadVoiceThread(lan, text)
         self.voice_thread.trigger.connect(self.playVoice)
         self.voice_thread.start()
-
-    def copyButtonClicked(self):
-        """点击复制内容按钮"""
-        text = ''
-        if self.pushButton_9.hasFocus():  # 点击译文输出框复制按钮
-            text = self.textBrowser.toPlainText()
-        elif self.pushButton_11.hasFocus():  # 点击释义输出框复制按钮
-            text = self.textBrowser_2.toPlainText()
-        if text:  # 文本不为空则添加到剪切板
-            self.clipboard.setText(text)
 
     def anchorClicked(self, url):
         """ 点击底部输出框中的链接
@@ -814,6 +804,16 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         else:  # 点击文本链接
             self.textEdit.setText(url)
             self.startTransl()
+
+    def copyButtonClicked(self):
+        """点击复制内容按钮"""
+        text = ''
+        if self.pushButton_9.hasFocus():  # 点击译文输出框复制按钮
+            text = self.textBrowser.toPlainText()
+        elif self.pushButton_11.hasFocus():  # 点击释义输出框复制按钮
+            text = self.textBrowser_2.toPlainText()
+        if text:  # 文本不为空则添加到剪切板
+            self.clipboard.setText(text)
 
     def playVoice(self, voice_data):
         """播放语音"""
