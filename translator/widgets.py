@@ -235,10 +235,12 @@ class MyTextEdit(QtWidgets.QTextEdit):
     #         self.selectAll()
 
     def insertFromMimeData(self, mime_data):
-        """插入文件时清空文本框内容"""
+        """插入文件时清空文本框内容，便于读取文件名"""
         if mime_data.urls():
             if mime_data.urls()[0].url().find('file:///') == 0:
+                self.blockSignals(True)
                 self.clear()
+                self.blockSignals(False)
         super(MyTextEdit, self).insertFromMimeData(mime_data)
 
     def resizeEvent(self, event):

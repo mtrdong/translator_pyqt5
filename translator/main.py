@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os.path
 import sys
 from time import sleep
 
@@ -500,6 +501,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             if self.source_lang and self.source_lang != 'auto':
                 combobox_2_index = self.comboBox_2.currentIndex()
                 combobox_3_index = self.comboBox_3.currentIndex()
+                # 保持源语言信号连接，暂停目标语言信号连接，防止自动触发两次翻译
                 self.comboBox_2.setCurrentIndex(combobox_3_index + 1)
                 self.comboBox_3.blockSignals(True)  # 关闭信号连接
                 self.comboBox_3.setCurrentIndex(combobox_2_index - 1)
@@ -512,32 +514,33 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         如果输入内容为图片，则对图片进行识别并发起翻译
         如果输入内容为文本，则设置一个定时器，定时结束时自动发起翻译
         """
-        self.timer.stop()  # 文本框内容发生变化时停止定时器
+        self.timer.stop()  # 每当文本框内容发生变化时停止定时翻译，防止连续输入触发多次定时翻译
         text = self.textEdit.toPlainText().strip()
         if text:  # 有内容输入
-            if text.find('file:///') == 0:  # 输入内容为文件时，如果输入的是图片则进行识别翻译，否则弹窗提示
-                file_name = text.split('\n')[0].replace('file:///', '')
-                self.textEdit.blockSignals(True)  # 关闭信号连接。在恢复信号连接之前，修改输入框内容时不会触发信号
+            if text.find('file:///') == 0:  # 输入文件时，如果输入的是图片则进行识别翻译（多张图片只取一张），否则弹窗提示
+                self.textEdit.blockSignals(True)  # 关闭信号连接
                 self.textEdit.setText('<i>正在识别翻译，请稍候...</i>')
+                self.textEdit.blockSignals(False)  # 恢复信号连接
                 QtWidgets.QApplication.processEvents()  # 刷新界面
-                if file_name.split('.')[-1:][0].lower() not in ['jpg', 'png']:
+                file_list = text.split('\n')
+                for file in file_list:
+                    file_name = file.split('file:///')[-1]
+                    if os.path.splitext(file_name)[-1] in ['.jpg', '.png']:
+                        break
+                else:
                     QtWidgets.QMessageBox.information(self, '提示', '仅支持 jpg 或 png 格式的图片')
                     self.textEdit.clear()
                     return None
-                self.textEdit.blockSignals(False)  # 恢复信号连接
                 with open(file_name, 'rb') as f:
                     img_data = f.read()
-                # 识别图片中的文本并发起翻译
-                self.ocr(img_data)
-            elif text != self.textEditCurrentContent:  # 输入内容为文本时，启动定时翻译
-                self.timer.start(1000)
+                self.ocr(img_data)  # 识别图片中的文本并发起翻译
+            elif text != self.textEditCurrentContent:  # 检查输入文本是否和上一次翻译的文本相同，如果相同则跳过，否则启动但是翻译
+                self.timer.start(1000)  # 启动定时翻译
             self.textEditCurrentContent = text  # 记录当前输入内容
-        else:  # 清空输入框
-            # 清空输出框内容
-            self.textBrowser.clear()
+        else:  # 输入内容为空或空白字符时收起输出文本框
+            self.textBrowser.clear()  # 清空输出框内容
             self.textBrowser_2.clear()
-            # 重设窗口大小
-            self.modifyUI()
+            self.modifyUI()  # 收起输出文本框
         # 输入框内容不为空时显示清空按钮，否则隐藏清空按钮
         if self.textEdit.toPlainText():
             self.pushButton_7.show()
@@ -808,9 +811,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             self.startTransl()
 
     def playVoice(self, voice_data):
-        """ 下载单词发音的线程结束
-        获取单词发音并创建播放器进行播放
-        """
+        """播放语音"""
         # 将语音写入缓冲区
         buffer = QtCore.QBuffer(self)
         buffer.setData(voice_data)
@@ -896,9 +897,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                 self.textEdit.setText(text)
             else:
                 QtWidgets.QMessageBox.information(self, '提示', '没有从图片中识别到文字！')
-                self.textEdit.blockSignals(True)
                 self.textEdit.clear()
-                self.textEdit.blockSignals(False)
 
         # 通过线程进行图像文字识别
         self.ocr_thread = BaiduOCRThread(img_data)
