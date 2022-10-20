@@ -587,7 +587,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                         self.float_window.outResult(data)  # 将结果输出到悬浮窗
 
                 # 通过线程发起翻译
-                self.start_trans_thread = StartTransThread(mime_data.text(), self.target_lan)
+                kwargs = {'query': mime_data.text(), 'to_lan': self.target_lan, 'from_lan': self.source_lan}
+                self.start_trans_thread = StartTransThread(self.transl_engine, **kwargs)
                 self.start_trans_thread.trigger.connect(trigger)
                 self.start_trans_thread.start()
                 # 标记正在翻译
@@ -766,9 +767,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                 self.refreshDisableIndex()
 
         # 通过线程发起翻译
-        kwargs = {'query': query, 'to_lan': self.target_lan}
-        if engine.get(self.comboBox.currentText()) != 'youdao':
-            kwargs['from_lan'] = self.source_lan
+        kwargs = {'query': query, 'to_lan': self.target_lan, 'from_lan': self.source_lan}
         self.start_trans_thread = StartTransThread(self.transl_engine, **kwargs)
         self.start_trans_thread.trigger.connect(trigger)
         self.start_trans_thread.start()

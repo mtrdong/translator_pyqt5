@@ -71,6 +71,8 @@ class StartTransThread(QThread):
         self.kwargs = kwargs
 
     def run(self):
+        if self.engine.__class__.__name__ == 'YoudaoTranslate':
+            self.kwargs.pop('from_lan', None)
         try:
             data = self.engine.translate(**self.kwargs)
         except:
