@@ -1,11 +1,9 @@
 chardet
 baidu-aip
 pyinstaller
-PyQt5
 PyQt5-stubs
 pyqt5-tools
 pywin32
-requests
 retrying
 system-hotkey
 xcffib

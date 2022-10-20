@@ -715,6 +715,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
 
     def startTransl(self):
         """启动翻译并输出翻译结果"""
+        if engine.get(self.comboBox.currentText()) != 'baidu':  # TODO 暂时仅支持百度翻译
+            return None
         self.timer.stop()  # 主动发起翻译时，关闭自动翻译定时器
         if self.transl_started:  # 上一次翻译上尚未结束
             return None
@@ -728,8 +730,6 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
 
         def trigger(b):
             """输出翻译结果"""
-            if engine.get(self.comboBox.currentText()) != 'baidu':  # TODO 暂时仅支持百度翻译
-                return None
             self.transl_started = False  # 标记本次翻译结束
             if not self.textEdit.toPlainText().strip():  # 没有翻译内容
                 return None
