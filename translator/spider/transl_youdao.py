@@ -26,7 +26,7 @@ class YoudaoTranslate(object):
             self.headers = {
                 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
                               'AppleWebKit/537.36 (KHTML, like Gecko) '
-                              'Chrome/105.0.0.0 Safari/537.36',
+                              'Chrome/106.0.0.0 Safari/537.36',
             }
             self.data = None
             # 中日互译时如果有两种结果，则该标志为 True
@@ -59,6 +59,7 @@ class YoudaoTranslate(object):
         """翻译"""
         form_data = self._get_form_data(query, to_lan)
         response = self.session.post(self.url, data=form_data, headers=self.headers)
+        assert response.status_code == 200, f'翻译失败({response.status_code})！'
         self.data = response.json()
         if to_lan == 'ja':  # 【中日】互译时检查是否有两种结果
             newjc = self.data.get('newjc', {}).get('word')

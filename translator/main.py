@@ -407,6 +407,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         # 下拉列表初始化
         self.comboBox.addItems(engine.keys())
         self.comboBox.setCurrentIndex(0)
+        self.comboBox.setItemData(2, 0, QtCore.Qt.UserRole - 1)  # TODO 谷歌翻译已挂，暂时禁用
         self.comboBox.currentIndexChanged.connect(self.comboBoxCurrentIndexChanged)
         self.source_lan = None  # 源语言代码
         self.target_lan = None  # 目标语言代码
@@ -417,7 +418,6 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.setLangItems()  # 设置源语言/目标语言下拉选项
         # 通过线程创建翻译引擎对象
         self.transl_engine = None  # 翻译引擎对象
-        self.transl_result = None  # 翻译结果
         self.getTranslEngine()  # 创建翻译引擎对象
         # 监听剪切板。开启监听时，当剪切板内容发生变化时，自动获取剪切板文本发起翻译（伪划词翻译）
         self.clipboard = QtWidgets.QApplication.clipboard()
@@ -490,6 +490,9 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """ 翻译按钮状态变更
         点击翻译按钮立即发起翻译
         """
+        if engine.get(self.comboBox.currentText()) != 'baidu':  # TODO 暂时仅支持百度翻译
+            QtWidgets.QMessageBox.information(self, '提示', '目前仅支持百度翻译！')
+            return None
         self.startTransl()
 
     @QtCore.pyqtSlot()
@@ -551,6 +554,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """ 剪切板数据变更
         开启复制翻译时，获取剪切板内容并发起翻译
         """
+        if engine.get(self.comboBox.currentText()) != 'baidu':  # TODO 暂时仅支持百度翻译
+            return None
         if self.clipboard_flag and not self.transl_started:
             mime_data = self.clipboard.mimeData()
 
@@ -579,15 +584,16 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                 else:
                     self.float_window.setQuery(mime_data.text())
 
-                def trigger(data):
+                def trigger(b):
                     """翻译结果输出到悬浮窗口"""
                     self.start_trans_thread.deleteLater()
                     self.transl_started = False  # 标记本次翻译结束
                     if hasattr(self, 'float_window'):
-                        self.float_window.outResult(data)  # 将结果输出到悬浮窗
+                        self.float_window.outResult(self.transl_engine.data)  # 将结果输出到悬浮窗
 
                 # 通过线程发起翻译
-                self.start_trans_thread = StartTransThread(mime_data.text(), self.target_lan)
+                kwargs = {'query': mime_data.text(), 'to_lan': self.target_lan, 'from_lan': self.source_lan}
+                self.start_trans_thread = StartTransThread(self.transl_engine, **kwargs)
                 self.start_trans_thread.trigger.connect(trigger)
                 self.start_trans_thread.start()
                 # 标记正在翻译
@@ -667,9 +673,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                 pass
         else:
             self.refreshDisableIndex()
-            if engine_val == 'baidu':  # TODO 暂时仅支持百度翻译
-                if self.textEdit.toPlainText():
-                    self.startTransl()
+            if self.textEdit.toPlainText():
+                self.startTransl()
 
     def comboBox_3CurrentIndexChanged(self):
         """ 目标语言下拉列表索引变更
@@ -690,9 +695,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             self.comboBox_2.setCurrentIndex(0)
             self.comboBox_2.blockSignals(False)
         self.refreshDisableIndex()
-        if engine_val == 'baidu':  # TODO 暂时仅支持百度翻译
-            if self.textEdit.toPlainText():
-                self.startTransl()
+        if self.textEdit.toPlainText():
+            self.startTransl()
 
     def refreshDisableIndex(self):
         """刷新源语言/目标语言下拉禁用选项"""
@@ -711,10 +715,9 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
 
     def startTransl(self):
         """启动翻译并输出翻译结果"""
-        self.timer.stop()  # 主动发起翻译时，关闭自动翻译定时器
         if engine.get(self.comboBox.currentText()) != 'baidu':  # TODO 暂时仅支持百度翻译
-            QtWidgets.QMessageBox.information(self, '提示', '目前仅支持百度翻译！')
             return None
+        self.timer.stop()  # 主动发起翻译时，关闭自动翻译定时器
         if self.transl_started:  # 上一次翻译上尚未结束
             return None
         if self.transl_engine is None:  # 翻译引擎为空
@@ -725,15 +728,15 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             QtWidgets.QMessageBox.information(self, '提示', '请输入翻译内容')
             return None
 
-        def trigger(data):
+        def trigger(b):
             """输出翻译结果"""
             self.transl_started = False  # 标记本次翻译结束
             if not self.textEdit.toPlainText().strip():  # 没有翻译内容
                 return None
+            data = self.transl_engine.data
             if not data:  # 没有翻译结果
                 QtWidgets.QMessageBox.information(self, '提示', '翻译结果为空，请重试！')
                 return None
-            self.transl_result = data  # 翻译结果
             trans_result = get_trans_result(data)  # 直译
             spell_html = get_spell_html(data)  # 音标
             comment_html = get_comment_html(data)  # 释义
@@ -766,9 +769,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                 self.refreshDisableIndex()
 
         # 通过线程发起翻译
-        kwargs = {'query': query, 'to_lan': self.target_lan}
-        if engine.get(self.comboBox.currentText()) != 'youdao':
-            kwargs['from_lan'] = self.source_lan
+        kwargs = {'query': query, 'to_lan': self.target_lan, 'from_lan': self.source_lan}
         self.start_trans_thread = StartTransThread(self.transl_engine, **kwargs)
         self.start_trans_thread.trigger.connect(trigger)
         self.start_trans_thread.start()
@@ -776,8 +777,9 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
 
     def voiceButtonClicked(self):
         """点击语音播报按钮"""
-        text = self.transl_result['trans_result']['data'][0].get('dst')
-        lan = self.transl_result['trans_result'].get('to')
+        data = self.transl_engine.data
+        text = data['trans_result']['data'][0].get('dst')
+        lan = data['trans_result'].get('to')
         # 通过线程下载并播放发音
         self.voice_thread = DownloadVoiceThread(lan, text)
         self.voice_thread.trigger.connect(self.playVoice)
@@ -790,7 +792,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """
         url = url.url().replace('#', '')
         if url in ['英', '美', '音']:  # 点击发音按钮
-            text = self.transl_result['trans_result']['data'][0].get('src')
+            text = self.transl_engine.data['trans_result']['data'][0].get('src')
             if url == '英':
                 lan = 'en'
             elif url == '美':

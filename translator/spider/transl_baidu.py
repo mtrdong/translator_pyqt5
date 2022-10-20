@@ -81,7 +81,8 @@ class BaiduTranslate(object):
             self.headers = {
                 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
                               'AppleWebKit/537.36 (KHTML, like Gecko) '
-                              'Chrome/88.0.4324.182 Safari/537.36',
+                              'Chrome/106.0.0.0 Safari/537.36',
+                'acs-token': ''  # TODO 新增请求头。服务端尚未做校验，暂时为空
             }
             response = self.session.get(self.url, headers=self.headers)
             self.headers['cookie'] = response.headers.get('Set-Cookie')
@@ -139,8 +140,8 @@ class BaiduTranslate(object):
         path = f'/v2transapi?from={from_lan}&to={to_lan}'
         self._update_form_data(query, to_lan, from_lan)
         response = self._post(path, self.form_data)
+        assert response.status_code == 200, f'翻译失败({response.status_code})！'
         self.data = json.loads(response.content)
-        return self.data
 
     def get_translation(self):
         """获取译文"""
