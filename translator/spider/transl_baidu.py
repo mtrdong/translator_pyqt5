@@ -139,8 +139,8 @@ class BaiduTranslate(object):
         path = f'/v2transapi?from={from_lan}&to={to_lan}'
         self._update_form_data(query, to_lan, from_lan)
         response = self._post(path, self.form_data)
+        assert response.status_code == 200, f'翻译失败({response.status_code})！'
         self.data = json.loads(response.content)
-        return self.data
 
     def get_translation(self):
         """获取译文"""

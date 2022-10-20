@@ -63,7 +63,7 @@ class TranslThread(QThread):
 
 class StartTransThread(QThread):
     """启动百度翻译获取翻译结果"""
-    trigger = pyqtSignal(dict)
+    trigger = pyqtSignal(bool)
 
     def __init__(self, engine, **kwargs):
         super().__init__()
@@ -74,10 +74,11 @@ class StartTransThread(QThread):
         if self.engine.__class__.__name__ == 'YoudaoTranslate':
             self.kwargs.pop('from_lan', None)
         try:
-            data = self.engine.translate(**self.kwargs)
+            self.engine.translate(**self.kwargs)
         except:
-            data = dict()
-        self.trigger.emit(data)  # 信号发送翻译结果
+            self.trigger.emit(False)  # 翻译失败
+        else:
+            self.trigger.emit(True)  # 翻译完成
 
 
 class DownloadVoiceThread(QThread):
