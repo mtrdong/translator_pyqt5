@@ -235,10 +235,10 @@ class YoudaoTranslate(object):
             ])
         return sentence_data
 
-    def get_tts(self, audio, le='', type_=2):
+    def get_tts(self, text, lan='', type_=2):
         """获取发音"""
         url = 'https://dict.youdao.com/dictvoice'
-        params = {'audio': audio, 'le': le, 'type': type_}
+        params = {'audio': text, 'le': lan, 'type': type_}
         response = self.session.get(url, params=params, headers=self.headers)
         content = response.content
         return content
@@ -248,7 +248,6 @@ if __name__ == '__main__':
     yt = YoudaoTranslate()
     yt.translate('good', 'en')
     explanations = yt.get_explanation()
-    # tts_uk = yt.get_tts(*explanations[0]['symbols'][0][1])
-    # tts_us = yt.get_tts(*explanations[0]['symbols'][1][1])
+    tts = yt.get_tts(*explanations[0]['symbols'][0][1])
     sentences = yt.get_sentence(True)
     print(yt.data)
