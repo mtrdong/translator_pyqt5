@@ -245,11 +245,12 @@ class BaiduTranslate(object):
             sentence_data.append([sentence, sentence_transl, sentence_speech])
         return sentence_data
 
-    def get_tts(self, text: str, lan: str):
+    def get_tts(self, text, lan):
         """获取单词发音"""
         spd = 5 if lan == 'zh' else 3
         path = f'/gettts?lan={lan}&text={text}&spd={spd}&source=web'
-        content = self._get(path).content
+        response = self._get(path)
+        content = response.content
         return content
 
     def get_ocr(self, img: bytes):
@@ -268,6 +269,6 @@ if __name__ == '__main__':
     bt.translate('result', 'zh')
     translations = bt.get_translation()
     explanations = bt.get_explanation()
-    # tts = bt.get_tts(*explanations[0]['symbols'][0][1])
+    tts = bt.get_tts(*explanations[0]['symbols'][0][1])
     sentences = bt.get_sentence()
     print(bt.data)

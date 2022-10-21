@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import QWidget
 from spider.transl_baidu import BaiduTranslate
 from spider.transl_google import GoogleTranslate
 from spider.transl_youdao import YoudaoTranslate
-from utils import check_network, baidu_ocr
+from utils import baidu_ocr
 
 __all__ = [
     'MouseCheckThread',
@@ -50,14 +50,15 @@ class TranslThread(QThread):
         self.select = select
 
     def run(self):
-        if not check_network():  # 检查网络连接
+        try:
+            if self.select == 'youdao':
+                obj = YoudaoTranslate()  # 创建有道翻译
+            elif self.select == 'google':
+                obj = GoogleTranslate()  # 创建谷歌翻译
+            else:
+                obj = BaiduTranslate()  # 创建百度翻译
+        except:
             obj = None
-        elif self.select == 'youdao':
-            obj = YoudaoTranslate()  # 创建有道翻译
-        elif self.select == 'google':
-            obj = GoogleTranslate()  # 创建谷歌翻译
-        else:
-            obj = BaiduTranslate()  # 创建百度翻译
         self.trigger.emit(obj)  # 发送信号
 
 
@@ -82,17 +83,20 @@ class StartTransThread(QThread):
 
 
 class DownloadVoiceThread(QThread):
-    """下载单词发音"""
+    """下载读音"""
     trigger = pyqtSignal(bytes)
 
-    def __init__(self, lan: str, text: str):
+    def __init__(self, engine, **kwargs):
         super().__init__()
-        self.lan = lan
-        self.text = text
+        self.engine = engine
+        self.kwargs = kwargs
 
     def run(self):
-        data = BaiduTranslate().get_tts(self.text, self.lan)
-        if data is None:
+        if self.engine.__class__.__name__ == 'BaiduTranslate':
+            self.kwargs.pop('type_', None)
+        try:
+            data = self.engine.get_tts(**self.kwargs)
+        except:
             data = bytes()
         self.trigger.emit(data)  # 信号发送数据
 
@@ -106,6 +110,9 @@ class BaiduOCRThread(QThread):
         self.image = image
 
     def run(self):
-        # text = baidu_ocr(self.image)  # 精度高，推荐
-        text = BaiduTranslate().get_ocr(self.image)  # 精度低，备用
+        try:
+            # text = baidu_ocr(self.image)  # 精度高，推荐
+            text = BaiduTranslate().get_ocr(self.image)  # 精度低，备用
+        except:
+            text = ''
         self.trigger.emit(text)  # 信号发送文本

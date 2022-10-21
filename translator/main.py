@@ -608,7 +608,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                 msg = QtWidgets.QMessageBox.information(
                     self,
                     '程序初始化失败',
-                    '网络似乎不可用，请检查网络后重试！',
+                    f'程序初始化异常，是否重试？',
                     QtWidgets.QMessageBox.Retry | QtWidgets.QMessageBox.Close,
                     QtWidgets.QMessageBox.Retry
                 )
@@ -780,10 +780,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         data = self.transl_engine.data
         text = data['trans_result']['data'][0].get('dst')
         lan = data['trans_result'].get('to')
-        # 通过线程下载并播放发音
-        self.voice_thread = DownloadVoiceThread(lan, text)
-        self.voice_thread.trigger.connect(self.playVoice)
-        self.voice_thread.start()
+        # 通过线程下载并播放读音
+        self.tts(text, lan)
 
     def anchorClicked(self, url):
         """ 点击底部输出框中的链接
@@ -800,9 +798,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             else:
                 lan = 'zh'
             # 通过线程下载并播放发音
-            self.voice_thread = DownloadVoiceThread(lan, text)
-            self.voice_thread.trigger.connect(self.playVoice)
-            self.voice_thread.start()
+            self.tts(text, lan)
         else:  # 点击文本链接
             self.textEdit.setText(url)
             self.startTransl()
@@ -816,20 +812,6 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             text = self.textBrowser_2.toPlainText()
         if text:  # 文本不为空则添加到剪切板
             self.clipboard.setText(text)
-
-    def playVoice(self, voice_data):
-        """播放语音"""
-        # 将语音写入缓冲区
-        buffer = QtCore.QBuffer(self)
-        buffer.setData(voice_data)
-        buffer.open(QtCore.QIODevice.ReadOnly)
-        # 创建播放器
-        player = QtMultimedia.QMediaPlayer(self)
-        player.setVolume(100)
-        player.setMedia(QtMultimedia.QMediaContent(), buffer)
-        sleep(0.1)  # 延时等待 setMedia 完成。
-        # 播放语音
-        player.play()
 
     def hideWidget(self):
         """隐藏部件"""
@@ -892,6 +874,28 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.temp_timer.setInterval(1)
         self.temp_timer.timeout.connect(timeout)
         self.temp_timer.start()
+
+    def tts(self, text, lan):
+        """ 文本转语音
+        下载 TTS 并播放
+        """
+        def trigger(data):
+            """播放语音"""
+            # 将语音写入缓冲区
+            buffer = QtCore.QBuffer(self)
+            buffer.setData(data)
+            buffer.open(QtCore.QIODevice.ReadOnly)
+            # 创建播放器
+            player = QtMultimedia.QMediaPlayer(self)
+            player.setVolume(100)
+            player.setMedia(QtMultimedia.QMediaContent(), buffer)
+            sleep(0.1)  # 延时等待 setMedia 完成。
+            # 播放语音
+            player.play()
+
+        self.voice_thread = DownloadVoiceThread(self.transl_engine, text=text, lan=lan)
+        self.voice_thread.trigger.connect(trigger)
+        self.voice_thread.start()
 
     def ocr(self, img_data):
         """ 文字识别
