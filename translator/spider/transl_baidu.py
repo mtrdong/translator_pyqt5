@@ -198,15 +198,16 @@ class BaiduTranslate(object):
                 symbol_list.append([f'美 [{symbols["ph_am"]}]', [simple_means["word_name"], 'en']])
             # 解析释义
             explain_list = []
-            for index, parts in enumerate(symbols['parts']):
-                part = parts.get('part') or parts.get('part_name') or index + 1
-                means = []
+            for parts in symbols['parts']:
                 if isinstance(parts['means'][0], dict):
-                    for mean in parts['means']:
-                        means.append(['；'.join(mean['means']), mean['text']])
+                    for index, mean in enumerate(parts['means']):
+                        part = index + 1
+                        means = [[mean['text'], '；'.join(mean['means'])]]
+                        explain_list.append({'part': part, 'means': means})
                 else:
-                    means.append(['；'.join(parts['means']), ''])
-                explain_list.append({'part': part, 'means': means})
+                    part = parts.get('part') or parts.get('part_name')
+                    means = [['；'.join(parts['means']), '']]
+                    explain_list.append({'part': part, 'means': means})
             # 解析语法
             grammar_list = []
             exchange_dict = {
