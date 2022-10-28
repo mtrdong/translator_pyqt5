@@ -859,7 +859,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         opacity.setOpacity(0)
         widget.setGraphicsEffect(opacity)
         opacity.i = 1
-        num = 30
+        num = 50
 
         def timeout():
             """设置控件透明度"""
