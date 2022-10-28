@@ -3,7 +3,6 @@ import json
 import random
 import re
 
-import requests
 from PyQt5.QtCore import QRect, QPoint
 from PyQt5.QtWidgets import QWidget
 from aip import AipOcr
