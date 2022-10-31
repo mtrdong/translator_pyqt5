@@ -226,7 +226,7 @@ class BaiduTranslate(object):
             explanation_data.append({'symbols': symbol_list, 'explains': explain_list, 'grammars': grammar_list})
         return explanation_data
 
-    def get_sentence(self):
+    def get_sentence(self, more=False):
         """获取例句"""
         sentence_data = []
         from_lan = self.data['trans_result']['from']
@@ -244,6 +244,8 @@ class BaiduTranslate(object):
             # 构建例句 TTS 获取参数
             sentence_speech = [sentence if from_lan == 'en' else sentence_transl, 'en']
             sentence_data.append([sentence, sentence_transl, sentence_speech])
+        if not more:  # 只返回前3条例句
+            sentence_data = sentence_data[:3]
         return sentence_data
 
     def get_tts(self, text, lan):

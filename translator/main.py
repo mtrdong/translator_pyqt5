@@ -859,7 +859,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         opacity.setOpacity(0)
         widget.setGraphicsEffect(opacity)
         opacity.i = 1
-        num = 30
+        num = 50
 
         def timeout():
             """设置控件透明度"""
@@ -921,6 +921,8 @@ if __name__ == '__main__':
     QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     # 创建QApplication类的实例
     app = QtWidgets.QApplication(sys.argv)
+    # 设置窗口风格为Fusion
+    app.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
     # 汉化右键菜单
     translator = QtCore.QTranslator()
     translator.load(widgets_zh_CN_qm)
