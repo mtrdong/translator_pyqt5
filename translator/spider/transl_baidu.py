@@ -141,7 +141,9 @@ class BaiduTranslate(object):
         self._update_form_data(query, to_lan, from_lan)
         response = self._post(path, self.form_data)
         assert response.status_code == 200, f'翻译失败({response.status_code})！'
-        self.data = json.loads(response.content)
+        data = json.loads(response.content)
+        assert data.get('errno') is None, f'翻译失败({data["errno"]}，{data["errmsg"]})！'
+        self.data = data
 
     def get_translation(self):
         """获取译文"""

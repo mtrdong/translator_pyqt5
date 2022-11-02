@@ -60,7 +60,9 @@ class YoudaoTranslate(object):
         form_data = self._get_form_data(query, to_lan)
         response = self.session.post(self.url, data=form_data, headers=self.headers)
         assert response.status_code == 200, f'翻译失败({response.status_code})！'
-        self.data = response.json()
+        data = response.json()
+        assert data.get('code') is None, f'翻译失败({data["code"]}，{data["message"]})！'
+        self.data = data
         if to_lan == 'ja':  # 【中日】互译时检查是否有两种结果
             newjc = self.data.get('newjc', {}).get('word')
             cj = self.data.get('cj', {}).get('word')
