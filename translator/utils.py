@@ -155,12 +155,12 @@ def generate_output(obj, more=False, reverse=False):
             sentence_list.append(sentence_html.format(
                 sentence[0].replace('<b>', replace),
                 b64encode(sentence[2]),
-                sentence[1]
+                sentence[1].replace('<b>', replace)
             ))
         sentence_contents = '<br><br>'.join(sentence_list)
         if sentence_contents:
             explanation_list.append(explanation_html.format(sentence_contents))
     # 拼接HTML内容
-    explanation_contents = '<br>'.join(explanation_list)
+    explanation_contents = '<hr width=0>'.join(explanation_list)
 
     return translation_contents, explanation_contents
