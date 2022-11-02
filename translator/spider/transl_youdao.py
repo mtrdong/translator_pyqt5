@@ -4,6 +4,7 @@ from threading import Lock
 from urllib.parse import parse_qs
 
 import requests
+from retrying import retry
 
 
 class YoudaoTranslate(object):
@@ -20,17 +21,31 @@ class YoudaoTranslate(object):
 
     def __init__(self):
         if not self._init_flag:  # 只初始化一次
-            self._init_flag = True
             self.session = requests.Session()
-            self.url = 'https://dict.youdao.com/jsonapi_s?doctype=json&jsonversion=4'
+            self.home = 'https://dict.youdao.com/'
             self.headers = {
                 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
                               'AppleWebKit/537.36 (KHTML, like Gecko) '
                               'Chrome/106.0.0.0 Safari/537.36',
             }
+            # 发送请求检查服务是否可用
+            self._get()
+            # 翻译结果
             self.data = None
             # 中日互译时如果有两种结果，则该标志为 True
             self.reverse_flag = False
+            # 标记初始化完成
+            self._init_flag = True
+
+    @retry(stop_max_attempt_number=3)
+    def _post(self, path='', form_data=None, params=None):
+        """发送请求"""
+        return self.session.post(url=self.home + path, data=form_data, params=params, headers=self.headers, timeout=5)
+
+    @retry(stop_max_attempt_number=3)
+    def _get(self, path='', params=None):
+        """发送请求"""
+        return self.session.get(url=self.home + path, params=params, headers=self.headers, timeout=5)
 
     @staticmethod
     def _get_form_data(text, le):
@@ -58,10 +73,12 @@ class YoudaoTranslate(object):
     def translate(self, query, to_lan):
         """翻译"""
         form_data = self._get_form_data(query, to_lan)
-        response = self.session.post(self.url, data=form_data, headers=self.headers)
-        assert response.status_code == 200, f'翻译失败({response.status_code})！'
+        path = 'jsonapi_s'
+        params = {'doctype': 'json', 'jsonversion': 4}
+        response = self._post(path, form_data, params)
+        assert response.status_code == 200, f'翻译失败！（{response.status_code}）'
         data = response.json()
-        assert data.get('code') is None, f'翻译失败({data["code"]}，{data["message"]})！'
+        assert data.get('code') is None, f'翻译失败！（{data["code"]}，{data["message"]}）'
         self.data = data
         if to_lan == 'ja':  # 【中日】互译时检查是否有两种结果
             newjc = self.data.get('newjc', {}).get('word')
@@ -233,7 +250,9 @@ class YoudaoTranslate(object):
             query = f'lj:{self.data["meta"]["input"]}'
             le = self.data['meta']['le']
             form_data = self._get_form_data(query, le)
-            response = self.session.post(self.url, data=form_data, headers=self.headers)
+            path = 'jsonapi_s'
+            params = {'doctype': 'json', 'jsonversion': 4}
+            response = self._post(path, form_data, params)
             body = response.json()
             sentence_pair = body.get('blng_sents', {}).get('sentence-pair', [])
         else:
@@ -250,9 +269,9 @@ class YoudaoTranslate(object):
 
     def get_tts(self, text, lan='', type_=2):
         """获取发音"""
-        url = 'https://dict.youdao.com/dictvoice'
+        path = 'dictvoice'
         params = {'audio': text, 'le': lan, 'type': type_}
-        response = self.session.get(url, params=params, headers=self.headers)
+        response = self._get(path, params)
         content = response.content
         return content
 

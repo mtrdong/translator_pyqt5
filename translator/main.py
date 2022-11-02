@@ -602,12 +602,12 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             self.transl_thread.quit()
         self.transl_engine = None
 
-        def trigger(obj):
+        def trigger(result):
             """设置翻译引擎"""
-            if obj is None:
-                QtWidgets.QMessageBox.information(self, '初始化失败', '翻译引擎初始化异常，请尝试切换翻译引擎或检查网络是否正常！')
+            if result['code'] == 0:
+                QtWidgets.QMessageBox.information(self, '翻译引擎初始化失败', '翻译引擎初始化失败，请尝试切换翻译引擎或检查网络是否正常！')
                 return None
-            self.transl_engine = obj
+            self.transl_engine = result['obj']
             # 切换引擎后如果输入框有内容则发起翻译
             if self.textEdit.toPlainText():
                 self.startTransl()
@@ -735,12 +735,12 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             return None
         # 翻译引擎为空时弹窗提示，并终止翻译
         if self.transl_engine is None:
-            QtWidgets.QMessageBox.information(self, '提示', '翻译引擎正在初始化中，请稍候重试！')
+            QtWidgets.QMessageBox.information(self, '翻译引擎始化中', '翻译引擎正在初始化中，请稍后重试！')
             return None
         query = self.textEdit.toPlainText().strip()
         # 没有输入翻译内容时弹窗提示，并终止翻译
         if not query:
-            QtWidgets.QMessageBox.information(self, '提示', '请输入翻译内容')
+            QtWidgets.QMessageBox.information(self, '翻译内容为空', '请输入翻译内容')
             return None
 
         def trigger(result):
@@ -748,16 +748,11 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             # 标记本次翻译结束
             self.transl_started = False
             # 翻译发生异常时弹窗提示，并终止输出
-            if not result:
-                QtWidgets.QMessageBox.information(self, '提示', '翻译失败，请重试！')
+            if result['code'] == 0:
+                QtWidgets.QMessageBox.information(self, '翻译失败', result['msg'])
                 return None
             # 没有翻译内容时终止输出
             if not self.textEdit.toPlainText().strip():
-                return None
-            # 没有翻译结果时弹窗提示，并终止输出
-            data = self.transl_engine.data
-            if not data:
-                QtWidgets.QMessageBox.information(self, '提示', '翻译结果为空，请重试！')
                 return None
             # 更新下拉列表
             self.updateComboBoxItems()

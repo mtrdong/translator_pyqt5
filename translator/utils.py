@@ -98,7 +98,7 @@ def generate_output(obj, more=False, reverse=False):
     explanation_list = []
     for explanation in explanations:
         # 音标/读音
-        symbol_html = '<span style="color: #969696;">' \
+        symbol_html = '<span style="color: #8C8C8C; font-weight: bold;">' \
                       '{} <a style="text-decoration: none;" href="#{}">🔊</a>' \
                       '</span>'
         symbol_list = [symbol_html.format(symbol[0], b64encode(symbol[1])) for symbol in explanation.get('symbols', [])]
@@ -106,7 +106,7 @@ def generate_output(obj, more=False, reverse=False):
         if symbol_contents:
             explanation_list.append(explanation_html.format(symbol_contents))
         # 简明释义
-        explain_html = '<span><i style="color: #969696;">{}</i><hr>{}</span>'
+        explain_html = '<span><i style="color: #8C8C8C;">{}</i><hr>{}</span>'
         explain_list = []
         for explain in explanation.get('explains', []):
             part = f"No.{explain['part']}" if isinstance(explain['part'], int) else explain['part']
@@ -114,11 +114,11 @@ def generate_output(obj, more=False, reverse=False):
             for index, mean in enumerate(explain['means']):
                 if mean[1]:
                     text_html = '<a style="text-decoration: none; color: #506EFF;" href="#{}">{}</a>'
-                    text_t_html = '<span style="color: #969696;">{}</span>'
+                    text_t_html = '<span style="color: #8C8C8C;">{}</span>'
                     text_contents = f'{text_html.format(b64encode(mean[0]), mean[0])}<br>{text_t_html.format(mean[1])}'
                 else:
                     text_contents = mean[0]
-                no_html = '<span style="color: #969696;">{} </span>'
+                no_html = '<span style="color: #8C8C8C;">{} </span>'
                 if len(explain['means']) > 1:
                     text_contents = no_html.format(index + 1) + text_contents
                 mean_list.append(text_contents)
@@ -130,7 +130,7 @@ def generate_output(obj, more=False, reverse=False):
         if more:
             # 单词语法
             grammar_html = '<span>' \
-                           '<span style="color: #969696;">{}</span>&nbsp;&nbsp;&nbsp;' \
+                           '<span style="color: #8C8C8C;">{}</span>&nbsp;&nbsp;&nbsp;' \
                            '<a style="text-decoration: none; color: #506EFF;" href="#{}">{}</a>' \
                            '</span>'
             grammar_list = []
@@ -141,9 +141,9 @@ def generate_output(obj, more=False, reverse=False):
                 explanation_list.append(explanation_html.format(grammar_contents))
     if more:
         # 双语例句
-        sentence_html = '<span style="font-size: 14px; color: #3C3C3C;">' \
+        sentence_html = '<span style="font-size: 14px;">' \
                         '{} <a style="text-decoration: none;" href="#{}">🔊</a><br>' \
-                        '<span style="color: #969696;">{}</span>' \
+                        '<span style="color: #8C8C8C;">{}</span>' \
                         '</span>'
         sentence_list = []
         sentences = obj.get_sentence(True)

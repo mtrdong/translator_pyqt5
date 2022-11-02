@@ -75,36 +75,47 @@ class BaiduTranslate(object):
 
     def __init__(self):
         if not self._init_flag:  # 只初始化一次
-            self._init_flag = True
             self.session = requests.Session()
-            self.url = 'https://fanyi.baidu.com'
+            self.home = 'https://fanyi.baidu.com/'
             self.headers = {
                 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
                               'AppleWebKit/537.36 (KHTML, like Gecko) '
                               'Chrome/106.0.0.0 Safari/537.36',
                 'acs-token': ''  # TODO 新增请求头。服务端尚未做校验，暂时为空
             }
-            response = self.session.get(self.url, headers=self.headers)
+            # 获取Cookie
+            response = self._get()
             self.headers['cookie'] = response.headers.get('Set-Cookie')
-            response = self.session.get(url=self.url, headers=self.headers)
+            # 获取Token
+            response = self._get()
             self.form_data = {
                 'token': re.findall(r'token:[\s\'\"]+([a-z\d]+)[\'\"]', response.content.decode())
             }
+            # 翻译结果
             self.data = None
+            # 标记初始化完成
+            self._init_flag = True
 
     @retry(stop_max_attempt_number=3)
-    def _post(self, path='', form_data=None, files=None):
+    def _post(self, path='', form_data=None, files=None, params=None):
         """发送请求"""
-        return self.session.post(url=self.url + path, headers=self.headers, data=form_data, files=files, timeout=5)
+        return self.session.post(
+            self.home + path,
+            data=form_data,
+            files=files,
+            params=params,
+            headers=self.headers,
+            timeout=5
+        )
 
     @retry(stop_max_attempt_number=3)
-    def _get(self, path=''):
+    def _get(self, path='', params=None):
         """发送请求"""
-        return self.session.post(url=self.url + path, headers=self.headers, timeout=5)
+        return self.session.get(self.home + path, params=params, headers=self.headers, timeout=5)
 
     def _get_lan(self, query):
         """查询语言种类"""
-        path = '/langdetect'
+        path = 'langdetect'
         form_data = {
             'query': query,
         }
@@ -137,12 +148,13 @@ class BaiduTranslate(object):
             from_lan = self._get_lan(query)  # 自动检测源语言
         if from_lan == to_lan:
             to_lan = 'en' if from_lan == 'zh' else 'zh'
-        path = f'/v2transapi?from={from_lan}&to={to_lan}'
+        path = 'v2transapi'
+        params = {'from': from_lan, 'to': to_lan}
         self._update_form_data(query, to_lan, from_lan)
-        response = self._post(path, self.form_data)
-        assert response.status_code == 200, f'翻译失败({response.status_code})！'
+        response = self._post(path, self.form_data, params=params)
+        assert response.status_code == 200, f'翻译失败！（{response.status_code}）'
         data = json.loads(response.content)
-        assert data.get('errno') is None, f'翻译失败({data["errno"]}，{data["errmsg"]})！'
+        assert data.get('errno') is None, f'翻译失败！（{data["errno"]}，{data["errmsg"]}）'
         self.data = data
 
     def get_translation(self):
@@ -253,14 +265,15 @@ class BaiduTranslate(object):
     def get_tts(self, text, lan):
         """获取单词发音"""
         spd = 5 if lan == 'zh' else 3
-        path = f'/gettts?lan={lan}&text={text}&spd={spd}&source=web'
-        response = self._get(path)
+        path = 'gettts'
+        params = {'lan': lan, 'text': text, 'spd': spd, 'source': 'web'}
+        response = self._get(path, params)
         content = response.content
         return content
 
     def get_ocr(self, img: bytes):
         """从图片中提取文字(精度差)"""
-        path = '/getocr'
+        path = 'getocr'
         form_data = {'from': 'auto', 'to': 'zh'}
         files = {'image': img}
         response = self._post(path, form_data, files)
