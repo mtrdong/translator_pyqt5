@@ -151,7 +151,7 @@ class BaiduTranslate(object):
         translation_data.append([dst, self.data['trans_result']['to']])
         return translation_data
 
-    def get_explanation(self):
+    def get_explanation(self, *args):
         """ 获取释义
         [{
             "symbols": [
@@ -198,14 +198,14 @@ class BaiduTranslate(object):
                 symbol_list.append([f'美 [{symbols["ph_am"]}]', [simple_means["word_name"], 'en']])
             # 解析释义
             explain_list = []
-            for parts in symbols['parts']:
+            for index, parts in enumerate(symbols['parts']):
                 if isinstance(parts['means'][0], dict):
-                    for index, mean in enumerate(parts['means']):
-                        part = index + 1
-                        means = [[mean['text'], '；'.join(mean['means'])]]
+                    for index2, mean in enumerate(parts['means']):
+                        part = index2 + 1
+                        means = [[mean['text'], '；'.join(mean.get('means', [mean['text']]))]]
                         explain_list.append({'part': part, 'means': means})
                 else:
-                    part = parts.get('part') or parts.get('part_name')
+                    part = parts.get('part') or parts.get('part_name') or index + 1
                     means = [['；'.join(parts['means']), '']]
                     explain_list.append({'part': part, 'means': means})
             # 解析语法
@@ -218,19 +218,21 @@ class BaiduTranslate(object):
                 'word_past': '过去分词',
                 'word_er': '比较级',
                 'word_est': '最高级',
+                'word_proto': '原形',
             }
             exchange = simple_means.get('exchange', {})
             for k, v in exchange.items():
-                grammar_list.append({'name': exchange_dict.get(k), 'value': v[0]})
+                if v:
+                    grammar_list.append({'name': exchange_dict.get(k), 'value': v[0]})
             # 添加数据
             explanation_data.append({'symbols': symbol_list, 'explains': explain_list, 'grammars': grammar_list})
         return explanation_data
 
-    def get_sentence(self, more=False):
+    def get_sentence(self, *args):
         """获取例句"""
         sentence_data = []
         from_lan = self.data['trans_result']['from']
-        double_list = json.loads(self.data['liju_result']['double'])
+        double_list = json.loads(self.data['liju_result']['double']) if self.data['liju_result']['double'] else []
         for double in double_list:
             # 解析例句
             sentence = ''
@@ -244,8 +246,6 @@ class BaiduTranslate(object):
             # 构建例句 TTS 获取参数
             sentence_speech = [sentence if from_lan == 'en' else sentence_transl, 'en']
             sentence_data.append([sentence, sentence_transl, sentence_speech])
-        if not more:  # 只返回前3条例句
-            sentence_data = sentence_data[:3]
         return sentence_data
 
     def get_tts(self, text, lan):

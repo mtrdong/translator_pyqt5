@@ -86,16 +86,14 @@ class DownloadVoiceThread(QThread):
     """下载读音"""
     trigger = pyqtSignal(bytes)
 
-    def __init__(self, engine, **kwargs):
+    def __init__(self, engine, *args):
         super().__init__()
         self.engine = engine
-        self.kwargs = kwargs
+        self.args = args
 
     def run(self):
-        if self.engine.__class__.__name__ == 'BaiduTranslate':
-            self.kwargs.pop('type_', None)
         try:
-            data = self.engine.get_tts(**self.kwargs)
+            data = self.engine.get_tts(*self.args)
         except:
             data = bytes()
         self.trigger.emit(data)  # 信号发送数据

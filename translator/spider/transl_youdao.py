@@ -66,6 +66,17 @@ class YoudaoTranslate(object):
             cj = self.data.get('cj', {}).get('word')
             self.reverse_flag = True if newjc and cj else False
 
+    def get_translation(self):
+        """获取译文"""
+        translation_data = []
+        if self.data.get('fanyi'):
+            translation_data.append(self.data['fanyi']['tran'])
+            translation_data.append([self.data['fanyi']['tran']])
+        else:
+            translation_data.append(self.data['meta']['input'])
+            translation_data.append([self.data['meta']['input'], self.data['meta']['le']])
+        return translation_data
+
     def get_explanation(self, reverse=False):
         """ 获取释义
         [{
@@ -101,10 +112,10 @@ class YoudaoTranslate(object):
         """
         explanation_data = []
         if self.data.get('fanyi'):
-            explanation_data.append({'explains': [{'part': 1, 'means': [[self.data['fanyi']['tran'], '']]}]})
+            return explanation_data
         # 【中英】翻译结果解析
-        elif self.data.get('le') == 'en':
-            word = (self.data.get('ce') or self.data.get('ec'))['word']
+        elif self.data.get('le') == 'en' and self.data.get('ce', self.data.get('ec')):
+            word = self.data.get('ce', self.data.get('ec'))['word']
             # 解析音标
             symbol_list = []
             if word.get('phone'):
@@ -118,22 +129,22 @@ class YoudaoTranslate(object):
             for index, trs in enumerate(word['trs']):
                 explain_list.append({
                     'part': trs.get('pos') or index + 1,
-                    'means': [[trs.get('tran') or trs.get('#text'), trs.get('#tran', '')]]
+                    'means': [[trs.get('tran', trs.get('#text')), trs.get('#tran', trs.get('#text', ''))]]
                 })
             # 解析语法
             grammar_list = [item['wf'] for item in word.get('wfs', [])]
             # 添加数据
             explanation_data.append({'symbols': symbol_list, 'explains': explain_list, 'grammars': grammar_list})
         # 【中法】翻译结果解析
-        elif self.data.get('le') == 'fr':
-            word = (self.data.get('cf') or self.data.get('fc'))['word'][0]
+        elif self.data.get('le') == 'fr' and self.data.get('cf', self.data.get('fc')):
+            word = self.data.get('cf', self.data.get('fc'))['word'][0]
             # 解析音标和释义
             symbol_list, explain_list = [], []
             if self.data.get('cf'):  # 中 > 法
                 if word.get('phone'):
                     symbol_list.append([f'音 [{word["phone"]}]', [word['return-phrase']['l']['i']]])
                 for index, tr in enumerate(word['trs'][0]['tr']):
-                    explain_list.append([index + 1, [[tr['l']['i'][0], '']]])
+                    explain_list.append({'part': index + 1, 'means': [[tr['l']['i'][0], '']]})
             elif self.data.get('fc'):  # 法 > 中
                 if word.get('phone'):
                     symbol_list.append([f'音 [{word["phone"]}]', [word['return-phrase']['l']['i'], self.data['le']]])
@@ -142,8 +153,8 @@ class YoudaoTranslate(object):
             # 添加数据
             explanation_data.append({'symbols': symbol_list, 'explains': explain_list})
         # 【中韩】翻译结果解析
-        elif self.data.get('le') == 'ko':
-            word = (self.data.get('ck') or self.data.get('kc'))['word']
+        elif self.data.get('le') == 'ko' and self.data.get('ck', self.data.get('kc')):
+            word = self.data.get('ck', self.data.get('kc'))['word']
             # 解析音标和释义
             symbol_list, explain_list = [], []
             if self.data.get('ck'):  # 中 > 韩
@@ -161,9 +172,9 @@ class YoudaoTranslate(object):
                         explain_list.append({'part': pos, 'means': [[trs['tr'][0]['l']['i'][0], '']]})
             elif self.data.get('kc'):  # 韩 > 中
                 for item in word:
-                    for trs in item['trs']:
+                    for index, trs in enumerate(item['trs']):
                         tr_list = [[tr['l']['i'][0], ''] for tr in trs['tr']]
-                        explain_list.append({'part': trs['pos'], 'means': tr_list})
+                        explain_list.append({'part': trs.get('pos') or index + 1, 'means': tr_list})
             explanation_data.append({'symbols': symbol_list, 'explains': explain_list})
         # 【中日】翻译结果解析
         elif self.data.get('le') == 'ja':
@@ -227,9 +238,9 @@ class YoudaoTranslate(object):
             sentence_pair = self.data.get('blng_sents_part', {}).get('sentence-pair', [])
         for item in sentence_pair:
             # 补全获取例句语音的参数，然后再通过 urllib.parse.parse_qs 解析参数
-            speech = parse_qs('audio=' + (item.get('sentence-speech') or item.get('sentence-translation-speech')))
+            speech = parse_qs('audio=' + item.get('sentence-speech', item.get('sentence-translation-speech')))
             sentence_data.append([
-                item.get('sentence-eng') or item.get('sentence'),  # 例句
+                item.get('sentence-eng', item.get('sentence')),  # 例句
                 item.get('sentence-translation'),  # 例句翻译
                 [speech.get('audio', [''])[0], speech.get('le', [''])[0]]  # 例句语音获取参数
             ])

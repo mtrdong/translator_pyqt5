@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>350</width>
-    <height>240</height>
+    <height>260</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -48,20 +48,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QTextBrowser" name="textBrowser_2">
-       <property name="maximumSize">
-        <size>
-         <width>320</width>
-         <height>40</height>
-        </size>
-       </property>
-       <property name="lineWrapMode">
-        <enum>QTextEdit::NoWrap</enum>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QTextBrowser" name="textBrowser_3"/>
+      <widget class="QTextBrowser" name="textBrowser_2"/>
      </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout">
