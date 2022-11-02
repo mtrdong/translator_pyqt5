@@ -10,6 +10,8 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from widgets import MyTextEdit
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -107,7 +109,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_3.setSpacing(0)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
-        self.textEdit = QtWidgets.QTextEdit(self.widget)
+        self.textEdit = MyTextEdit(self.widget)
         self.textEdit.setMinimumSize(QtCore.QSize(380, 110))
         self.textEdit.setMaximumSize(QtCore.QSize(16777215, 150))
         self.textEdit.setStyleSheet("QTextEdit {background-color: rgb(255, 255, 255); border-radius: 10px; font: 16px \"微软雅黑\"; color: rgb(60, 60, 60); padding: 6px;} QTextEdit:hover {border: 2px solid rgb(82, 186, 255);} QTextEdit:focus {border: 2px solid rgb(82, 186, 255);}")
@@ -177,6 +179,7 @@ class Ui_MainWindow(object):
         self.textBrowser_2 = QtWidgets.QTextBrowser(self.widget_2)
         self.textBrowser_2.setMinimumSize(QtCore.QSize(380, 260))
         self.textBrowser_2.setStyleSheet("QTextBrowser {background-color: rgb(250, 250, 250); border: 2px solid rgb(250, 250, 250); border-radius: 10px; font: 16px \"微软雅黑\"; color: rgb(60, 60, 60); padding: 6px;}")
+        self.textBrowser_2.setOpenLinks(False)
         self.textBrowser_2.setObjectName("textBrowser_2")
         self.verticalLayout_5.addWidget(self.textBrowser_2)
         self.widget_4 = QtWidgets.QWidget(self.widget_2)
