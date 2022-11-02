@@ -89,11 +89,12 @@ class YoudaoTranslate(object):
         """获取译文"""
         translation_data = []
         if self.data.get('fanyi'):
+            to_str = self.data['fanyi']['type'].split('2')[-1].split('-')[0]
             translation_data.append(self.data['fanyi']['tran'])
-            translation_data.append([self.data['fanyi']['tran']])
+            translation_data.append([self.data['fanyi']['tran'], to_str])
         else:
             translation_data.append(self.data['meta']['input'])
-            translation_data.append([self.data['meta']['input'], self.data['meta']['le']])
+            translation_data.append([self.data['meta']['input'], self.data['meta']['guessLanguage']])
         return translation_data
 
     def get_explanation(self, reverse=False):
@@ -129,6 +130,8 @@ class YoudaoTranslate(object):
             ]
         }]
         """
+        input_text = self.data['meta']['input']
+        guess_language = self.data['meta']['guessLanguage']
         explanation_data = []
         if self.data.get('fanyi'):
             return explanation_data
@@ -138,11 +141,11 @@ class YoudaoTranslate(object):
             # 解析音标
             symbol_list = []
             if word.get('phone'):
-                symbol_list.append([f'音 [{word["phone"]}]', [word['return-phrase']]])
+                symbol_list.append([f'音 [{word["phone"]}]', [input_text, guess_language]])
             if word.get("ukphone"):
-                symbol_list.append([f'英 [{word["ukphone"]}]', [word['return-phrase'], '', 1]])
+                symbol_list.append([f'英 [{word["ukphone"]}]', [input_text, guess_language, 1]])
             if word.get("usphone"):
-                symbol_list.append([f'美 [{word["usphone"]}]', [word['return-phrase']]])
+                symbol_list.append([f'美 [{word["usphone"]}]', [input_text, guess_language]])
             # 解析释义
             explain_list = []
             for index, trs in enumerate(word['trs']):
@@ -157,16 +160,16 @@ class YoudaoTranslate(object):
         # 【中法】翻译结果解析
         elif self.data.get('le') == 'fr' and self.data.get('cf', self.data.get('fc')):
             word = self.data.get('cf', self.data.get('fc'))['word'][0]
-            # 解析音标和释义
-            symbol_list, explain_list = [], []
+            # 解析音标
+            symbol_list = []
+            if word.get('phone'):
+                symbol_list.append([f'音 [{word["phone"]}]', [input_text, guess_language]])
+            # 解析释义
+            explain_list = []
             if self.data.get('cf'):  # 中 > 法
-                if word.get('phone'):
-                    symbol_list.append([f'音 [{word["phone"]}]', [word['return-phrase']['l']['i']]])
                 for index, tr in enumerate(word['trs'][0]['tr']):
                     explain_list.append({'part': index + 1, 'means': [[tr['l']['i'][0], '']]})
             elif self.data.get('fc'):  # 法 > 中
-                if word.get('phone'):
-                    symbol_list.append([f'音 [{word["phone"]}]', [word['return-phrase']['l']['i'], self.data['le']]])
                 for trs in word['trs']:
                     explain_list.append({'part': trs['pos'], 'means': [[trs['tr'][0]['l']['i'][0], '']]})
             # 添加数据
@@ -174,11 +177,13 @@ class YoudaoTranslate(object):
         # 【中韩】翻译结果解析
         elif self.data.get('le') == 'ko' and self.data.get('ck', self.data.get('kc')):
             word = self.data.get('ck', self.data.get('kc'))['word']
-            # 解析音标和释义
-            symbol_list, explain_list = [], []
+            # 解析音标
+            symbol_list = []
+            if word[0].get('phone'):
+                symbol_list.append([f'音 [{word[0]["phone"]}]', [input_text, guess_language]])
+            # 解析释义
+            explain_list = []
             if self.data.get('ck'):  # 中 > 韩
-                if word[0].get('phone'):
-                    symbol_list.append([f'音 [{word[0]["phone"]}]', [word[0]['return-phrase']['l']['i']]])
                 num = 1
                 for trs in word[0]['trs']:
                     pos = trs.get('pos')
@@ -207,9 +212,9 @@ class YoudaoTranslate(object):
                 head = word_['head']
                 symbol_list = []
                 if head.get('rs'):
-                    symbol_list.append([f'{head["pjm"]} [{head["rs"]}]', [head['pjm'], self.data['le']]])
+                    symbol_list.append([f'{head["pjm"]} [{head["rs"]}]', [input_text, guess_language]])
                 if head.get('sound'):
-                    symbol_list.append([f'音 [{head["sound"]}]', [head['hw'], '']])
+                    symbol_list.append([f'音 [{head["sound"]}]', [input_text, guess_language]])
                 # 解析释义
                 num = 1
                 explain_list = []
