@@ -5,6 +5,7 @@ from time import sleep
 from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QWidget
+from requests import exceptions
 
 from spider.transl_baidu import BaiduTranslate
 from spider.transl_google import GoogleTranslate
@@ -43,13 +44,14 @@ class MouseCheckThread(QThread):
 
 class TranslThread(QThread):
     """创建翻译引擎对象"""
-    trigger = pyqtSignal(object)
+    trigger = pyqtSignal(dict)
 
     def __init__(self, select: str):
         super().__init__()
         self.select = select
 
     def run(self):
+        result = {'code': 0, 'msg': 'OK', 'obj': None}
         try:
             if self.select == 'youdao':
                 obj = YoudaoTranslate()  # 创建有道翻译
@@ -57,14 +59,16 @@ class TranslThread(QThread):
                 obj = GoogleTranslate()  # 创建谷歌翻译
             else:
                 obj = BaiduTranslate()  # 创建百度翻译
-        except:
-            obj = None
-        self.trigger.emit(obj)  # 发送信号
+        except (exceptions.ConnectionError, exceptions.ProxyError) as exc:
+            result.update({'msg': str(exc)})
+        else:
+            result.update({'code': 1, 'obj': obj})
+        self.trigger.emit(result)  # 发送信号
 
 
 class StartTransThread(QThread):
     """启动百度翻译获取翻译结果"""
-    trigger = pyqtSignal(bool)
+    trigger = pyqtSignal(dict)
 
     def __init__(self, engine, **kwargs):
         super().__init__()
@@ -72,30 +76,30 @@ class StartTransThread(QThread):
         self.kwargs = kwargs
 
     def run(self):
+        result = {'code': 1, 'msg': 'OK'}
         if self.engine.__class__.__name__ == 'YoudaoTranslate':
             self.kwargs.pop('from_lan', None)
         try:
             self.engine.translate(**self.kwargs)
-        except:
-            self.trigger.emit(False)  # 翻译失败
+        except (AssertionError, exceptions.ConnectionError, exceptions.ProxyError) as exc:
+            result.update({'code': 0, 'msg': str(exc)})
+            self.trigger.emit(result)  # 翻译失败
         else:
-            self.trigger.emit(True)  # 翻译完成
+            self.trigger.emit(result)  # 翻译完成
 
 
 class DownloadVoiceThread(QThread):
     """下载读音"""
     trigger = pyqtSignal(bytes)
 
-    def __init__(self, engine, **kwargs):
+    def __init__(self, engine, *args):
         super().__init__()
         self.engine = engine
-        self.kwargs = kwargs
+        self.args = args
 
     def run(self):
-        if self.engine.__class__.__name__ == 'BaiduTranslate':
-            self.kwargs.pop('type_', None)
         try:
-            data = self.engine.get_tts(**self.kwargs)
+            data = self.engine.get_tts(*self.args)
         except:
             data = bytes()
         self.trigger.emit(data)  # 信号发送数据

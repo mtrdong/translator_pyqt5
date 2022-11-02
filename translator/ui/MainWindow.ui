@@ -573,7 +573,10 @@
               </size>
              </property>
              <property name="styleSheet">
-              <string notr="true">QTextBrowser {background-color: transparent; border: 2px solid transparent; border-radius: 10px; font: 16px &quot;微软雅黑&quot;; color: rgb(60, 60, 60); padding: 6px;}</string>
+              <string notr="true">QTextBrowser {background-color: rgb(250, 250, 250); border: 2px solid rgb(250, 250, 250); border-radius: 10px; font: 16px &quot;微软雅黑&quot;; color: rgb(60, 60, 60); padding: 6px;}</string>
+             </property>
+             <property name="openLinks">
+              <bool>false</bool>
              </property>
             </widget>
            </item>

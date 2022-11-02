@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QApplication
 
 from ui.FloatWindow_ui import Ui_FloatWindow
 from threads import DownloadVoiceThread
-from utils import get_trans_result, get_word_means, get_spell_html
+from utils import generate_output, b64decode
 from widgets import FloatWidget
 
 
@@ -35,62 +35,49 @@ class FloatWindow(FloatWidget, Ui_FloatWindow):
 
     def setQuery(self, s):
         self.query = s
-        self.textBrowser.setText("<strong>{}</strong>".format(s))
-        self.textBrowser_2.setText("<i style='color: #606060;'>正在翻译...</i>")
+        self.textBrowser.setHtml("<strong>{}</strong>".format(s))
+        self.textBrowser_2.setHtml("<i style='color: #606060;'>正在翻译...</i>")
         self.textBrowser_2.show()
-        self.textBrowser_3.clear()
 
-    def outResult(self, data):
+    def outResult(self, obj):
         """输出翻译结果"""
-        trans_result = get_trans_result(data)  # 直译
-        word_means = get_word_means(data)  # 释义
-        spell_html = get_spell_html(data)  # 音标
-        if not (trans_result or word_means):
-            self.textBrowser_3.setText('<div style="color: #FF3C3C;">翻译结果为空，请重试</div>')
-            self.textBrowser_2.hide()
-        elif spell_html:
-            explanation_html = '<div style="color: #3C3C3C;"><p>{}</p></div>'.format(spell_html)
-            word_means_html = '<div style="color: #3C3C3C;">{}</div>'.format(word_means if word_means else trans_result)
-            self.textBrowser_2.setText(explanation_html)
-            self.textBrowser_3.setText(word_means_html)
+        self.transl_engine = obj
+        translation_contents, explanation_contents = generate_output(obj)
+        if not (translation_contents or explanation_contents):
+            self.textBrowser_2.setHtml('<div style="color: #FF3C3C;">翻译结果为空，请重试</div>')
         else:
-            trans_result_html = '<div style="color: #3C3C3C;">{}<div>'.format(trans_result)
-            self.textBrowser_3.setText(trans_result_html)
-            self.textBrowser_2.hide()
+            self.textBrowser_2.setHtml(explanation_contents or translation_contents)
 
     def anchorClicked(self, url):
-        """ 点击底部输出框中的链接
+        """ 点击输出框中的链接
         点击输出框中音标发音按钮时，获取单词发音并播放
-        点击输出框中文本链接的时候，提取文本并进行翻译
         """
         url = url.url().replace('#', '')
-        if url in ['英', '美', '音']:  # 点击发音按钮
-            if url == '英':
-                lan = 'en'
-            elif url == '美':
-                lan = 'uk'
-            else:
-                lan = 'zh'
-            # 通过线程下载并播放发音
-            self.voice_thread = DownloadVoiceThread(lan, self.query)
-            self.voice_thread.trigger.connect(self.playVoice)
-            self.voice_thread.start()
+        res = b64decode(url)
+        # 通过线程下载并播放发音
+        self.tts(*res)
 
-    def playVoice(self, voice_data):
-        """ 下载单词发音的线程结束
-        获取单词发音并创建播放器进行播放
+    def tts(self, *args):
+        """ 文本转语音
+        下载 TTS 并播放
         """
-        # 将语音写入缓冲区
-        buffer = QBuffer(self)
-        buffer.setData(voice_data)
-        buffer.open(QIODevice.ReadOnly)
-        # 创建播放器
-        player = QMediaPlayer(self)
-        player.setVolume(100)
-        player.setMedia(QMediaContent(), buffer)
-        sleep(0.01)  # 延时等待 setMedia 完成。
-        # 播放语音
-        player.play()
+        def trigger(data):
+            """播放语音"""
+            # 将语音写入缓冲区
+            buffer = QBuffer(self)
+            buffer.setData(data)
+            buffer.open(QIODevice.ReadOnly)
+            # 创建播放器
+            player = QMediaPlayer(self)
+            player.setVolume(100)
+            player.setMedia(QMediaContent(), buffer)
+            sleep(0.1)  # 延时等待 setMedia 完成。
+            # 播放语音
+            player.play()
+
+        self.voice_thread = DownloadVoiceThread(self.transl_engine, *args)
+        self.voice_thread.trigger.connect(trigger)
+        self.voice_thread.start()
 
 
 if __name__ == '__main__':

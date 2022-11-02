@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_FloatWindow(object):
     def setupUi(self, FloatWindow):
         FloatWindow.setObjectName("FloatWindow")
-        FloatWindow.resize(350, 240)
+        FloatWindow.resize(350, 260)
         FloatWindow.setStyleSheet("QTextBrowser {background-color: transparent; border: 0;} QScrollBar:vertical {background: transparent; width: 6px; margin: 0;} QScrollBar::handle:vertical {background: rgb(224, 224, 224); min-height: 30px; border-radius: 3px;} QScrollBar::sub-line:vertical {height: 0; subcontrol-position: top;} QScrollBar::add-line:vertical {height: 0; subcontrol-position: bottom;} QScrollBar:horizontal {background: transparent; height: 6px; margin: 0;} QScrollBar::handle:horizontal {background: rgb(224, 224, 224); min-width: 30px; border-radius: 3px;} QScrollBar::sub-line:horizontal {width: 0; subcontrol-position: left;} QScrollBar::add-line:horizontal {width: 0; subcontrol-position: right;}")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(FloatWindow)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
@@ -28,13 +28,8 @@ class Ui_FloatWindow(object):
         self.textBrowser.setObjectName("textBrowser")
         self.verticalLayout.addWidget(self.textBrowser)
         self.textBrowser_2 = QtWidgets.QTextBrowser(FloatWindow)
-        self.textBrowser_2.setMaximumSize(QtCore.QSize(320, 40))
-        self.textBrowser_2.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
         self.textBrowser_2.setObjectName("textBrowser_2")
         self.verticalLayout.addWidget(self.textBrowser_2)
-        self.textBrowser_3 = QtWidgets.QTextBrowser(FloatWindow)
-        self.textBrowser_3.setObjectName("textBrowser_3")
-        self.verticalLayout.addWidget(self.textBrowser_3)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.radioButton = QtWidgets.QRadioButton(FloatWindow)

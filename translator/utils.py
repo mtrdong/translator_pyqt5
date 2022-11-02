@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
+import base64
 import json
 import random
-import re
 
 from PyQt5.QtCore import QRect, QPoint
 from PyQt5.QtWidgets import QWidget
@@ -10,12 +10,9 @@ from aip import AipOcr
 __all__ = [
     'move_widget',
     'baidu_ocr',
-    'get_trans_result',
-    'get_word_means',
-    'get_spell_html',
-    'get_comment_html',
-    'get_exchange_html',
-    'get_example_html',
+    'b64encode',
+    'b64decode',
+    'generate_output',
 ]
 
 
@@ -67,135 +64,103 @@ def baidu_ocr(img_bytes):
     return text
 
 
-def get_trans_result(data):
-    """获取直译结果"""
-    try:
-        trans_result = '<br />'.join([d['dst'] for d in data['trans_result']['data']])
-    except:
-        trans_result = ''
-    return trans_result
+def b64encode(o):
+    """base64编码"""
+    b64ec = base64.b64encode(json.dumps(o).encode())
+    return b64ec.decode()
 
 
-def get_word_means(data):
-    """获取简明释义"""
-    try:
-        word_means = '; '.join(data['dict_result']['simple_means']['word_means'])
-    except:
-        word_means = ''
-    return word_means
+def b64decode(s):
+    """base64解码"""
+    b64dc = base64.b64decode(s)
+    return json.loads(b64dc.decode())
 
 
-def get_spell_html(data):
-    """获取单词音标"""
-    spell_list = []
-    spell_dict = {
-        'ph_en': '英',
-        'ph_am': '美',
-        'word_symbol': '音',
-    }
-    html_template = '<span style="font-size: 14px; color: #606060;">{lang} [{spell}] <a style="text-decoration: none;" href="#{lang}">🔊</a></span>'
-    try:
-        spell = data['dict_result']['simple_means']['symbols'][0]
-        for k, v in spell_dict.items():
-            if spell.get(k):
-                spell_list.append(html_template.format(lang=v, spell=spell.get(k)))
-    except:
-        return ''
-    return '&nbsp;&nbsp;&nbsp;'.join(spell_list)
+def generate_output(obj, more=False, reverse=False):
+    """ 生成HTML输出内容
 
+    :param obj: 翻译引擎对象
+    :param more: 显示更多内容（默认不添加单词语法和双语例句）
+    :param reverse: 有道词典--中日互译 结果切换
+    :return: HTML字符串
+    """
+    # 输出内容1：译文
+    translations = obj.get_translation()
+    translation_html = '<div style="font-size: 16px; color: #3C3C3C;">{}</div>'
+    translation_contents = translation_html.format(translations[0].replace('\n', '<br>'))
 
-def get_comment_html(data):
-    """获取单词释义"""
-    try:
-        parts = data["dict_result"]["simple_means"]["symbols"][0]["parts"]
-    except:
-        return ''
-    else:
-        comment_list = []
-        for part in parts:
-            try:
-                means_list = [text['text'] for text in part['means']]
-            except:
-                means_list = part['means']
-            comments = []
-            for comment in means_list:
-                if re.match(r'^[a-zA-Z.\-\'\s]+$', comment):
-                    comments.append('<span><a style="text-decoration: none; color: #4395FF;" href="#{comment}">{comment}</a></span>'.format(comment=comment))
+    # 输出内容2：释义
+    explanations = obj.get_explanation(reverse)
+    if not explanations:
+        # 没有释义时直接返回译文
+        return translation_contents, ''
+    explanation_html = '<div style="font-size: 14px; color: #3C3C3C;">{}</div>'
+    explanation_list = []
+    for explanation in explanations:
+        # 音标/读音
+        symbol_html = '<span style="color: #8C8C8C; font-weight: bold;">' \
+                      '{} <a style="text-decoration: none;" href="#{}">🔊</a>' \
+                      '</span>'
+        symbol_list = [symbol_html.format(symbol[0], b64encode(symbol[1])) for symbol in explanation.get('symbols', [])]
+        symbol_contents = '&nbsp;&nbsp;&nbsp;'.join(symbol_list)
+        if symbol_contents:
+            explanation_list.append(explanation_html.format(symbol_contents))
+        # 简明释义
+        explain_html = '<span><i style="color: #8C8C8C;">{}</i><hr>{}</span>'
+        explain_list = []
+        for explain in explanation.get('explains', []):
+            part = f"No.{explain['part']}" if isinstance(explain['part'], int) else explain['part']
+            mean_list = []
+            for index, mean in enumerate(explain['means']):
+                if mean[1]:
+                    text_html = '<a style="text-decoration: none; color: #506EFF;" href="#{}">{}</a>'
+                    text_t_html = '<span style="color: #8C8C8C;">{}</span>'
+                    text_contents = f'{text_html.format(b64encode(mean[0]), mean[0])}<br>{text_t_html.format(mean[1])}'
                 else:
-                    comments.append('<span>{comment}</span>'.format(comment=comment))
-            part_str = part.get('part') if part.get('part') else part.get('part_name', '')
-            if part_str:
-                comment_list.append('<div>{}</div>'.format('<span style="color: #A4A4A4;">{}</span>'.format(part_str) + '&nbsp;&nbsp;&nbsp;' + '；'.join(comments)))
-            else:
-                comment_list.append('；'.join(comments))
-        return ''.join(comment_list)
+                    text_contents = mean[0]
+                no_html = '<span style="color: #8C8C8C;">{} </span>'
+                if len(explain['means']) > 1:
+                    text_contents = no_html.format(index + 1) + text_contents
+                mean_list.append(text_contents)
+            mean_contents = '<br>'.join(mean_list)
+            explain_list.append(explain_html.format(part, mean_contents))
+        explain_contents = '<br><br>'.join(explain_list)
+        if explain_contents:
+            explanation_list.append(explanation_html.format(explain_contents))
+        if more:
+            # 单词语法
+            grammar_html = '<span>' \
+                           '<span style="color: #8C8C8C;">{}</span>&nbsp;&nbsp;&nbsp;' \
+                           '<a style="text-decoration: none; color: #506EFF;" href="#{}">{}</a>' \
+                           '</span>'
+            grammar_list = []
+            for grammar in explanation.get('grammars', []):
+                grammar_list.append(grammar_html.format(grammar['name'], b64encode(grammar['value']), grammar['value']))
+            grammar_contents = '<br>'.join(grammar_list)
+            if grammar_contents:
+                explanation_list.append(explanation_html.format(grammar_contents))
+    if more:
+        # 双语例句
+        sentence_html = '<span style="font-size: 14px;">' \
+                        '{} <a style="text-decoration: none;" href="#{}">🔊</a><br>' \
+                        '<span style="color: #8C8C8C;">{}</span>' \
+                        '</span>'
+        sentence_list = []
+        sentences = obj.get_sentence(True)
+        if len(sentences) > 3:
+            # 例句数量大于3条时，随机选取其中3条例句
+            sentences = random.sample(sentences, 3)
+        for sentence in sentences:
+            replace = '<b style="color: #F0374B;">'
+            sentence_list.append(sentence_html.format(
+                sentence[0].replace('<b>', replace),
+                b64encode(sentence[2]),
+                sentence[1].replace('<b>', replace)
+            ))
+        sentence_contents = '<br><br>'.join(sentence_list)
+        if sentence_contents:
+            explanation_list.append(explanation_html.format(sentence_contents))
+    # 拼接HTML内容
+    explanation_contents = '<hr width=0>'.join(explanation_list)
 
-
-def get_exchange_html(data):
-    """获取单词形态"""
-    exchange_list = []
-    exchange_dict = {
-        'word_third': '第三人称单数',
-        'word_pl': '复数',
-        'word_ing': '现在分词',
-        'word_done': '过去式',
-        'word_past': '过去分词',
-        'word_er': '比较级',
-        'word_est': '最高级',
-    }
-    html_template = '<span><a style="text-decoration: none; color: #4395FF;" href="#{exchange}">{exchange}</a></span>'
-    try:
-        exchange = data['dict_result']['simple_means']['exchange']
-        for k, v in exchange_dict.items():
-            if exchange.get(k):
-                exchange_list.append('{}：{}'.format(v, html_template.format(exchange=exchange.get(k)[0])))
-    except:
-        return ''
-    return '&nbsp;&nbsp;&nbsp;'.join(exchange_list)
-
-
-def get_example_html(data):
-    """获取例句"""
-    try:
-        double = json.loads(data['liju_result']['double'])
-    except:
-        return ''
-    query = data['trans_result']['data'][0]['src']
-    num = random.randint(0, len(double) - 1)
-    if data['trans_result']['from'] == 'en':
-        from_text = ''
-        for s in [s[0] for s in double[num][:2][0]]:
-            if re.match(r'^[a-zA-Z]+$', s):
-                from_text = from_text + s + ' '
-            else:
-                from_text = from_text.strip() + s + ' ' if from_text else s
-        to_text = ''.join([s[0] for s in double[num][:2][1]])
-    else:
-        from_text = ''.join([s[0] for s in double[num][:2][0]])
-        to_text = ''
-        for s in [s[0] for s in double[num][:2][1]]:
-            if re.match(r'^[a-zA-Z]+$', s):
-                to_text = to_text + s + ' '
-            else:
-                to_text = to_text.strip() + s + ' ' if to_text else s
-    from_text = re.sub(query, match_case(query), from_text, flags=re.IGNORECASE)
-    return '<span>【例】</span><span>{}<br />{}</span>'.format(from_text, to_text)
-
-
-def match_case(word):
-    def inner(match):
-        """
-        替换字符串并设置样式
-        替换字符串与原字符串大小写保持一致
-        """
-        html_template = '<span style="color: #FF9E45">{}</span>'
-        text = match.group()
-        if text.isupper():
-            return html_template.format(word.upper())
-        elif text.islower():
-            return html_template.format(word.lower())
-        elif text[0].isupper():
-            return html_template.format(word.capitalize())
-        else:
-            return html_template.format(word)
-    return inner
+    return translation_contents, explanation_contents
