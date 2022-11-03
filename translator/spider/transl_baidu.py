@@ -273,7 +273,7 @@ class BaiduTranslate(object):
         response = self._post(path, form_data, files)
         assert response.status_code == 200, f'提取文字失败！（{response.status_code}）'
         data = json.loads(response.content)
-        src = '\n'.join(data['data'].get('src'))
+        src = '\n'.join(data.get('data', {}).get('src', []))
         return src
 
 
