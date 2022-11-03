@@ -112,12 +112,15 @@ def generate_output(obj, more=False, reverse=False):
             part = f"No.{explain['part']}" if isinstance(explain['part'], int) else explain['part']
             mean_list = []
             for index, mean in enumerate(explain['means']):
+                text = mean[0]
+                text_tr = mean[1]
+                if mean[2]:
+                    a_html = '<a style="text-decoration: none; color: #506EFF;" href="#{}">{}</a>'
+                    text = a_html.format(b64encode(mean[0]), mean[0])
                 if mean[1]:
-                    text_html = '<a style="text-decoration: none; color: #506EFF;" href="#{}">{}</a>'
-                    text_tr_html = '<span style="color: #8C8C8C;">{}</span>'
-                    text_contents = f'{text_html.format(b64encode(mean[0]), mean[0])}<br>{text_tr_html.format(mean[1])}'
-                else:
-                    text_contents = mean[0]
+                    span_html = '<br><span style="color: #8C8C8C;">{}</span>'
+                    text_tr = span_html.format(mean[1])
+                text_contents = text + text_tr
                 no_html = '<span style="color: #8C8C8C;">{} </span>'
                 if len(explain['means']) > 1:
                     text_contents = no_html.format(index + 1) + text_contents

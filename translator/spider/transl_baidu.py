@@ -169,13 +169,13 @@ class BaiduTranslate(object):
                 {
                     "part": "int.",
                     "means": [
-                        ["喂，你好（用于问候或打招呼）；喂，你好（打电话时的招呼语）；喂，你好（引起别人注意的招呼语）；<非正式>喂，嘿 (认为别人说了蠢话或分心)；<英，旧>嘿（表示惊讶）", ""]
+                        ["喂，你好（用于问候或打招呼）；喂，你好（打电话时的招呼语）；喂，你好（引起别人注意的招呼语）；<非正式>喂，嘿 (认为别人说了蠢话或分心)；<英，旧>嘿（表示惊讶）", "", False]
                     ]
                 },
                 {
                     "part": "n.",
                     "means": [
-                        ["招呼，问候；（Hello）（法、印、美、俄）埃洛（人名）", ""]
+                        ["招呼，问候；（Hello）（法、印、美、俄）埃洛（人名）", "", False]
                     ]
                 }
             ],
@@ -209,11 +209,11 @@ class BaiduTranslate(object):
                 if isinstance(parts['means'][0], dict):
                     for index2, mean in enumerate(parts['means']):
                         part = index2 + 1
-                        means = [[mean['text'], '；'.join(mean.get('means', [mean['text']]))]]
+                        means = [[mean['text'], '；'.join(mean.get('means', [])), True]]
                         explain_list.append({'part': part, 'means': means})
                 else:
                     part = parts.get('part') or parts.get('part_name') or index + 1
-                    means = [['；'.join(parts['means']), '']]
+                    means = [['；'.join(parts['means']), '', False]]
                     explain_list.append({'part': part, 'means': means})
             # 解析语法
             grammar_list = []
