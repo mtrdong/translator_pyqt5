@@ -28,6 +28,7 @@ class Ui_FloatWindow(object):
         self.textBrowser.setObjectName("textBrowser")
         self.verticalLayout.addWidget(self.textBrowser)
         self.textBrowser_2 = QtWidgets.QTextBrowser(FloatWindow)
+        self.textBrowser_2.setOpenLinks(False)
         self.textBrowser_2.setObjectName("textBrowser_2")
         self.verticalLayout.addWidget(self.textBrowser_2)
         self.horizontalLayout = QtWidgets.QHBoxLayout()

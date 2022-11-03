@@ -54,8 +54,9 @@ class FloatWindow(FloatWidget, Ui_FloatWindow):
         """
         url = url.url().replace('#', '')
         res = b64decode(url)
-        # 通过线程下载并播放发音
-        self.tts(*res)
+        if isinstance(res, list):
+            # 通过线程下载并播放发音
+            self.tts(*res)
 
     def tts(self, *args):
         """ 文本转语音
