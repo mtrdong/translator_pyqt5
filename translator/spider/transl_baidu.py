@@ -243,15 +243,17 @@ class BaiduTranslate(object):
         for double in double_list:
             # 解析例句
             sentence = ''
+            sentence_text = ''
             for item in double[0]:
                 string = f'<b>{item[0]}</b>' if item[3] == 1 else item[0]  # 标记查询的单词
                 sentence += string if item[-1] == 0 else string + ' '
+                sentence_text += item[0] if item[-1] == 0 else item[0] + ' '
             # 解析例句翻译
             sentence_transl = ''
             for item in double[1]:
                 sentence_transl += item[0] if item[-1] == 0 else item[0] + ' '
             # 构建例句 TTS 获取参数
-            sentence_speech = [sentence if from_lan == 'en' else sentence_transl, 'en']
+            sentence_speech = [sentence_text if from_lan == 'en' else sentence_transl, 'en']
             sentence_data.append([sentence, sentence_transl, sentence_speech, 0 if from_lan == 'en' else 1])
         return sentence_data
 

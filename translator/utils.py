@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import base64
+import html
 import json
 import random
 
@@ -85,9 +86,9 @@ def generate_output(obj, more=False, reverse=False):
     :return: HTML字符串
     """
     # 输出内容1：译文
-    translations = obj.get_translation()
+    translation_text, _ = obj.get_translation()
     translation_html = '<div style="font-size: 16px; color: #3C3C3C;">{}</div>'
-    translation_contents = translation_html.format(translations[0].replace('\n', '<br>'))
+    translation_contents = translation_html.format(html.escape(translation_text).replace('\n', '<br>'))
 
     # 输出内容2：释义
     explanations = obj.get_explanation(reverse)

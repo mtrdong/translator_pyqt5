@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import html
 import os
 import sys
 from time import sleep
@@ -562,7 +563,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                         self.float_window.deleteLater()
                         self.activateWindow()
                         self.showNormal()
-                        self.textEdit.setText(s)
+                        self.textEdit.setPlainText(s)
                         QtWidgets.QApplication.processEvents()
 
                     def destroyed():
@@ -807,7 +808,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             # 通过线程下载并播放发音
             self.tts(*res)
         else:  # 点击文本链接
-            self.textEdit.setText(res)
+            self.textEdit.setPlainText(res)
             self.startTransl()
 
     def hideWidget(self):
@@ -902,7 +903,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             """将识别到的文本设置到输入框进行翻译。如果没有识别到文本则弹窗提示"""
             self.ocr_thread.deleteLater()
             if text:
-                self.textEdit.setText(text)
+                self.textEdit.setPlainText(text)
             else:
                 QtWidgets.QMessageBox.information(self, '提示', '没有从图片中识别到文字！')
                 self.textEdit.clear()

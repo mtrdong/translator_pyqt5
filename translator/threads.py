@@ -36,7 +36,7 @@ class MouseCheckThread(QThread):
         while True:
             mouse_pos = QCursor.pos()  # 鼠标当前坐标
             pos = mouse_pos - widget_pos  # 鼠标相对 widget 左上角的坐标
-            if not (-offset <= pos.x() <= widget_w + offset) and (-offset <= pos.y() <= widget_h + offset):
+            if not (-offset <= pos.x() <= widget_w + offset and -offset <= pos.y() <= widget_h + offset):
                 # 鼠标超出 widget 边缘一定距离后，发送信号并结束循环
                 self.trigger.emit(True)
                 break
