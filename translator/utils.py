@@ -114,8 +114,8 @@ def generate_output(obj, more=False, reverse=False):
             for index, mean in enumerate(explain['means']):
                 if mean[1]:
                     text_html = '<a style="text-decoration: none; color: #506EFF;" href="#{}">{}</a>'
-                    text_t_html = '<span style="color: #8C8C8C;">{}</span>'
-                    text_contents = f'{text_html.format(b64encode(mean[0]), mean[0])}<br>{text_t_html.format(mean[1])}'
+                    text_tr_html = '<span style="color: #8C8C8C;">{}</span>'
+                    text_contents = f'{text_html.format(b64encode(mean[0]), mean[0])}<br>{text_tr_html.format(mean[1])}'
                 else:
                     text_contents = mean[0]
                 no_html = '<span style="color: #8C8C8C;">{} </span>'
@@ -141,10 +141,8 @@ def generate_output(obj, more=False, reverse=False):
                 explanation_list.append(explanation_html.format(grammar_contents))
     if more:
         # 双语例句
-        sentence_html = '<span style="font-size: 14px;">' \
-                        '{} <a style="text-decoration: none;" href="#{}">🔊</a><br>' \
-                        '<span style="color: #8C8C8C;">{}</span>' \
-                        '</span>'
+        sentence_html = '<span style="font-size: 14px;">{}<br><span style="color: #8C8C8C;">{}</span></span>'
+        a_html = ' <a style="text-decoration: none;" href="#{}">🔊</a>'
         sentence_list = []
         sentences = obj.get_sentence(True)
         if len(sentences) > 3:
@@ -152,11 +150,13 @@ def generate_output(obj, more=False, reverse=False):
             sentences = random.sample(sentences, 3)
         for sentence in sentences:
             replace = '<b style="color: #F0374B;">'
-            sentence_list.append(sentence_html.format(
-                sentence[0].replace('<b>', replace),
-                b64encode(sentence[2]),
-                sentence[1].replace('<b>', replace)
-            ))
+            sentence_text = sentence[0].replace('<b>', replace)
+            sentence_tr = sentence[1].replace('<b>', replace)
+            if sentence[3] == 0:
+                sentence_text += a_html.format(b64encode(sentence[2]))
+            else:
+                sentence_tr += a_html.format(b64encode(sentence[2]))
+            sentence_list.append(sentence_html.format(sentence_text, sentence_tr))
         sentence_contents = '<br><br>'.join(sentence_list)
         if sentence_contents:
             explanation_list.append(explanation_html.format(sentence_contents))

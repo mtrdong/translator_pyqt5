@@ -252,7 +252,7 @@ class BaiduTranslate(object):
                 sentence_transl += item[0] if item[-1] == 0 else item[0] + ' '
             # 构建例句 TTS 获取参数
             sentence_speech = [sentence if from_lan == 'en' else sentence_transl, 'en']
-            sentence_data.append([sentence, sentence_transl, sentence_speech])
+            sentence_data.append([sentence, sentence_transl, sentence_speech, 0 if from_lan == 'en' else 1])
         return sentence_data
 
     def get_tts(self, text, lan):

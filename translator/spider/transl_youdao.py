@@ -268,7 +268,8 @@ class YoudaoTranslate(object):
             sentence_data.append([
                 item.get('sentence-eng', item.get('sentence')),  # 例句
                 item.get('sentence-translation'),  # 例句翻译
-                [speech.get('audio', [''])[0], speech.get('le', [''])[0]]  # 例句语音获取参数
+                [speech.get('audio', [''])[0], speech.get('le', [''])[0]],  # 例句语音获取参数
+                0 if item.get('sentence-speech') else 1  # 标记发音句子的位置
             ])
         return sentence_data
 
