@@ -29,12 +29,15 @@ class MouseCheckThread(QThread):
         self.widget = widget
 
     def run(self):
-        widget_pos = self.widget.pos()
+        offset = 20  # 鼠标超出 widget 边缘的距离（单位：像素）
+        widget_w = self.widget.width()  # widget 的宽度
+        widget_h = self.widget.height()  # widget 的高度
+        widget_pos = self.widget.pos()  # widget 左上角的坐标
         while True:
-            mouse_pos = QCursor.pos()
-            pos = mouse_pos - widget_pos
-            if not (-20 <= pos.x() <= self.widget.width() + 20 and -20 <= pos.y() <= self.widget.height() + 20):
-                # 鼠标超出悬浮窗范围，发送信号并结束循环
+            mouse_pos = QCursor.pos()  # 鼠标当前坐标
+            pos = mouse_pos - widget_pos  # 鼠标相对 widget 左上角的坐标
+            if (-offset <= pos.x() <= widget_w + offset) and (-offset <= pos.y() <= widget_h + offset):
+                # 鼠标超出 widget 边缘一定距离后，发送信号并结束循环
                 self.trigger.emit(True)
                 break
             sleep(0.1)
