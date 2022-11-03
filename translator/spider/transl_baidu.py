@@ -4,7 +4,7 @@ import math
 import re
 from threading import Lock
 
-import requests
+import httpx
 from retrying import retry
 
 
@@ -75,7 +75,7 @@ class BaiduTranslate(object):
 
     def __init__(self):
         if not self._init_flag:  # 只初始化一次
-            self.session = requests.Session()
+            self.session = httpx.Client()
             self.home = 'https://fanyi.baidu.com/'
             self.headers = {
                 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
@@ -99,19 +99,12 @@ class BaiduTranslate(object):
     @retry(stop_max_attempt_number=3)
     def _post(self, path='', form_data=None, files=None, params=None):
         """发送请求"""
-        return self.session.post(
-            self.home + path,
-            data=form_data,
-            files=files,
-            params=params,
-            headers=self.headers,
-            timeout=5
-        )
+        return self.session.post(self.home + path, data=form_data, files=files, params=params, headers=self.headers)
 
     @retry(stop_max_attempt_number=3)
     def _get(self, path='', params=None):
         """发送请求"""
-        return self.session.get(self.home + path, params=params, headers=self.headers, timeout=5)
+        return self.session.get(self.home + path, params=params, headers=self.headers)
 
     def _get_lan(self, query):
         """查询语言种类"""
@@ -176,13 +169,13 @@ class BaiduTranslate(object):
                 {
                     "part": "int.",
                     "means": [
-                        ["喂，你好（用于问候或打招呼）；喂，你好（打电话时的招呼语）；喂，你好（引起别人注意的招呼语）；<非正式>喂，嘿 (认为别人说了蠢话或分心)；<英，旧>嘿（表示惊讶）", ""]
+                        ["喂，你好（用于问候或打招呼）；喂，你好（打电话时的招呼语）；喂，你好（引起别人注意的招呼语）；<非正式>喂，嘿 (认为别人说了蠢话或分心)；<英，旧>嘿（表示惊讶）", "", False]
                     ]
                 },
                 {
                     "part": "n.",
                     "means": [
-                        ["招呼，问候；（Hello）（法、印、美、俄）埃洛（人名）", ""]
+                        ["招呼，问候；（Hello）（法、印、美、俄）埃洛（人名）", "", False]
                     ]
                 }
             ],
@@ -216,11 +209,11 @@ class BaiduTranslate(object):
                 if isinstance(parts['means'][0], dict):
                     for index2, mean in enumerate(parts['means']):
                         part = index2 + 1
-                        means = [[mean['text'], '；'.join(mean.get('means', [mean['text']]))]]
+                        means = [[mean['text'], '；'.join(mean.get('means', [])), True]]
                         explain_list.append({'part': part, 'means': means})
                 else:
                     part = parts.get('part') or parts.get('part_name') or index + 1
-                    means = [['；'.join(parts['means']), '']]
+                    means = [['；'.join(parts['means']), '', False]]
                     explain_list.append({'part': part, 'means': means})
             # 解析语法
             grammar_list = []
@@ -250,24 +243,27 @@ class BaiduTranslate(object):
         for double in double_list:
             # 解析例句
             sentence = ''
+            sentence_text = ''
             for item in double[0]:
                 string = f'<b>{item[0]}</b>' if item[3] == 1 else item[0]  # 标记查询的单词
                 sentence += string if item[-1] == 0 else string + ' '
+                sentence_text += item[0] if item[-1] == 0 else item[0] + ' '
             # 解析例句翻译
             sentence_transl = ''
             for item in double[1]:
                 sentence_transl += item[0] if item[-1] == 0 else item[0] + ' '
             # 构建例句 TTS 获取参数
-            sentence_speech = [sentence if from_lan == 'en' else sentence_transl, 'en']
-            sentence_data.append([sentence, sentence_transl, sentence_speech])
+            sentence_speech = [sentence_text if from_lan == 'en' else sentence_transl, 'en']
+            sentence_data.append([sentence, sentence_transl, sentence_speech, 0 if from_lan == 'en' else 1])
         return sentence_data
 
     def get_tts(self, text, lan):
-        """获取单词发音"""
+        """获取发音"""
         spd = 5 if lan == 'zh' else 3
         path = 'gettts'
         params = {'lan': lan, 'text': text, 'spd': spd, 'source': 'web'}
         response = self._get(path, params)
+        assert response.status_code == 200, f'获取发音失败！（{response.status_code}）'
         content = response.content
         return content
 
@@ -277,8 +273,9 @@ class BaiduTranslate(object):
         form_data = {'from': 'auto', 'to': 'zh'}
         files = {'image': img}
         response = self._post(path, form_data, files)
+        assert response.status_code == 200, f'提取文字失败！（{response.status_code}）'
         data = json.loads(response.content)
-        src = '\n'.join(data['data'].get('src'))
+        src = '\n'.join(data.get('data', {}).get('src', []))
         return src
 
 

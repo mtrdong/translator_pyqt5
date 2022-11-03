@@ -3,7 +3,7 @@ from hashlib import md5
 from threading import Lock
 from urllib.parse import parse_qs
 
-import requests
+import httpx
 from retrying import retry
 
 
@@ -21,7 +21,7 @@ class YoudaoTranslate(object):
 
     def __init__(self):
         if not self._init_flag:  # 只初始化一次
-            self.session = requests.Session()
+            self.session = httpx.Client()
             self.home = 'https://dict.youdao.com/'
             self.headers = {
                 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
@@ -40,12 +40,12 @@ class YoudaoTranslate(object):
     @retry(stop_max_attempt_number=3)
     def _post(self, path='', form_data=None, params=None):
         """发送请求"""
-        return self.session.post(url=self.home + path, data=form_data, params=params, headers=self.headers, timeout=5)
+        return self.session.post(url=self.home + path, data=form_data, params=params, headers=self.headers)
 
     @retry(stop_max_attempt_number=3)
     def _get(self, path='', params=None):
         """发送请求"""
-        return self.session.get(url=self.home + path, params=params, headers=self.headers, timeout=5)
+        return self.session.get(url=self.home + path, params=params, headers=self.headers)
 
     @staticmethod
     def _get_form_data(text, le):
@@ -108,13 +108,13 @@ class YoudaoTranslate(object):
                 {
                     "part": "int.",
                     "means": [
-                        ["喂，你好（用于问候或打招呼）；喂，你好（打电话时的招呼语）；喂，你好（引起别人注意的招呼语）；<非正式>喂，嘿 (认为别人说了蠢话或分心)；<英，旧>嘿（表示惊讶）", ""]
+                        ["喂，你好（用于问候或打招呼）；喂，你好（打电话时的招呼语）；喂，你好（引起别人注意的招呼语）；<非正式>喂，嘿 (认为别人说了蠢话或分心)；<英，旧>嘿（表示惊讶）", "", False]
                     ]
                 },
                 {
                     "part": "n.",
                     "means": [
-                        ["招呼，问候；（Hello）（法、印、美、俄）埃洛（人名）", ""]
+                        ["招呼，问候；（Hello）（法、印、美、俄）埃洛（人名）", "", False]
                     ]
                 }
             ],
@@ -149,9 +149,10 @@ class YoudaoTranslate(object):
             # 解析释义
             explain_list = []
             for index, trs in enumerate(word['trs']):
+                b = trs.get('#text') is not None  # 「中 > 英」标记
                 explain_list.append({
                     'part': trs.get('pos') or index + 1,
-                    'means': [[trs.get('tran', trs.get('#text')), trs.get('#tran', trs.get('#text', ''))]]
+                    'means': [[trs.get('tran', trs.get('#text')), trs.get('#tran', ''), b]]
                 })
             # 解析语法
             grammar_list = [item['wf'] for item in word.get('wfs', [])]
@@ -168,10 +169,10 @@ class YoudaoTranslate(object):
             explain_list = []
             if self.data.get('cf'):  # 中 > 法
                 for index, tr in enumerate(word['trs'][0]['tr']):
-                    explain_list.append({'part': index + 1, 'means': [[tr['l']['i'][0], '']]})
+                    explain_list.append({'part': index + 1, 'means': [[tr['l']['i'][0], '', True]]})
             elif self.data.get('fc'):  # 法 > 中
                 for trs in word['trs']:
-                    explain_list.append({'part': trs['pos'], 'means': [[trs['tr'][0]['l']['i'][0], '']]})
+                    explain_list.append({'part': trs['pos'], 'means': [[trs['tr'][0]['l']['i'][0], '', False]]})
             # 添加数据
             explanation_data.append({'symbols': symbol_list, 'explains': explain_list})
         # 【中韩】翻译结果解析
@@ -191,13 +192,13 @@ class YoudaoTranslate(object):
                         for tr in trs['tr']:
                             pos = num
                             num += 1
-                            explain_list.append({'part': pos, 'means': [[tr['l']['i'][0], '']]})
+                            explain_list.append({'part': pos, 'means': [[tr['l']['i'][0], '', False]]})
                     else:
-                        explain_list.append({'part': pos, 'means': [[trs['tr'][0]['l']['i'][0], '']]})
+                        explain_list.append({'part': pos, 'means': [[trs['tr'][0]['l']['i'][0], '', False]]})
             elif self.data.get('kc'):  # 韩 > 中
                 for item in word:
                     for index, trs in enumerate(item['trs']):
-                        tr_list = [[tr['l']['i'][0], ''] for tr in trs['tr']]
+                        tr_list = [[tr['l']['i'][0], '', False] for tr in trs['tr']]
                         explain_list.append({'part': trs.get('pos') or index + 1, 'means': tr_list})
             explanation_data.append({'symbols': symbol_list, 'explains': explain_list})
         # 【中日】翻译结果解析
@@ -207,7 +208,7 @@ class YoudaoTranslate(object):
             newjc_data = []  # 「日 > 中」数据
             cj_data = []  # 「中 > 日」数据
 
-            def get_word(word_):
+            def get_word(word_, tag=False):
                 # 解析音标
                 head = word_['head']
                 symbol_list = []
@@ -220,7 +221,7 @@ class YoudaoTranslate(object):
                 explain_list = []
                 for sense in word_['sense']:
                     cx = sense.get('cx') or num
-                    jmsy_list = [[phrList['jmsy'], phrList.get('jmsyT', '')] for phrList in sense['phrList']]
+                    jmsy_list = [[phrList['jmsy'], phrList.get('jmsyT', ''), tag] for phrList in sense['phrList']]
                     explain_list.append({'part': cx, 'means': jmsy_list})
                     num += 1
                 # 返回数据
@@ -235,7 +236,7 @@ class YoudaoTranslate(object):
                     word_data = get_word(mPhonicD)
                     newjc_data.append(word_data)
             if cj:  # 中 > 日
-                word_data = get_word(cj)
+                word_data = get_word(cj, True)
                 cj_data.append(word_data)
 
             # 【中日】互译时如果有两个结果：
@@ -268,7 +269,8 @@ class YoudaoTranslate(object):
             sentence_data.append([
                 item.get('sentence-eng', item.get('sentence')),  # 例句
                 item.get('sentence-translation'),  # 例句翻译
-                [speech.get('audio', [''])[0], speech.get('le', [''])[0]]  # 例句语音获取参数
+                [speech.get('audio', [''])[0], speech.get('le', [''])[0]],  # 例句语音获取参数
+                0 if item.get('sentence-speech') else 1  # 标记发音句子的位置
             ])
         return sentence_data
 
@@ -277,6 +279,7 @@ class YoudaoTranslate(object):
         path = 'dictvoice'
         params = {'audio': text, 'le': lan, 'type': type_}
         response = self._get(path, params)
+        assert response.status_code == 200, f'获取发音失败！（{response.status_code}）'
         content = response.content
         return content
 

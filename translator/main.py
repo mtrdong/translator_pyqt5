@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import html
 import os
 import sys
 from time import sleep
@@ -7,8 +8,8 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtMultimedia
 from PyQt5 import QtWidgets
-from system_hotkey import SystemHotkey
-from win32con import HWND_TOPMOST, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW, HWND_NOTOPMOST
+from system_hotkey import SystemHotkey, user32
+from win32con import HWND_TOPMOST, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW, HWND_NOTOPMOST, VK_F1
 from win32gui import SetWindowPos
 
 from rc import images_rc  # 导入图片资源
@@ -428,11 +429,10 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.timer.timeout.connect(self.startTransl)
         # 文本输入框当前内容。记录当前翻译内容，防止连续输入相同内容时，再次触发自动翻译（不影响主动翻译）
         self.textEditCurrentContent = ''
-        # 全局截屏翻译快捷键
-        self.screen_trans_hot_key = SystemHotkey()
-        self.screen_trans_hot_key.register(['f1'], callback=lambda x: self.pushButton_4.click())
         # 翻译状态（True-正在翻译；False-翻译结束）。当有正在进行的翻译时，不允许发起二次翻译
         self.transl_started = False
+        # 注册热键
+        self.registerHotKey()
 
     @QtCore.pyqtSlot()
     def on_checkBox_clicked(self):
@@ -563,7 +563,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                         self.float_window.deleteLater()
                         self.activateWindow()
                         self.showNormal()
-                        self.textEdit.setText(s)
+                        self.textEdit.setPlainText(s)
                         QtWidgets.QApplication.processEvents()
 
                     def destroyed():
@@ -808,7 +808,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             # 通过线程下载并播放发音
             self.tts(*res)
         else:  # 点击文本链接
-            self.textEdit.setText(res)
+            self.textEdit.setPlainText(res)
             self.startTransl()
 
     def hideWidget(self):
@@ -903,7 +903,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             """将识别到的文本设置到输入框进行翻译。如果没有识别到文本则弹窗提示"""
             self.ocr_thread.deleteLater()
             if text:
-                self.textEdit.setText(text)
+                self.textEdit.setPlainText(text)
             else:
                 QtWidgets.QMessageBox.information(self, '提示', '没有从图片中识别到文字！')
                 self.textEdit.clear()
@@ -912,6 +912,16 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.ocr_thread = BaiduOCRThread(img_data)
         self.ocr_thread.trigger.connect(trigger)
         self.ocr_thread.start()
+
+    def registerHotKey(self):
+        """注册全局热键"""
+        # 检查“F1”是否已被注册
+        if user32.RegisterHotKey(None, 0, 0, VK_F1):
+            # 释放“F1”
+            user32.RegisterHotKey(None, 0, 1, VK_F1)
+            # 注册“F1”为全局截屏翻译快捷键
+            screen_trans_hot_key = SystemHotkey()
+            screen_trans_hot_key.register(['f1'], callback=lambda x: self.pushButton_4.click())
 
 
 if __name__ == '__main__':

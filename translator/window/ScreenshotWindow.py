@@ -8,7 +8,7 @@ from widgets import MyLabel
 
 class ScreenshotWindow(QWidget):
     """截图窗口"""
-    completed = pyqtSignal(QByteArray)
+    completed = pyqtSignal(bytes)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -116,7 +116,7 @@ class ScreenshotWindow(QWidget):
         buffer.open(QIODevice.WriteOnly)
         if self.captureImage:
             self.captureImage.save(buffer, 'PNG')
-        self.completed.emit(buffer.data())  # 发送信号
+        self.completed.emit(bytes(buffer.data()))  # 发送信号
         self.deleteLater()  # 回收窗口
 
     def cancel(self):

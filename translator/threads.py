@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-import contextlib
 from time import sleep
 
+import httpx
 from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QWidget
-from requests import exceptions
 
 from spider.transl_baidu import BaiduTranslate
 from spider.transl_google import GoogleTranslate
@@ -30,16 +29,18 @@ class MouseCheckThread(QThread):
         self.widget = widget
 
     def run(self):
-        widget_pos = self.widget.pos()
-        with contextlib.suppress(Exception):
-            while True:
-                mouse_pos = QCursor.pos()
-                pos = mouse_pos - widget_pos
-                if not (-20 <= pos.x() <= self.widget.width() + 20 and -20 <= pos.y() <= self.widget.height() + 20):
-                    # 鼠标超出悬浮窗范围，发送信号并结束循环
-                    self.trigger.emit(True)
-                    break
-                sleep(0.1)
+        offset = 20  # 鼠标超出 widget 边缘的距离（单位：像素）
+        widget_w = self.widget.width()  # widget 的宽度
+        widget_h = self.widget.height()  # widget 的高度
+        widget_pos = self.widget.pos()  # widget 左上角的坐标
+        while True:
+            mouse_pos = QCursor.pos()  # 鼠标当前坐标
+            pos = mouse_pos - widget_pos  # 鼠标相对 widget 左上角的坐标
+            if not (-offset <= pos.x() <= widget_w + offset and -offset <= pos.y() <= widget_h + offset):
+                # 鼠标超出 widget 边缘一定距离后，发送信号并结束循环
+                self.trigger.emit(True)
+                break
+            sleep(0.1)
 
 
 class TranslThread(QThread):
@@ -59,7 +60,7 @@ class TranslThread(QThread):
                 obj = GoogleTranslate()  # 创建谷歌翻译
             else:
                 obj = BaiduTranslate()  # 创建百度翻译
-        except (exceptions.ConnectionError, exceptions.ProxyError) as exc:
+        except (httpx.ConnectError, httpx.ProxyError, httpx.ConnectTimeout) as exc:
             result.update({'msg': str(exc)})
         else:
             result.update({'code': 1, 'obj': obj})
@@ -81,7 +82,7 @@ class StartTransThread(QThread):
             self.kwargs.pop('from_lan', None)
         try:
             self.engine.translate(**self.kwargs)
-        except (AssertionError, exceptions.ConnectionError, exceptions.ProxyError) as exc:
+        except (AssertionError, httpx.ConnectError, httpx.ConnectTimeout) as exc:
             result.update({'code': 0, 'msg': str(exc)})
             self.trigger.emit(result)  # 翻译失败
         else:
@@ -100,7 +101,7 @@ class DownloadVoiceThread(QThread):
     def run(self):
         try:
             data = self.engine.get_tts(*self.args)
-        except:
+        except (AssertionError, httpx.ConnectError, httpx.ConnectTimeout):
             data = bytes()
         self.trigger.emit(data)  # 信号发送数据
 
@@ -117,6 +118,6 @@ class BaiduOCRThread(QThread):
         try:
             # text = baidu_ocr(self.image)  # 精度高，推荐
             text = BaiduTranslate().get_ocr(self.image)  # 精度低，备用
-        except:
+        except (AssertionError, httpx.ConnectError, httpx.ConnectTimeout):
             text = ''
         self.trigger.emit(text)  # 信号发送文本

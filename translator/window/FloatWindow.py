@@ -1,3 +1,4 @@
+import html
 from time import sleep
 
 from PyQt5.QtCore import QIODevice, QBuffer, pyqtSignal
@@ -35,8 +36,8 @@ class FloatWindow(FloatWidget, Ui_FloatWindow):
 
     def setQuery(self, s):
         self.query = s
-        self.textBrowser.setHtml("<strong>{}</strong>".format(s))
-        self.textBrowser_2.setHtml("<i style='color: #606060;'>正在翻译...</i>")
+        self.textBrowser.setText("<b>{}</b>".format(html.escape(self.query)))
+        self.textBrowser_2.setText("<i style='color: #606060;'>正在翻译...</i>")
         self.textBrowser_2.show()
 
     def outResult(self, obj):
@@ -44,9 +45,9 @@ class FloatWindow(FloatWidget, Ui_FloatWindow):
         self.transl_engine = obj
         translation_contents, explanation_contents = generate_output(obj)
         if not (translation_contents or explanation_contents):
-            self.textBrowser_2.setHtml('<div style="color: #FF3C3C;">翻译结果为空，请重试</div>')
+            self.textBrowser_2.setText('<div style="color: #FF3C3C;">翻译结果为空，请重试</div>')
         else:
-            self.textBrowser_2.setHtml(explanation_contents or translation_contents)
+            self.textBrowser_2.setText(explanation_contents or translation_contents)
 
     def anchorClicked(self, url):
         """ 点击输出框中的链接
@@ -54,8 +55,9 @@ class FloatWindow(FloatWidget, Ui_FloatWindow):
         """
         url = url.url().replace('#', '')
         res = b64decode(url)
-        # 通过线程下载并播放发音
-        self.tts(*res)
+        if isinstance(res, list):
+            # 通过线程下载并播放发音
+            self.tts(*res)
 
     def tts(self, *args):
         """ 文本转语音
