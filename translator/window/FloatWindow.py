@@ -7,7 +7,7 @@ from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtWidgets import QApplication
 
 from ui.FloatWindow_ui import Ui_FloatWindow
-from threads import DownloadVoiceThread
+from threads import VoiceThread
 from utils import generate_output, b64decode
 from widgets import FloatWidget
 
@@ -42,7 +42,7 @@ class FloatWindow(FloatWidget, Ui_FloatWindow):
 
     def outResult(self, obj):
         """输出翻译结果"""
-        self.transl_engine = obj
+        self.engine = obj
         translation_contents, explanation_contents = generate_output(obj)
         if not (translation_contents or explanation_contents):
             self.textBrowser_2.setText('<div style="color: #FF3C3C;">翻译结果为空，请重试</div>')
@@ -77,7 +77,7 @@ class FloatWindow(FloatWidget, Ui_FloatWindow):
             # 播放语音
             player.play()
 
-        self.voice_thread = DownloadVoiceThread(self.transl_engine, *args)
+        self.voice_thread = VoiceThread(self.engine, *args)
         self.voice_thread.trigger.connect(trigger)
         self.voice_thread.start()
 

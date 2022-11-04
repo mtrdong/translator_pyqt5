@@ -95,6 +95,7 @@ def generate_output(obj, more=False, reverse=False):
     if not explanations:
         # 没有释义时直接返回译文
         return translation_contents, ''
+    no_html = '<span style="color: #8C8C8C;">{}&nbsp;&nbsp;</span>'
     explanation_html = '<div style="font-size: 14px; color: #3C3C3C;">{}</div>'
     explanation_list = []
     for explanation in explanations:
@@ -122,7 +123,6 @@ def generate_output(obj, more=False, reverse=False):
                     span_html = '<br><span style="color: #8C8C8C;">{}</span>'
                     text_tr = span_html.format(mean[1])
                 text_contents = text + text_tr
-                no_html = '<span style="color: #8C8C8C;">{} </span>'
                 if len(explain['means']) > 1:
                     text_contents = no_html.format(index + 1) + text_contents
                 mean_list.append(text_contents)
@@ -145,22 +145,26 @@ def generate_output(obj, more=False, reverse=False):
                 explanation_list.append(explanation_html.format(grammar_contents))
     if more:
         # 双语例句
-        sentence_html = '<span style="font-size: 14px;">{}<br><span style="color: #8C8C8C;">{}</span></span>'
+        sentence_html = '<span style="font-size: 14px;">{}</span>'
         a_html = ' <a style="text-decoration: none;" href="#{}">🔊</a>'
         sentence_list = []
         sentences = obj.get_sentence(True)
         if len(sentences) > 3:
             # 例句数量大于3条时，随机选取其中3条例句
             sentences = random.sample(sentences, 3)
-        for sentence in sentences:
+        for index, sentence in enumerate(sentences):
             replace = '<b style="color: #F0374B;">'
             sentence_text = sentence[0].replace('<b>', replace)
             sentence_tr = sentence[1].replace('<b>', replace)
+            if sentence_tr:
+                span_html = '<br><span style="color: #8C8C8C;">{}</span>'
+                sentence_tr = span_html.format(sentence_tr)
             if sentence[3] == 0:
                 sentence_text += a_html.format(b64encode(sentence[2]))
-            else:
+            elif sentence_tr:
                 sentence_tr += a_html.format(b64encode(sentence[2]))
-            sentence_list.append(sentence_html.format(sentence_text, sentence_tr))
+            no = no_html.format(index + 1)
+            sentence_list.append(sentence_html.format(no + sentence_text + sentence_tr))
         sentence_contents = '<br><br>'.join(sentence_list)
         if sentence_contents:
             explanation_list.append(explanation_html.format(sentence_contents))

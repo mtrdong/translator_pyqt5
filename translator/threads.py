@@ -13,9 +13,9 @@ from utils import baidu_ocr
 
 __all__ = [
     'MouseCheckThread',
+    'EngineThread',
     'TranslThread',
-    'StartTransThread',
-    'DownloadVoiceThread',
+    'VoiceThread',
     'BaiduOCRThread',
 ]
 
@@ -25,7 +25,7 @@ class MouseCheckThread(QThread):
     trigger = pyqtSignal(bool)
 
     def __init__(self, widget: QWidget):
-        super().__init__()
+        super(MouseCheckThread, self).__init__()
         self.widget = widget
 
     def run(self):
@@ -43,12 +43,12 @@ class MouseCheckThread(QThread):
             sleep(0.1)
 
 
-class TranslThread(QThread):
+class EngineThread(QThread):
     """创建翻译引擎对象"""
     trigger = pyqtSignal(dict)
 
     def __init__(self, select: str):
-        super().__init__()
+        super(EngineThread, self).__init__()
         self.select = select
 
     def run(self):
@@ -67,12 +67,12 @@ class TranslThread(QThread):
         self.trigger.emit(result)  # 发送信号
 
 
-class StartTransThread(QThread):
-    """启动百度翻译获取翻译结果"""
+class TranslThread(QThread):
+    """启动翻译"""
     trigger = pyqtSignal(dict)
 
     def __init__(self, engine, **kwargs):
-        super().__init__()
+        super(TranslThread, self).__init__()
         self.engine = engine
         self.kwargs = kwargs
 
@@ -83,18 +83,20 @@ class StartTransThread(QThread):
         try:
             self.engine.translate(**self.kwargs)
         except (AssertionError, httpx.ConnectError, httpx.ConnectTimeout) as exc:
+            # 翻译失败
             result.update({'code': 0, 'msg': str(exc)})
-            self.trigger.emit(result)  # 翻译失败
+            self.trigger.emit(result)
         else:
-            self.trigger.emit(result)  # 翻译完成
+            # 翻译完成
+            self.trigger.emit(result)
 
 
-class DownloadVoiceThread(QThread):
-    """下载读音"""
+class VoiceThread(QThread):
+    """下载发音"""
     trigger = pyqtSignal(bytes)
 
     def __init__(self, engine, *args):
-        super().__init__()
+        super(VoiceThread, self).__init__()
         self.engine = engine
         self.args = args
 
@@ -103,7 +105,7 @@ class DownloadVoiceThread(QThread):
             data = self.engine.get_tts(*self.args)
         except (AssertionError, httpx.ConnectError, httpx.ConnectTimeout):
             data = bytes()
-        self.trigger.emit(data)  # 信号发送数据
+        self.trigger.emit(data)  # 发送数据
 
 
 class BaiduOCRThread(QThread):

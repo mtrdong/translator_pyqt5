@@ -202,6 +202,8 @@ class Ui_MainWindow(object):
         self.horizontalLayout_6.addItem(spacerItem7)
         self.verticalLayout_5.addWidget(self.widget_4)
         self.verticalLayout_3.addWidget(self.widget_2)
+        self.widget_2.raise_()
+        self.textEdit.raise_()
         self.verticalLayout_2.addWidget(self.widget)
         self.verticalLayout.addLayout(self.verticalLayout_2)
 
