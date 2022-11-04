@@ -1,5 +1,6 @@
 chardet
 baidu-aip
+httpx
 pyinstaller
 PyQt5-stubs
 pyqt5-tools

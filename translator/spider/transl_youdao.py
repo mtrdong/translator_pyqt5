@@ -70,7 +70,7 @@ class YoudaoTranslate(object):
         }
         return form_data
 
-    def translate(self, query, to_lan):
+    def translate(self, query, to_lan, *args, **kwargs):
         """翻译"""
         form_data = self._get_form_data(query, to_lan)
         path = 'jsonapi_s'
@@ -85,7 +85,7 @@ class YoudaoTranslate(object):
             cj = self.data.get('cj', {}).get('word')
             self.reverse_flag = True if newjc and cj else False
 
-    def get_translation(self):
+    def get_translation(self, *args, **kwargs):
         """获取译文"""
         translation_data = []
         if self.data.get('fanyi'):
@@ -97,7 +97,7 @@ class YoudaoTranslate(object):
             translation_data.append([self.data['meta']['input'], self.data['meta']['guessLanguage']])
         return translation_data
 
-    def get_explanation(self, reverse=False):
+    def get_explanation(self, reverse=False, *args, **kwargs):
         """ 获取释义
         [{
             "symbols": [
@@ -249,7 +249,7 @@ class YoudaoTranslate(object):
 
         return explanation_data
 
-    def get_sentence(self, more=False):
+    def get_sentence(self, more=False, *args, **kwargs):
         """获取例句"""
         sentence_data = []
         if more:
@@ -274,7 +274,7 @@ class YoudaoTranslate(object):
             ])
         return sentence_data
 
-    def get_tts(self, text, lan='', type_=2):
+    def get_tts(self, text, lan='', type_=2, *args, **kwargs):
         """获取发音"""
         path = 'dictvoice'
         params = {'audio': text, 'le': lan, 'type': type_}

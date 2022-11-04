@@ -4,7 +4,8 @@ import json
 from contextlib import suppress
 from threading import Lock
 
-import requests
+import httpx
+from retrying import retry
 
 
 class GoogleTranslate(object):
@@ -21,15 +22,29 @@ class GoogleTranslate(object):
 
     def __init__(self):
         if not self._init_flag:  # 只初始化一次
-            self._init_flag = True
-            self.session = requests.Session()
-            self.url = 'https://translate.google.cn/_/TranslateWebserverUi/data/batchexecute'
+            self.session = httpx.Client()
+            self.home = 'https://translate.google.cn/'
             self.headers = {
                 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
                               'AppleWebKit/537.36 (KHTML, like Gecko) '
                               'Chrome/106.0.0.0 Safari/537.36',
             }
+            # 发送请求检查服务是否可用
+            self._get()
+            # 翻译结果
             self.data = None
+            # 标记初始化完成
+            self._init_flag = True
+
+    @retry(stop_max_attempt_number=3)
+    def _post(self, path='', form_data=None, params=None):
+        """发送请求"""
+        return self.session.post(self.home + path, data=form_data, params=params, headers=self.headers)
+
+    @retry(stop_max_attempt_number=3)
+    def _get(self, path='', params=None):
+        """发送请求"""
+        return self.session.get(self.home + path, params=params, headers=self.headers)
 
     @staticmethod
     def _get_form_data(rpcids, query, from_lan, to_lan=None):
@@ -40,16 +55,17 @@ class GoogleTranslate(object):
         form_data = {'f.req': json.dumps([[[rpcids, json.dumps(list_), None, "generic"]]])}
         return form_data
 
-    def translate(self, query, from_lan, to_lan):
+    def translate(self, query, from_lan, to_lan, *args, **kwargs):
         """翻译"""
         rpcids = 'MkEWBc'
         form_data = self._get_form_data(rpcids, query, from_lan, to_lan)
-        response = self.session.post(self.url, data=form_data, headers=self.headers)
+        path = '_/TranslateWebserverUi/data/batchexecute'
+        response = self._post(path, form_data)
         content = response.content.decode().split('\n\n')[-1]
         data = json.loads(json.loads(content)[0][2])
         self.data = data
 
-    def get_translation(self):
+    def get_translation(self, *args, **kwargs):
         """获取译文"""
         translation_data = []
         with suppress(IndexError, TypeError):
@@ -58,7 +74,7 @@ class GoogleTranslate(object):
             translation_data.append([text, self.data[1][1]])
         return translation_data
 
-    def get_explanation(self):
+    def get_explanation(self, *args, **kwargs):
         """ 获取释义
         [{
             "symbols": [
@@ -68,15 +84,15 @@ class GoogleTranslate(object):
                 {
                     "part": "形容词",
                     "means": [
-                        ["好", "good"],
-                        ["良好", "good, well, favorable, fine, favourable"]
+                        ["好", "good", False],
+                        ["良好", "good, well, favorable, fine, favourable", False]
                     ]
                 },
                 {
                     "part": "名词",
                     "means": [
-                        ["益处", "benefit, good, profit"],
-                        ["甜头", "good, sweet taste, pleasant flavor"]
+                        ["益处", "benefit, good, profit", False],
+                        ["甜头", "good, sweet taste, pleasant flavor", False]
                     ]
                 }
             ]
@@ -93,20 +109,21 @@ class GoogleTranslate(object):
             explanation_data.append({'symbols': symbol_list, 'explains': explain_list})
         return explanation_data
 
-    def get_sentence(self):
+    def get_sentence(self, *args, **kwargs):
         """获取例句"""
         sentence_data = []
         with suppress(IndexError, TypeError):
             sentence_pair = self.data[3][2][0]
             for item in sentence_pair:
-                sentence_data.append([item[1], [item[1], 'en'], ''])
+                sentence_data.append([item[1], [item[1], 'en'], '', 0])
         return sentence_data
 
-    def get_tts(self, text, lang):
+    def get_tts(self, text, lang, *args, **kwargs):
         """获取发音"""
         rpcids = 'jQ1olc'
         form_data = self._get_form_data(rpcids, text, lang)
-        response = self.session.post(self.url, data=form_data, headers=self.headers)
+        path = '_/TranslateWebserverUi/data/batchexecute'
+        response = self._post(path, form_data)
         content = response.content.decode().split('\n\n')[-1]
         data = json.loads(json.loads(content)[0][2])
         return base64.b64decode(data[0])
@@ -117,6 +134,6 @@ if __name__ == '__main__':
     gt.translate('good', 'auto', 'zh-CN')
     translations = gt.get_translation()
     explanations = gt.get_explanation()
-    # tts = gt.get_tts(*explanations[0]['symbols'][0][1])
+    tts = gt.get_tts(*explanations[0]['symbols'][0][1])
     sentences = gt.get_sentence()
     print(gt.data)

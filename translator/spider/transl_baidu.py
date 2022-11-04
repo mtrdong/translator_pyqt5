@@ -130,7 +130,7 @@ class BaiduTranslate(object):
             'sign': sign,
         })
 
-    def translate(self, query, to_lan, from_lan=None):
+    def translate(self, query, to_lan, from_lan=None, *args, **kwargs):
         """ 启动翻译
         翻译成功后返回百度翻译的源数据
         :param query: 翻译内容
@@ -150,7 +150,7 @@ class BaiduTranslate(object):
         assert data.get('errno') is None, f'翻译失败！（{data["errno"]}，{data["errmsg"]}）'
         self.data = data
 
-    def get_translation(self):
+    def get_translation(self, *args, **kwargs):
         """获取译文"""
         translation_data = []
         dst = '\n'.join([data['dst'] for data in self.data['trans_result']['data']])
@@ -158,7 +158,7 @@ class BaiduTranslate(object):
         translation_data.append([dst, self.data['trans_result']['to']])
         return translation_data
 
-    def get_explanation(self, *args):
+    def get_explanation(self, *args, **kwargs):
         """ 获取释义
         [{
             "symbols": [
@@ -235,7 +235,7 @@ class BaiduTranslate(object):
             explanation_data.append({'symbols': symbol_list, 'explains': explain_list, 'grammars': grammar_list})
         return explanation_data
 
-    def get_sentence(self, *args):
+    def get_sentence(self, *args, **kwargs):
         """获取例句"""
         sentence_data = []
         from_lan = self.data['trans_result']['from']
@@ -257,7 +257,7 @@ class BaiduTranslate(object):
             sentence_data.append([sentence, sentence_transl, sentence_speech, 0 if from_lan == 'en' else 1])
         return sentence_data
 
-    def get_tts(self, text, lan):
+    def get_tts(self, text, lan, *args, **kwargs):
         """获取发音"""
         spd = 5 if lan == 'zh' else 3
         path = 'gettts'
@@ -267,7 +267,7 @@ class BaiduTranslate(object):
         content = response.content
         return content
 
-    def get_ocr(self, img: bytes):
+    def get_ocr(self, img, *args, **kwargs):
         """从图片中提取文字(精度差)"""
         path = 'getocr'
         form_data = {'from': 'auto', 'to': 'zh'}
@@ -281,7 +281,7 @@ class BaiduTranslate(object):
 
 if __name__ == '__main__':
     bt = BaiduTranslate()
-    bt.translate('result', 'zh')
+    bt.translate('good', 'zh')
     translations = bt.get_translation()
     explanations = bt.get_explanation()
     tts = bt.get_tts(*explanations[0]['symbols'][0][1])

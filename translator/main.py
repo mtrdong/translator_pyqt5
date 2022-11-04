@@ -551,55 +551,59 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """ 剪切板数据变更
         开启复制翻译时，获取剪切板内容并发起翻译
         """
-        if self.clipboard_flag and not self.transl_started:
-            mime_data = self.clipboard.mimeData()
+        mime_data = self.clipboard.mimeData()
+        text = mime_data.text().strip()
+        # 满足以下条件时，对剪切板的内容进行翻译，并输出到悬浮窗
+        # 1. 开启了“划词翻译”
+        # 2. 没有正在进行中的翻译任务
+        # 3. 剪切板的内容为纯文本，且不是纯空白字符
+        if self.clipboard_flag and not self.transl_started and mime_data.hasFormat('text/plain') and text:
 
-            if 'text/plain' in mime_data.formats():
+            if not hasattr(self, 'float_window'):
 
-                if not hasattr(self, 'float_window'):
+                def clicked(s):
+                    """从悬浮窗口转到主窗口"""
+                    self.float_window.deleteLater()
+                    self.activateWindow()
+                    self.showNormal()
+                    self.textEdit.setPlainText(s)
+                    QtWidgets.QApplication.processEvents()
 
-                    def clicked(s):
-                        """从悬浮窗口转到主窗口"""
-                        self.float_window.deleteLater()
-                        self.activateWindow()
-                        self.showNormal()
-                        self.textEdit.setPlainText(s)
-                        QtWidgets.QApplication.processEvents()
+                def destroyed():
+                    """回收悬浮窗口"""
+                    del self.float_window
 
-                    def destroyed():
-                        """回收悬浮窗口"""
-                        del self.float_window
+                # 显示悬浮窗
+                self.float_window = FloatWindow(text)  # 创建悬浮窗
+                self.float_window.pushButtonClicked.connect(clicked)
+                self.float_window.radioButtonClicked.connect(self.checkBox.click)
+                self.float_window.destroyed.connect(destroyed)
+                self.float_window.show()
+            else:
+                self.float_window.setQuery(text)
 
-                    # 显示悬浮窗
-                    self.float_window = FloatWindow(mime_data.text())  # 创建悬浮窗
-                    self.float_window.pushButtonClicked.connect(clicked)
-                    self.float_window.radioButtonClicked.connect(self.checkBox.click)
-                    self.float_window.destroyed.connect(destroyed)
-                    self.float_window.show()
-                else:
-                    self.float_window.setQuery(mime_data.text())
+            def trigger(b):
+                """翻译结果输出到悬浮窗口"""
+                # 标记本次翻译结束
+                self.transl_started = False
+                if hasattr(self, 'float_window'):
+                    # 将结果输出到悬浮窗口
+                    self.float_window.outResult(self.transl_engine)
 
-                def trigger(b):
-                    """翻译结果输出到悬浮窗口"""
-                    self.start_trans_thread.deleteLater()
-                    self.transl_started = False  # 标记本次翻译结束
-                    if hasattr(self, 'float_window'):
-                        self.float_window.outResult(self.transl_engine)  # 将结果输出到悬浮窗
-
-                # 通过线程发起翻译
-                kwargs = {'query': mime_data.text(), 'to_lan': self.target_lan, 'from_lan': self.source_lan}
-                self.start_trans_thread = StartTransThread(self.transl_engine, **kwargs)
-                self.start_trans_thread.trigger.connect(trigger)
-                self.start_trans_thread.start()
-                # 标记正在翻译
-                self.transl_started = True
+            # 通过线程发起翻译
+            kwargs = {'query': text, 'to_lan': self.target_lan, 'from_lan': self.source_lan}
+            self.transl_thread = TranslThread(self.transl_engine, **kwargs)
+            self.transl_thread.trigger.connect(trigger)
+            self.transl_thread.start()
+            # 标记正在翻译
+            self.transl_started = True
 
     def getTranslEngine(self):
         """通过线程创建翻译引擎对象"""
         # 退出之前的线程，并重置翻译引擎
-        if hasattr(self, 'transl_thread'):
-            self.transl_thread.disconnect()
-            self.transl_thread.quit()
+        if hasattr(self, 'engine_thread'):
+            self.engine_thread.disconnect()
+            self.engine_thread.quit()
         self.transl_engine = None
 
         def trigger(result):
@@ -612,9 +616,9 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             if self.textEdit.toPlainText():
                 self.startTransl()
 
-        self.transl_thread = TranslThread(engine.get(self.comboBox.currentText()))
-        self.transl_thread.trigger.connect(trigger)
-        self.transl_thread.start()
+        self.engine_thread = EngineThread(engine.get(self.comboBox.currentText()))
+        self.engine_thread.trigger.connect(trigger)
+        self.engine_thread.start()
 
     def setLangItems(self):
         """设置源语言和目标语言下拉列表"""
@@ -761,9 +765,9 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
 
         # 通过线程发起翻译
         kwargs = {'query': query, 'to_lan': self.target_lan, 'from_lan': self.source_lan}
-        self.start_trans_thread = StartTransThread(self.transl_engine, **kwargs)
-        self.start_trans_thread.trigger.connect(trigger)
-        self.start_trans_thread.start()
+        self.transl_thread = TranslThread(self.transl_engine, **kwargs)
+        self.transl_thread.trigger.connect(trigger)
+        self.transl_thread.start()
         self.transl_started = True  # 标记本次翻译正在进行
 
     def output(self, reverse=False):
@@ -891,7 +895,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             # 播放语音
             player.play()
 
-        self.voice_thread = DownloadVoiceThread(self.transl_engine, *args)
+        self.voice_thread = VoiceThread(self.transl_engine, *args)
         self.voice_thread.trigger.connect(trigger)
         self.voice_thread.start()
 
