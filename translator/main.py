@@ -553,6 +553,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """
         if self.clipboard_flag and not self.transl_started:
             mime_data = self.clipboard.mimeData()
+            text = mime_data.text()
 
             if 'text/plain' in mime_data.formats():
 
@@ -571,20 +572,24 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                         del self.float_window
 
                     # 显示悬浮窗
-                    self.float_window = FloatWindow(mime_data.text())  # 创建悬浮窗
+                    self.float_window = FloatWindow(text)  # 创建悬浮窗
                     self.float_window.pushButtonClicked.connect(clicked)
                     self.float_window.radioButtonClicked.connect(self.checkBox.click)
                     self.float_window.destroyed.connect(destroyed)
                     self.float_window.show()
                 else:
-                    self.float_window.setQuery(mime_data.text())
+                    self.float_window.setQuery(text)
 
                 def trigger(b):
                     """翻译结果输出到悬浮窗口"""
-                    self.start_trans_thread.deleteLater()
-                    self.transl_started = False  # 标记本次翻译结束
+                    # 标记本次翻译结束
+                    self.transl_started = False
+                    if not self.start_trans_thread.destroyed:
+                        # 回收线程
+                        self.start_trans_thread.deleteLater()
                     if hasattr(self, 'float_window'):
-                        self.float_window.outResult(self.transl_engine)  # 将结果输出到悬浮窗
+                        # 将结果输出到悬浮窗口
+                        self.float_window.outResult(self.transl_engine)
 
                 # 通过线程发起翻译
                 kwargs = {'query': mime_data.text(), 'to_lan': self.target_lan, 'from_lan': self.source_lan}
