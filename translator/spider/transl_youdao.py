@@ -212,10 +212,11 @@ class YoudaoTranslate(object):
                 # 解析音标
                 head = word_['head']
                 symbol_list = []
+                to_str = head['type'].split('2')[0].split('-')[0]
                 if head.get('rs'):
-                    symbol_list.append([f'{head["pjm"]} [{head["rs"]}]', [input_text, guess_language]])
+                    symbol_list.append([f'{head["pjm"]} [{head["rs"]}]', [input_text, to_str]])
                 if head.get('sound'):
-                    symbol_list.append([f'音 [{head["sound"]}]', [input_text, guess_language]])
+                    symbol_list.append([f'音 [{head["sound"]}]', [input_text, to_str]])
                 # 解析释义
                 num = 1
                 explain_list = []
