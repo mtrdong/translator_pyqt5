@@ -4,8 +4,9 @@ import math
 import re
 from threading import Lock
 
-import httpx
 from retrying import retry
+
+from spider import BaseTranslate
 
 
 def n(r: int, o: str):
@@ -61,7 +62,7 @@ def e(r: str):
     return f'{p}.{p ^ m}'
 
 
-class BaiduTranslate(object):
+class BaiduTranslate(BaseTranslate):
     """百度翻译爬虫"""
     _lock = Lock()
     _instance = None
@@ -74,25 +75,21 @@ class BaiduTranslate(object):
         return cls._instance
 
     def __init__(self):
+        super(BaiduTranslate, self).__init__()
         if not self._init_flag:  # 只初始化一次
-            self.session = httpx.Client()
+            # 百度翻译主页
             self.home = 'https://fanyi.baidu.com/'
-            self.headers = {
-                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                              'AppleWebKit/537.36 (KHTML, like Gecko) '
-                              'Chrome/106.0.0.0 Safari/537.36',
-                'acs-token': ''  # TODO 新增请求头。服务端尚未做校验，暂时为空
-            }
-            # 获取Cookie
+            # 添加请求头
             response = self._get()
-            self.headers['cookie'] = response.headers.get('Set-Cookie')
+            self.headers.update({
+                'cookie': response.headers.get('Set-Cookie'),
+                'acs-token': ''  # TODO 新增请求头。服务端尚未做校验，暂时为空
+            })
             # 获取Token
             response = self._get()
             self.form_data = {
                 'token': re.findall(r'token:[\s\'\"]+([a-z\d]+)[\'\"]', response.content.decode())
             }
-            # 翻译结果
-            self.data = None
             # 标记初始化完成
             self._init_flag = True
 

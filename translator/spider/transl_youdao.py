@@ -3,11 +3,12 @@ from hashlib import md5
 from threading import Lock
 from urllib.parse import parse_qs
 
-import httpx
 from retrying import retry
 
+from spider import BaseTranslate
 
-class YoudaoTranslate(object):
+
+class YoudaoTranslate(BaseTranslate):
     """有道翻译爬虫"""
     _lock = Lock()
     _instance = None
@@ -20,18 +21,12 @@ class YoudaoTranslate(object):
         return cls._instance
 
     def __init__(self):
+        super(YoudaoTranslate, self).__init__()
         if not self._init_flag:  # 只初始化一次
-            self.session = httpx.Client()
+            # 有道翻译主页
             self.home = 'https://dict.youdao.com/'
-            self.headers = {
-                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                              'AppleWebKit/537.36 (KHTML, like Gecko) '
-                              'Chrome/106.0.0.0 Safari/537.36',
-            }
             # 发送请求检查服务是否可用
             self._get()
-            # 翻译结果
-            self.data = None
             # 中日互译时如果有两种结果，则该标志为 True
             self.reverse_flag = False
             # 标记初始化完成

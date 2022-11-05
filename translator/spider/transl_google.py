@@ -4,11 +4,12 @@ import json
 from contextlib import suppress
 from threading import Lock
 
-import httpx
 from retrying import retry
 
+from spider import BaseTranslate
 
-class GoogleTranslate(object):
+
+class GoogleTranslate(BaseTranslate):
     """谷歌翻译爬虫"""
     _lock = Lock()
     _instance = None
@@ -21,18 +22,12 @@ class GoogleTranslate(object):
         return cls._instance
 
     def __init__(self):
+        super(GoogleTranslate, self).__init__()
         if not self._init_flag:  # 只初始化一次
-            self.session = httpx.Client()
+            # 谷歌翻译主页
             self.home = 'https://translate.google.cn/'
-            self.headers = {
-                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                              'AppleWebKit/537.36 (KHTML, like Gecko) '
-                              'Chrome/106.0.0.0 Safari/537.36',
-            }
             # 发送请求检查服务是否可用
             self._get()
-            # 翻译结果
-            self.data = None
             # 标记初始化完成
             self._init_flag = True
 

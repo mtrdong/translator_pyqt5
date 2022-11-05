@@ -6,6 +6,7 @@ from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QWidget
 
+from spider import BaseTranslate
 from spider.transl_baidu import BaiduTranslate
 from spider.transl_google import GoogleTranslate
 from spider.transl_youdao import YoudaoTranslate
@@ -71,7 +72,7 @@ class TranslThread(QThread):
     """启动翻译"""
     trigger = pyqtSignal(dict)
 
-    def __init__(self, engine, **kwargs):
+    def __init__(self, engine: BaseTranslate, **kwargs):
         super(TranslThread, self).__init__()
         self.engine = engine
         self.kwargs = kwargs
@@ -95,7 +96,7 @@ class VoiceThread(QThread):
     """下载发音"""
     trigger = pyqtSignal(bytes)
 
-    def __init__(self, engine, *args):
+    def __init__(self, engine: BaseTranslate, *args):
         super(VoiceThread, self).__init__()
         self.engine = engine
         self.args = args
