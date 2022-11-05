@@ -75,8 +75,8 @@ class BaiduTranslate(BaseTranslate):
         return cls._instance
 
     def __init__(self):
-        super(BaiduTranslate, self).__init__()
         if not self._init_flag:  # 只初始化一次
+            super(BaiduTranslate, self).__init__()
             # 百度翻译主页
             self.home = 'https://fanyi.baidu.com/'
             # 添加请求头
