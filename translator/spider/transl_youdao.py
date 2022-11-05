@@ -21,8 +21,8 @@ class YoudaoTranslate(BaseTranslate):
         return cls._instance
 
     def __init__(self):
-        super(YoudaoTranslate, self).__init__()
         if not self._init_flag:  # 只初始化一次
+            super(YoudaoTranslate, self).__init__()
             # 有道词典主页
             self.home = 'https://dict.youdao.com/'
             # 发送请求检查服务是否可用

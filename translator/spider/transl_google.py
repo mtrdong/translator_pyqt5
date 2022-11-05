@@ -22,8 +22,8 @@ class GoogleTranslate(BaseTranslate):
         return cls._instance
 
     def __init__(self):
-        super(GoogleTranslate, self).__init__()
         if not self._init_flag:  # 只初始化一次
+            super(GoogleTranslate, self).__init__()
             # 谷歌翻译主页
             self.home = 'https://translate.google.cn/'
             # 发送请求检查服务是否可用
