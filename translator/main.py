@@ -14,6 +14,7 @@ from win32gui import SetWindowPos
 
 from rc import images_rc  # 导入图片资源
 from res import widgets_zh_CN_qm
+from spider import BaseTranslate
 from threads import *
 from ui.MainWindow_ui import Ui_MainWindow
 from utils import b64decode, generate_output
@@ -418,7 +419,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.comboBox_3.currentIndexChanged.connect(self.comboBox_3CurrentIndexChanged)
         self.setLangItems()  # 设置源语言/目标语言下拉选项
         # 通过线程创建翻译引擎对象
-        self.transl_engine = None  # 翻译引擎对象
+        self.transl_engine: BaseTranslate = ...  # 翻译引擎对象
         self.getTranslEngine()  # 创建翻译引擎对象
         # 监听剪切板。开启监听时，当剪切板内容发生变化时，自动获取剪切板文本发起翻译（伪划词翻译）
         self.clipboard = QtWidgets.QApplication.clipboard()
@@ -806,7 +807,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         点击输出框中音标发音按钮时，获取单词发音并播放
         点击输出框中文本链接的时候，提取文本并进行翻译
         """
-        url = url.url().replace('#', '')
+        url = url.url()[1:]
         res = b64decode(url)
         if isinstance(res, list):  # 点击发音按钮
             # 通过线程下载并播放发音
@@ -920,9 +921,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
     def registerHotKey(self):
         """注册全局热键"""
         # 检查“F1”是否已被注册
-        if user32.RegisterHotKey(None, 0, 0, VK_F1):
-            # 释放“F1”
-            user32.RegisterHotKey(None, 0, 1, VK_F1)
+        if user32.RegisterHotKey(None, 0, 0, VK_F1) and user32.RegisterHotKey(None, 0, 1, VK_F1):
             # 注册“F1”为全局截屏翻译快捷键
             screen_trans_hot_key = SystemHotkey()
             screen_trans_hot_key.register(['f1'], callback=lambda x: self.pushButton_4.click())

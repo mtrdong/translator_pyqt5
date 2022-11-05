@@ -9,7 +9,7 @@ from spider import BaseTranslate
 
 
 class YoudaoTranslate(BaseTranslate):
-    """有道翻译爬虫"""
+    """有道词典爬虫"""
     _lock = Lock()
     _instance = None
     _init_flag = False
@@ -23,7 +23,7 @@ class YoudaoTranslate(BaseTranslate):
     def __init__(self):
         super(YoudaoTranslate, self).__init__()
         if not self._init_flag:  # 只初始化一次
-            # 有道翻译主页
+            # 有道词典主页
             self.home = 'https://dict.youdao.com/'
             # 发送请求检查服务是否可用
             self._get()
@@ -66,7 +66,12 @@ class YoudaoTranslate(BaseTranslate):
         return form_data
 
     def translate(self, query, to_lan, *args, **kwargs):
-        """翻译"""
+        """ 启动翻译
+
+        :param query: 翻译内容
+        :param to_lan: 源语言
+        :return:
+        """
         form_data = self._get_form_data(query, to_lan)
         path = 'jsonapi_s'
         params = {'doctype': 'json', 'jsonversion': 4}
@@ -78,10 +83,12 @@ class YoudaoTranslate(BaseTranslate):
         if to_lan == 'ja':  # 【中日】互译时检查是否有两种结果
             newjc = self.data.get('newjc', {}).get('word')
             cj = self.data.get('cj', {}).get('word')
-            self.reverse_flag = True if newjc and cj else False
+            self.reverse_flag = newjc and cj
 
     def get_translation(self, *args, **kwargs):
-        """获取译文"""
+        """ 获取译文
+        ["hello", ["hello", "eng"]]
+        """
         translation_data = []
         if self.data.get('fanyi'):
             to_str = self.data['fanyi']['type'].split('2')[-1].split('-')[0]
@@ -103,7 +110,7 @@ class YoudaoTranslate(BaseTranslate):
                 {
                     "part": "int.",
                     "means": [
-                        ["喂，你好（用于问候或打招呼）；喂，你好（打电话时的招呼语）；喂，你好（引起别人注意的招呼语）；<非正式>喂，嘿 (认为别人说了蠢话或分心)；<英，旧>嘿（表示惊讶）", "", False]
+                        ["喂，你好（用于问候或打招呼）；喂，你好（打电话时的招呼语）；喂，你好（引起别人注意的招呼语）", "", False]
                     ]
                 },
                 {
@@ -247,7 +254,22 @@ class YoudaoTranslate(BaseTranslate):
         return explanation_data
 
     def get_sentence(self, more=False, *args, **kwargs):
-        """获取例句"""
+        """ 获取例句
+        [
+            [
+                "'Hello, Paul,' they chorused.",
+                "“你好，保罗。”他们齐声问候道。",
+                ["'Hello, Paul,' they chorused.", "eng"],
+                0
+            ],
+            [
+                "Hello, this is John Thompson.",
+                "你好，我是约翰·汤普森。",
+                ["Hello, this is John Thompson.", "eng"],
+                0
+            ]
+        ]
+        """
         sentence_data = []
         if more:
             query = f'lj:{self.data["meta"]["input"]}'
@@ -272,7 +294,13 @@ class YoudaoTranslate(BaseTranslate):
         return sentence_data
 
     def get_tts(self, text, lan='', type_=2, *args, **kwargs):
-        """获取发音"""
+        """ 获取发音
+
+        :param text: 源文本
+        :param lan: 文本语言
+        :param type_: 发音类型
+        :return: 文本语音
+        """
         path = 'dictvoice'
         params = {'audio': text, 'le': lan, 'type': type_}
         response = self._get(path, params)
@@ -283,7 +311,8 @@ class YoudaoTranslate(BaseTranslate):
 
 if __name__ == '__main__':
     yt = YoudaoTranslate()
-    yt.translate('good', 'en')
+    yt.translate('hello', 'en')
+    translations = yt.get_translation()
     explanations = yt.get_explanation()
     tts = yt.get_tts(*explanations[0]['symbols'][0][1])
     sentences = yt.get_sentence(True)

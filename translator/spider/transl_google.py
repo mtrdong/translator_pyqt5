@@ -51,7 +51,13 @@ class GoogleTranslate(BaseTranslate):
         return form_data
 
     def translate(self, query, from_lan, to_lan, *args, **kwargs):
-        """翻译"""
+        """ 启动翻译
+
+        :param query: 翻译内容
+        :param from_lan: 目标语言
+        :param to_lan: 源语言
+        :return:
+        """
         rpcids = 'MkEWBc'
         form_data = self._get_form_data(rpcids, query, from_lan, to_lan)
         path = '_/TranslateWebserverUi/data/batchexecute'
@@ -61,7 +67,9 @@ class GoogleTranslate(BaseTranslate):
         self.data = data
 
     def get_translation(self, *args, **kwargs):
-        """获取译文"""
+        """ 获取译文
+        ["你好", ["你好", "zh"]]
+        """
         translation_data = []
         with suppress(IndexError, TypeError):
             text = self.data[1][0][0][5][0][0]
@@ -80,14 +88,14 @@ class GoogleTranslate(BaseTranslate):
                     "part": "形容词",
                     "means": [
                         ["好", "good", False],
-                        ["良好", "good, well, favorable, fine, favourable", False]
+                        ["良好", "good, well, favorable, fine, favourable", True]
                     ]
                 },
                 {
                     "part": "名词",
                     "means": [
                         ["益处", "benefit, good, profit", False],
-                        ["甜头", "good, sweet taste, pleasant flavor", False]
+                        ["甜头", "good, sweet taste, pleasant flavor", True]
                     ]
                 }
             ]
@@ -99,24 +107,33 @@ class GoogleTranslate(BaseTranslate):
             symbol_list, explain_list = [], []
             symbol_list.append([f'音 [{self.data[0][0]}]', [self.data[0][4][0][0], self.data[0][2]]])
             for i in self.data[3][5][0]:
-                explain_list.append({'part': i[0], 'means': [[n[0], '；'.join(n[2])] for n in i[1]]})
+                explain_list.append({'part': i[0], 'means': [[n[0], '；'.join(n[2]), True] for n in i[1]]})
             # 添加数据
             explanation_data.append({'symbols': symbol_list, 'explains': explain_list})
         return explanation_data
 
     def get_sentence(self, *args, **kwargs):
-        """获取例句"""
+        """ 获取例句
+        [
+            [
+                "hello there, Katie!",
+                "",
+                ["hello there, Katie!", "en"],
+                0
+            ]
+        ]
+        """
         sentence_data = []
         with suppress(IndexError, TypeError):
             sentence_pair = self.data[3][2][0]
             for item in sentence_pair:
-                sentence_data.append([item[1], [item[1], 'en'], '', 0])
+                sentence_data.append([item[1], '', [item[1], 'en'], 0])
         return sentence_data
 
-    def get_tts(self, text, lang, *args, **kwargs):
+    def get_tts(self, text, lan, *args, **kwargs):
         """获取发音"""
         rpcids = 'jQ1olc'
-        form_data = self._get_form_data(rpcids, text, lang)
+        form_data = self._get_form_data(rpcids, text, lan)
         path = '_/TranslateWebserverUi/data/batchexecute'
         response = self._post(path, form_data)
         content = response.content.decode().split('\n\n')[-1]
@@ -126,7 +143,7 @@ class GoogleTranslate(BaseTranslate):
 
 if __name__ == '__main__':
     gt = GoogleTranslate()
-    gt.translate('good', 'auto', 'zh-CN')
+    gt.translate('hello', 'auto', 'zh-CN')
     translations = gt.get_translation()
     explanations = gt.get_explanation()
     tts = gt.get_tts(*explanations[0]['symbols'][0][1])

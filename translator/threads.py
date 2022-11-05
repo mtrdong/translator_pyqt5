@@ -56,7 +56,7 @@ class EngineThread(QThread):
         result = {'code': 0, 'msg': 'OK', 'obj': None}
         try:
             if self.select == 'youdao':
-                obj = YoudaoTranslate()  # 创建有道翻译
+                obj = YoudaoTranslate()  # 创建有道词典
             elif self.select == 'google':
                 obj = GoogleTranslate()  # 创建谷歌翻译
             else:
