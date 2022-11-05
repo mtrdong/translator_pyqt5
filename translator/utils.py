@@ -18,8 +18,8 @@ __all__ = [
 
 
 def move_widget(widget: QWidget, geometry: QRect, pos: QPoint = None, offset: int = 20):
-    """ 移动部件
-    保持部件始终显示在屏幕内
+    """ 移动窗口，保持窗口始终显示在屏幕内
+
     :param widget: 移动部件
     :param geometry: 屏幕宽高
     :param pos: 鼠标坐标。窗口跟随鼠标移动

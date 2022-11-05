@@ -129,10 +129,11 @@ class BaiduTranslate(BaseTranslate):
 
     def translate(self, query, to_lan, from_lan=None, *args, **kwargs):
         """ 启动翻译
-        翻译成功后返回百度翻译的源数据
+
         :param query: 翻译内容
         :param from_lan: 目标语言
         :param to_lan: 源语言
+        :return:
         """
         if not from_lan:
             from_lan = self._get_lan(query)  # 自动检测源语言
@@ -148,7 +149,9 @@ class BaiduTranslate(BaseTranslate):
         self.data = data
 
     def get_translation(self, *args, **kwargs):
-        """获取译文"""
+        """ 获取译文
+        ["你好", ["你好", "zh"]]
+        """
         translation_data = []
         dst = '\n'.join([data['dst'] for data in self.data['trans_result']['data']])
         translation_data.append(dst)
@@ -159,20 +162,14 @@ class BaiduTranslate(BaseTranslate):
         """ 获取释义
         [{
             "symbols": [
-                ["英[həˈləʊ]", ["hello", "", 1]],
-                ["美[heˈloʊ]", ["hello", "", 2]]
+                ["英[həˈləʊ]", ["hello", "uk"]],
+                ["美[heˈloʊ]", ["hello", "en"]]
             ],
             "explains": [
                 {
-                    "part": "int.",
+                    "part": "int./n",
                     "means": [
-                        ["喂，你好（用于问候或打招呼）；喂，你好（打电话时的招呼语）；喂，你好（引起别人注意的招呼语）；<非正式>喂，嘿 (认为别人说了蠢话或分心)；<英，旧>嘿（表示惊讶）", "", False]
-                    ]
-                },
-                {
-                    "part": "n.",
-                    "means": [
-                        ["招呼，问候；（Hello）（法、印、美、俄）埃洛（人名）", "", False]
+                        ["你好；(用于问候、接电话或引起注意)喂；(表示惊讶或认为别人说了蠢话或没有注意听)嘿", "", False]
                     ]
                 }
             ],
@@ -180,10 +177,6 @@ class BaiduTranslate(BaseTranslate):
                 {
                     "name": "复数",
                     "value": "hellos"
-                },
-                {
-                    "name": "过去式",
-                    "value": "helloed"
                 }
             ]
         }]
@@ -233,7 +226,22 @@ class BaiduTranslate(BaseTranslate):
         return explanation_data
 
     def get_sentence(self, *args, **kwargs):
-        """获取例句"""
+        """ 获取例句
+        [
+            [
+                "‘ Oh, hello, ’ he said, with a smile.",
+                "“嗨，你好。”他微笑着说。",
+                ["‘ Oh, hello, ’ he said, with a smile.", "en"],
+                0
+            ],
+            [
+                "Hello, Mr Brown.",
+                "你好，布朗先生。",
+                ["Hello, Mr Brown.", "en"],
+                0
+            ]
+        ]
+        """
         sentence_data = []
         from_lan = self.data['trans_result']['from']
         double_list = json.loads(self.data['liju_result']['double']) if self.data['liju_result']['double'] else []
@@ -243,19 +251,24 @@ class BaiduTranslate(BaseTranslate):
             sentence_text = ''
             for item in double[0]:
                 string = f'<b>{item[0]}</b>' if item[3] == 1 else item[0]  # 标记查询的单词
-                sentence += string if item[-1] == 0 else string + ' '
-                sentence_text += item[0] if item[-1] == 0 else item[0] + ' '
+                sentence += string + (item[-1] if len(item) == 5 else '')
+                sentence_text += item[0] + (item[-1] if len(item) == 5 else '')
             # 解析例句翻译
-            sentence_transl = ''
+            sentence_tr = ''
             for item in double[1]:
-                sentence_transl += item[0] if item[-1] == 0 else item[0] + ' '
+                sentence_tr += item[0] + (item[-1] if len(item) == 5 else '')
             # 构建例句 TTS 获取参数
-            sentence_speech = [sentence_text if from_lan == 'en' else sentence_transl, 'en']
-            sentence_data.append([sentence, sentence_transl, sentence_speech, 0 if from_lan == 'en' else 1])
+            sentence_speech = [sentence_text if from_lan == 'en' else sentence_tr, 'en']
+            sentence_data.append([sentence, sentence_tr, sentence_speech, 0 if from_lan == 'en' else 1])
         return sentence_data
 
     def get_tts(self, text, lan, *args, **kwargs):
-        """获取发音"""
+        """ 获取发音
+
+        :param text: 源文本
+        :param lan: 文本语言
+        :return: 文本语音
+        """
         spd = 5 if lan == 'zh' else 3
         path = 'gettts'
         params = {'lan': lan, 'text': text, 'spd': spd, 'source': 'web'}
@@ -278,7 +291,7 @@ class BaiduTranslate(BaseTranslate):
 
 if __name__ == '__main__':
     bt = BaiduTranslate()
-    bt.translate('good', 'zh')
+    bt.translate('hello', 'zh')
     translations = bt.get_translation()
     explanations = bt.get_explanation()
     tts = bt.get_tts(*explanations[0]['symbols'][0][1])
