@@ -831,7 +831,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             # 显示输出框1和输出框2
             size = QtCore.QSize(self.width(), MAX_H)
         elif mode == 2:
-            # 显示输出框1，显示输出框2
+            # 关闭输出框1，显示输出框2
             h = self.widget_3.height() + self.textBrowser.height()
             size = QtCore.QSize(self.width(), MAX_H - h)
 
