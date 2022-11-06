@@ -110,7 +110,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_3.setSpacing(0)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.textEdit = MyTextEdit(self.widget)
-        self.textEdit.setMinimumSize(QtCore.QSize(380, 110))
+        self.textEdit.setMinimumSize(QtCore.QSize(380, 100))
         self.textEdit.setMaximumSize(QtCore.QSize(16777215, 150))
         self.textEdit.setStyleSheet("QTextEdit {background-color: rgb(255, 255, 255); border-radius: 10px; font: 16px \"微软雅黑\"; color: rgb(60, 60, 60); padding: 6px;} QTextEdit:hover {border: 2px solid rgb(82, 186, 255);} QTextEdit:focus {border: 2px solid rgb(82, 186, 255);}")
         self.textEdit.setObjectName("textEdit")

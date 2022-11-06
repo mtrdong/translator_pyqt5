@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import html
 import os
 import sys
 from time import sleep
@@ -441,8 +440,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         1. 勾选状态开启复制翻译
         2. 取消勾选关闭复制翻译
         """
-        state = self.checkBox.checkState()
-        if state == 2:
+        if self.checkBox.isChecked():
             self.clipboard_flag = True
         else:
             self.clipboard_flag = False
@@ -827,10 +825,13 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """更新布局"""
         size = None
         if mode == 0:
+            # 关闭输出框1和输出框2
             size = QtCore.QSize(QtCore.QSize(self.width(), 0))
         elif mode == 1:
+            # 显示输出框1和输出框2
             size = QtCore.QSize(self.width(), MAX_H)
         elif mode == 2:
+            # 显示输出框1，显示输出框2
             h = self.widget_3.height() + self.textBrowser.height()
             size = QtCore.QSize(self.width(), MAX_H - h)
 

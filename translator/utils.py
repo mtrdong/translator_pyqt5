@@ -8,6 +8,8 @@ from PyQt5.QtCore import QRect, QPoint
 from PyQt5.QtWidgets import QWidget
 from aip import AipOcr
 
+from spider import BaseTranslate
+
 __all__ = [
     'move_widget',
     'baidu_ocr',
@@ -77,7 +79,7 @@ def b64decode(s):
     return json.loads(b64dc.decode())
 
 
-def generate_output(obj, more=False, reverse=False):
+def generate_output(obj: BaseTranslate, more=False, reverse=False):
     """ 生成HTML输出内容
 
     :param obj: 翻译引擎对象
