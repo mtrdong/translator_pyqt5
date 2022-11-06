@@ -33,6 +33,8 @@ class FloatWindow(FloatWidget, Ui_FloatWindow):
         self.textBrowser_2.anchorClicked.connect(self.anchorClicked)
         # 初始化输出
         self.setQuery(self.query)
+        # 剪切板
+        self.clipboard = QApplication.clipboard()
 
     def setQuery(self, s):
         self.query = s
@@ -58,6 +60,10 @@ class FloatWindow(FloatWidget, Ui_FloatWindow):
         if isinstance(res, list):
             # 通过线程下载并播放发音
             self.tts(*res)
+        else:
+            if self.radioButton.isChecked():
+                # 复制点击的文本到剪切板，触发主程序翻译
+                self.clipboard.setText(res)
 
     def tts(self, *args):
         """ 文本转语音
