@@ -10,7 +10,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from widgets import MyTextEdit
+from widgets import TextEdit
 
 
 class Ui_MainWindow(object):
@@ -109,7 +109,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_3.setSpacing(0)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
-        self.textEdit = MyTextEdit(self.widget)
+        self.textEdit = TextEdit(self.widget)
         self.textEdit.setMinimumSize(QtCore.QSize(380, 100))
         self.textEdit.setMaximumSize(QtCore.QSize(16777215, 150))
         self.textEdit.setStyleSheet("QTextEdit {background-color: rgb(255, 255, 255); border-radius: 10px; font: 16px \"微软雅黑\"; color: rgb(60, 60, 60); padding: 6px;} QTextEdit:hover {border: 2px solid rgb(82, 186, 255);} QTextEdit:focus {border: 2px solid rgb(82, 186, 255);}")

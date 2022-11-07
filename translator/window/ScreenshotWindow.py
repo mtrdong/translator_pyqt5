@@ -3,7 +3,7 @@ from PyQt5.QtGui import QCursor, QColor, QKeySequence, QPen, QPainter, QGuiAppli
 from PyQt5.QtWidgets import QWidget, QShortcut, QDesktopWidget, QApplication
 
 from utils import move_widget
-from widgets import MyLabel
+from widgets import Label
 
 
 class ScreenshotWindow(QWidget):
@@ -32,7 +32,7 @@ class ScreenshotWindow(QWidget):
 
     def createTipBox(self):
         """创建提示框"""
-        self.label = MyLabel(self)
+        self.label = Label(self)
         self.label.setText("按住鼠标左键选择翻译区域<br>按下鼠标右键或Esc键取消截屏")
         self.label.setStyleSheet("QLabel {background-color: rgba(0, 0, 0, 150); "
                                  "font: 14px \"微软雅黑\"; "
