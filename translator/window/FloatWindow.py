@@ -41,7 +41,6 @@ class FloatWindow(FloatWidget, Ui_FloatWindow):
         self.query = s
         self.textBrowser.setText("<b>{}</b>".format(html.escape(self.query)))
         self.textBrowser_2.setText("<i style='color: #606060;'>正在翻译...</i>")
-        self.textBrowser_2.show()
 
     def output(self, obj):
         """输出翻译结果"""
@@ -62,7 +61,6 @@ class FloatWindow(FloatWidget, Ui_FloatWindow):
             # 通过线程下载并播放发音
             self.tts(*res)
         else:
-            self.setQuery(res)
             # 发送点击的文本
             self.textBrowserAnchorClicked.emit(res)
 

@@ -394,10 +394,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.setFont(font)
         self.setupUi(self)
         self.resize(self.minimumSize())
-        # 隐藏输入框清空按钮
-        self.pushButton_7.hide()
-        # 隐藏输出框和输出控件
-        self.hideWidget()
+        # 初始化UI
+        self.initUI()
         # 语音和复制按钮点击事件
         self.pushButton_8.clicked.connect(self.voiceButtonClicked)
         self.pushButton_10.clicked.connect(self.voiceButtonClicked)
@@ -552,7 +550,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """
         mime_data = self.clipboard.mimeData()
         text = mime_data.text().strip()
-        # 满足以下条件时，对剪切板的内容进行翻译，并输出到悬浮窗
+        # 满足以下条件时，获取剪切板的内容进行翻译，并输出到悬浮窗
         # 1. 开启了“划词翻译”
         # 2. 没有正在进行中的翻译任务
         # 3. 剪切板的内容为纯文本，且不是纯空白字符
@@ -560,7 +558,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
 
             if not hasattr(self, 'float_window'):
 
-                def clicked(s):
+                def pushButtonClicked(s):
                     """从悬浮窗口转到主窗口"""
                     self.float_window.deleteLater()
                     self.activateWindow()
@@ -569,15 +567,20 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                     self.startTransl()
                     QtWidgets.QApplication.processEvents()
 
+                def textBrowserAnchorClicked(s):
+                    """点击悬浮窗的单词时通过主程序进行翻译，再输出到悬浮窗"""
+                    self.float_window.setQuery(s)
+                    self.startTransl(s, output=1)
+
                 def destroyed():
                     """回收悬浮窗口"""
                     del self.float_window
 
                 # 显示悬浮窗
                 self.float_window = FloatWindow(text)  # 创建悬浮窗
-                self.float_window.pushButtonClicked.connect(clicked)
+                self.float_window.pushButtonClicked.connect(pushButtonClicked)
                 self.float_window.radioButtonClicked.connect(self.checkBox.click)
-                self.float_window.textBrowserAnchorClicked.connect(lambda x: self.startTransl(x, output=1))
+                self.float_window.textBrowserAnchorClicked.connect(textBrowserAnchorClicked)
                 self.float_window.destroyed.connect(destroyed)
                 self.float_window.show()
             else:
@@ -732,7 +735,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         if self.transl_engine is None:
             QtWidgets.QMessageBox.information(self, '翻译引擎始化中', '翻译引擎正在初始化中，请稍后重试！')
             return None
-        # 获取翻译内容，并进行预处理
+        # 获取翻译内容，并去除首尾的空白字符
         query = self.textEdit.toPlainText() if query is None else query
         query = query.strip()
         # 没有输入翻译内容时弹窗提示，并终止翻译
@@ -823,15 +826,18 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             self.textEdit.setPlainText(res)
             self.startTransl()
 
-    def hideWidget(self):
-        """隐藏部件"""
+    def initUI(self):
+        """初始化UI布局"""
+        # 隐藏输入框清空按钮
+        self.pushButton_7.hide()
+        # 隐藏输出框1和输出框2
         self.textBrowser.hide()
         self.textBrowser_2.hide()
         self.widget_3.hide()
         self.widget_4.hide()
 
     def updateUI(self, mode=0):
-        """更新布局"""
+        """更新UI布局"""
         size = None
         if mode == 0:
             # 关闭输出框1和输出框2
@@ -844,8 +850,15 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             h = self.widget_3.height() + self.textBrowser.height()
             size = QtCore.QSize(self.width(), MAX_H - h)
 
+        def hide():
+            """隐藏输出控件"""
+            self.textBrowser.hide()
+            self.textBrowser_2.hide()
+            self.widget_3.hide()
+            self.widget_4.hide()
+
         def finished():
-            """调整输出框"""
+            """调整输出控件"""
             self.animation.deleteLater()
             if mode == 1:
                 self.widget_3.show()
@@ -858,7 +871,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                 self.fadeIn(self.widget_2)
 
         if size is not None:
-            self.hideWidget()
+            hide()
             # 窗口大小变化动画
             self.animation = QtCore.QPropertyAnimation(self, b"size", self)
             self.animation.setDuration(200)  # 动画持续时间
