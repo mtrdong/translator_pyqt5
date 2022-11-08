@@ -566,6 +566,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                     self.activateWindow()
                     self.showNormal()
                     self.textEdit.setPlainText(s)
+                    self.startTransl()
                     QtWidgets.QApplication.processEvents()
 
                 def destroyed():
@@ -576,26 +577,14 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                 self.float_window = FloatWindow(text)  # 创建悬浮窗
                 self.float_window.pushButtonClicked.connect(clicked)
                 self.float_window.radioButtonClicked.connect(self.checkBox.click)
+                self.float_window.textBrowserAnchorClicked.connect(lambda x: self.startTransl(x, output=1))
                 self.float_window.destroyed.connect(destroyed)
                 self.float_window.show()
             else:
                 self.float_window.setQuery(text)
 
-            def trigger(b):
-                """翻译结果输出到悬浮窗口"""
-                # 标记本次翻译结束
-                self.transl_started = False
-                if hasattr(self, 'float_window'):
-                    # 将结果输出到悬浮窗口
-                    self.float_window.outResult(self.transl_engine)
-
-            # 通过线程发起翻译
-            kwargs = {'query': text, 'to_lan': self.target_lan, 'from_lan': self.source_lan}
-            self.transl_thread = TranslThread(self.transl_engine, **kwargs)
-            self.transl_thread.trigger.connect(trigger)
-            self.transl_thread.start()
-            # 标记正在翻译
-            self.transl_started = True
+            # 发起翻译
+            self.startTransl(text, output=1)
 
     def getTranslEngine(self):
         """通过线程创建翻译引擎对象"""
@@ -729,8 +718,11 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                 self.refreshComboBoxItems()
                 self.comboBox_3.blockSignals(False)
 
-    def startTransl(self):
-        """启动翻译并输出翻译结果"""
+    def startTransl(self, query=None, output=0):
+        """ 启动翻译并输出翻译结果
+        output = 0: 输出到主窗口（默认）
+        output = 1: 输出到悬浮窗
+        """
         # 主动发起翻译时，关闭自动翻译定时器
         self.timer.stop()
         # 上一次翻译上尚未结束时终止本次翻译
@@ -740,14 +732,16 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         if self.transl_engine is None:
             QtWidgets.QMessageBox.information(self, '翻译引擎始化中', '翻译引擎正在初始化中，请稍后重试！')
             return None
-        query = self.textEdit.toPlainText().strip()
+        # 获取翻译内容，并进行预处理
+        query = self.textEdit.toPlainText() if query is None else query
+        query = query.strip()
         # 没有输入翻译内容时弹窗提示，并终止翻译
         if not query:
             QtWidgets.QMessageBox.information(self, '翻译内容为空', '请输入翻译内容')
             return None
 
-        def trigger(result):
-            """翻译结束"""
+        def output_to_main_window(result):
+            """翻译结束，输出结果到主窗口"""
             # 标记本次翻译结束
             self.transl_started = False
             # 翻译发生异常时弹窗提示，并终止输出
@@ -762,6 +756,21 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             # 输出翻译结果
             self.output()
 
+        def output_to_float_window(result):
+            """翻译结束，输出结果到悬浮窗"""
+            # 标记本次翻译结束
+            self.transl_started = False
+            if hasattr(self, 'float_window'):
+                # 将结果输出到悬浮窗口
+                self.float_window.output(self.transl_engine)
+
+        # 输出方式
+        if output == 0:
+            trigger = output_to_main_window
+        elif output == 1:
+            trigger = output_to_float_window
+        else:
+            return None
         # 通过线程发起翻译
         kwargs = {'query': query, 'to_lan': self.target_lan, 'from_lan': self.source_lan}
         self.transl_thread = TranslThread(self.transl_engine, **kwargs)

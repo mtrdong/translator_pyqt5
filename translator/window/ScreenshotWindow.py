@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QRect, qAbs, Qt, pyqtSignal, QBuffer, QIODevice, QByteArray
+from PyQt5.QtCore import QRect, qAbs, Qt, pyqtSignal, QBuffer, QIODevice
 from PyQt5.QtGui import QCursor, QColor, QKeySequence, QPen, QPainter, QGuiApplication
 from PyQt5.QtWidgets import QWidget, QShortcut, QDesktopWidget, QApplication
 
