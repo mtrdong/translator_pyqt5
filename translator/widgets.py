@@ -157,14 +157,14 @@ class FloatWidget(QtWidgets.QWidget):
         self.mouse_check_thread.start()
 
 
-class MyTextEdit(QtWidgets.QTextEdit):
+class TextEdit(QtWidgets.QTextEdit):
     """ 自定义TextEdit
     1. 自定义右键菜单
     2. 插入文件时清空文本框
     3. 设置、取消阴影
     """
     def __init__(self, *args):
-        super(MyTextEdit, self).__init__(*args)
+        super(TextEdit, self).__init__(*args)
         # 阴影设置
         self.effect = QtWidgets.QGraphicsDropShadowEffect(self)
         self.effect.setOffset(0, 2)
@@ -241,11 +241,11 @@ class MyTextEdit(QtWidgets.QTextEdit):
                 self.blockSignals(True)
                 self.clear()
                 self.blockSignals(False)
-        super(MyTextEdit, self).insertFromMimeData(mime_data)
+        super(TextEdit, self).insertFromMimeData(mime_data)
 
     def resizeEvent(self, event):
         """大小变化时调整阴影效果"""
-        super(MyTextEdit, self).resizeEvent(event)
+        super(TextEdit, self).resizeEvent(event)
         if self.height() == self.minimumHeight():
             # 去除阴影
             self.effect.setColor(QtCore.Qt.transparent)
@@ -256,12 +256,12 @@ class MyTextEdit(QtWidgets.QTextEdit):
             self.setGraphicsEffect(self.effect)
 
 
-class MyLabel(QtWidgets.QLabel):
+class Label(QtWidgets.QLabel):
     """ 自定义Label
     鼠标移入隐藏，移出显示
     """
     def __init__(self, *args):
-        super(MyLabel, self).__init__(*args)
+        super(Label, self).__init__(*args)
 
     def enterEvent(self, event):
         """鼠标移入隐藏"""
@@ -270,3 +270,28 @@ class MyLabel(QtWidgets.QLabel):
     def leaveEvent(self, event):
         """鼠标移出显示"""
         self.show()
+
+
+class StyledItemDelegate(QtWidgets.QStyledItemDelegate):
+    """ 自定义项目委托
+    使 QListView 或 QTableView 等控件支持富文本渲染
+    """
+    def paint(self, painter, option, index):
+        self.initStyleOption(option, index)
+
+        # 通过QTextDocument设置HTML代码
+        doc = QtGui.QTextDocument()
+        doc.setHtml(option.text)
+        option.text = ''  # 清空源文本
+
+        style = option.widget.style() if option.widget.style() else QtWidgets.QApplication.style()
+        style.drawControl(QtWidgets.QStyle.CE_ItemViewItem, option, painter, option.widget)
+        rect = style.subElementRect(QtWidgets.QStyle.SE_ItemViewItemText, option)
+
+        painter.save()
+        painter.translate(rect.topLeft())  # 坐标变换，将左上角设置为原点
+        painter.setClipRect(rect.translated(-rect.topLeft()))  # 设置HTML绘制区域
+
+        context = QtGui.QAbstractTextDocumentLayout.PaintContext()
+        doc.documentLayout().draw(painter, context)
+        painter.restore()
