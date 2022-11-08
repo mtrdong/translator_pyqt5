@@ -16,6 +16,7 @@ class FloatWindow(FloatWidget, Ui_FloatWindow):
     """悬浮窗口"""
     radioButtonClicked = pyqtSignal(bool)
     pushButtonClicked = pyqtSignal(str)
+    textBrowserAnchorClicked = pyqtSignal(str)
 
     def __init__(self, query: str, *args, **kwargs):
         # 窗口初始化
@@ -40,9 +41,8 @@ class FloatWindow(FloatWidget, Ui_FloatWindow):
         self.query = s
         self.textBrowser.setText("<b>{}</b>".format(html.escape(self.query)))
         self.textBrowser_2.setText("<i style='color: #606060;'>正在翻译...</i>")
-        self.textBrowser_2.show()
 
-    def outResult(self, obj):
+    def output(self, obj):
         """输出翻译结果"""
         self.engine = obj
         translation_contents, explanation_contents = generate_output(obj)
@@ -61,9 +61,8 @@ class FloatWindow(FloatWidget, Ui_FloatWindow):
             # 通过线程下载并播放发音
             self.tts(*res)
         else:
-            if self.radioButton.isChecked():
-                # 复制点击的文本到剪切板，触发主程序翻译
-                self.clipboard.setText(res)
+            # 发送点击的文本
+            self.textBrowserAnchorClicked.emit(res)
 
     def tts(self, *args):
         """ 文本转语音
