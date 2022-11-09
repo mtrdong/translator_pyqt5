@@ -518,8 +518,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                     if os.path.splitext(file_name)[-1] in ['.jpg', '.png']:
                         break
                 else:
-                    QtWidgets.QMessageBox.information(self, '提示', '仅支持 jpg 或 png 格式的图片')
                     self.textEdit.clear()
+                    QtWidgets.QMessageBox.information(self, '提示', '仅支持 jpg 或 png 格式的图片')
                     return None
                 with open(file_name, 'rb') as f:
                     img_data = f.read()
