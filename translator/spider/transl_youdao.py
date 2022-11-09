@@ -64,7 +64,6 @@ class YoudaoTranslate(BaseTranslate):
         path = 'jsonapi_s'
         params = {'doctype': 'json', 'jsonversion': 4}
         response = self._post(path, form_data, params=params)
-        assert response.status_code == 200, f'翻译失败！（{response.status_code}）'
         data = response.json()
         assert data.get('code') is None, f'翻译失败！（{data["code"]}，{data["message"]}）'
         self.data = data
@@ -292,7 +291,6 @@ class YoudaoTranslate(BaseTranslate):
         path = 'dictvoice'
         params = {'audio': text, 'le': lan, 'type': type_}
         response = self._get(path, params)
-        assert response.status_code == 200, f'获取发音失败！（{response.status_code}）'
         content = response.content
         return content
 

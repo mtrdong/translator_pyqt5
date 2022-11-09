@@ -131,7 +131,6 @@ class BaiduTranslate(BaseTranslate):
         params = {'from': from_lan, 'to': to_lan}
         self._update_form_data(query, to_lan, from_lan)
         response = self._post(path, self.form_data, params=params)
-        assert response.status_code == 200, f'翻译失败！（{response.status_code}）'
         data = json.loads(response.content)
         assert data.get('errno') is None, f'翻译失败！（{data["errno"]}，{data["errmsg"]}）'
         self.data = data
@@ -261,7 +260,6 @@ class BaiduTranslate(BaseTranslate):
         path = 'gettts'
         params = {'lan': lan, 'text': text, 'spd': spd, 'source': 'web'}
         response = self._get(path, params)
-        assert response.status_code == 200, f'获取发音失败！（{response.status_code}）'
         content = response.content
         return content
 
@@ -271,7 +269,6 @@ class BaiduTranslate(BaseTranslate):
         form_data = {'from': 'auto', 'to': 'zh'}
         files = {'image': img}
         response = self._post(path, form_data, files)
-        assert response.status_code == 200, f'提取文字失败！（{response.status_code}）'
         data = json.loads(response.content)
         src = '\n'.join(data.get('data', {}).get('src', []))
         return src
