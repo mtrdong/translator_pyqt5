@@ -466,9 +466,6 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                 self.showNormal()  # 显示主窗口
                 QtWidgets.QApplication.processEvents()  # 刷新界面
                 if img_data:
-                    self.textEdit.blockSignals(True)
-                    self.textEdit.setText('<i>正在识别翻译，请稍候...</i>')
-                    self.textEdit.blockSignals(False)
                     # 识别图片中的文本并发起翻译
                     self.ocr(img_data)
 
@@ -515,10 +512,6 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         text = self.textEdit.toPlainText().strip()
         if text:  # 有内容输入
             if text.find('file:///') == 0:  # 输入文件时，如果输入的是图片则进行识别翻译（多张图片只取一张），否则弹窗提示
-                self.textEdit.blockSignals(True)  # 关闭信号连接
-                self.textEdit.setText('<i>正在识别翻译，请稍候...</i>')
-                self.textEdit.blockSignals(False)  # 恢复信号连接
-                QtWidgets.QApplication.processEvents()  # 刷新界面
                 file_list = text.split('\n')
                 for file in file_list:
                     file_name = file.split('file:///')[-1]
@@ -927,16 +920,21 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """ 文字识别
         识别图片中的文本并发起翻译
         """
+        # 输出提示信息
+        self.textEdit.blockSignals(True)  # 关闭信号连接
+        self.textEdit.setText('<i>正在识别翻译，请稍候...</i>')
+        self.textEdit.blockSignals(False)  # 恢复信号连接
+
         def trigger(text):
             """将识别到的文本设置到输入框进行翻译。如果没有识别到文本则弹窗提示"""
-            self.ocr_thread.deleteLater()
             if text:
                 self.textEdit.setPlainText(text)
+                self.startTransl()
             else:
                 QtWidgets.QMessageBox.information(self, '提示', '没有从图片中识别到文字！')
-                self.textEdit.clear()
+                self.textEdit.clear()  # 清除提示信息
 
-        # 通过线程进行图像文字识别
+        # 提取图片中的文字
         self.ocr_thread = BaiduOCRThread(img_data)
         self.ocr_thread.trigger.connect(trigger)
         self.ocr_thread.start()
