@@ -3,8 +3,6 @@ from hashlib import md5
 from threading import Lock
 from urllib.parse import parse_qs
 
-from retrying import retry
-
 from spider import BaseTranslate
 
 
@@ -31,16 +29,6 @@ class YoudaoTranslate(BaseTranslate):
             self.reverse_flag = False
             # 标记初始化完成
             self._init_flag = True
-
-    @retry(stop_max_attempt_number=3)
-    def _post(self, path='', form_data=None, params=None):
-        """发送请求"""
-        return self.session.post(url=self.home + path, data=form_data, params=params, headers=self.headers)
-
-    @retry(stop_max_attempt_number=3)
-    def _get(self, path='', params=None):
-        """发送请求"""
-        return self.session.get(url=self.home + path, params=params, headers=self.headers)
 
     @staticmethod
     def _get_form_data(text, le):
@@ -75,8 +63,7 @@ class YoudaoTranslate(BaseTranslate):
         form_data = self._get_form_data(query, to_lan)
         path = 'jsonapi_s'
         params = {'doctype': 'json', 'jsonversion': 4}
-        response = self._post(path, form_data, params)
-        assert response.status_code == 200, f'翻译失败！（{response.status_code}）'
+        response = self._post(path, form_data, params=params)
         data = response.json()
         assert data.get('code') is None, f'翻译失败！（{data["code"]}，{data["message"]}）'
         self.data = data
@@ -277,7 +264,7 @@ class YoudaoTranslate(BaseTranslate):
             form_data = self._get_form_data(query, le)
             path = 'jsonapi_s'
             params = {'doctype': 'json', 'jsonversion': 4}
-            response = self._post(path, form_data, params)
+            response = self._post(path, form_data, params=params)
             body = response.json()
             sentence_pair = body.get('blng_sents', {}).get('sentence-pair', [])
         else:
@@ -304,7 +291,6 @@ class YoudaoTranslate(BaseTranslate):
         path = 'dictvoice'
         params = {'audio': text, 'le': lan, 'type': type_}
         response = self._get(path, params)
-        assert response.status_code == 200, f'获取发音失败！（{response.status_code}）'
         content = response.content
         return content
 

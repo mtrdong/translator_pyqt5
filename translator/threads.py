@@ -113,14 +113,15 @@ class BaiduOCRThread(QThread):
     """百度图象识别"""
     trigger = pyqtSignal(str)
 
-    def __init__(self, image: bytes):
+    def __init__(self, image: bytes, from_lan):
         super().__init__()
         self.image = image
+        self.from_lan = from_lan
 
     def run(self):
         try:
             # text = baidu_ocr(self.image)  # 精度高，推荐
-            text = BaiduTranslate().get_ocr(self.image)  # 精度低，备用
+            text = BaiduTranslate().get_ocr(self.image, self.from_lan)  # 精度低，备用
         except (AssertionError, httpx.ConnectError, httpx.ConnectTimeout):
             text = ''
         self.trigger.emit(text)  # 信号发送文本

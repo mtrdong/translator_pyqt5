@@ -4,8 +4,6 @@ import math
 import re
 from threading import Lock
 
-from retrying import retry
-
 from spider import BaseTranslate
 
 
@@ -93,16 +91,6 @@ class BaiduTranslate(BaseTranslate):
             # 标记初始化完成
             self._init_flag = True
 
-    @retry(stop_max_attempt_number=3)
-    def _post(self, path='', form_data=None, files=None, params=None):
-        """发送请求"""
-        return self.session.post(self.home + path, data=form_data, files=files, params=params, headers=self.headers)
-
-    @retry(stop_max_attempt_number=3)
-    def _get(self, path='', params=None):
-        """发送请求"""
-        return self.session.get(self.home + path, params=params, headers=self.headers)
-
     def _get_lan(self, query):
         """查询语言种类"""
         path = 'langdetect'
@@ -143,7 +131,6 @@ class BaiduTranslate(BaseTranslate):
         params = {'from': from_lan, 'to': to_lan}
         self._update_form_data(query, to_lan, from_lan)
         response = self._post(path, self.form_data, params=params)
-        assert response.status_code == 200, f'翻译失败！（{response.status_code}）'
         data = json.loads(response.content)
         assert data.get('errno') is None, f'翻译失败！（{data["errno"]}，{data["errmsg"]}）'
         self.data = data
@@ -273,19 +260,19 @@ class BaiduTranslate(BaseTranslate):
         path = 'gettts'
         params = {'lan': lan, 'text': text, 'spd': spd, 'source': 'web'}
         response = self._get(path, params)
-        assert response.status_code == 200, f'获取发音失败！（{response.status_code}）'
         content = response.content
         return content
 
-    def get_ocr(self, img, *args, **kwargs):
-        """从图片中提取文字(精度差)"""
+    def get_ocr(self, img, from_lan='auto', *args, **kwargs):
+        """ 从图片中提取文字(精度差)
+        识别结果为空时，可尝试切换识别语言
+        """
         path = 'getocr'
-        form_data = {'from': 'auto', 'to': 'zh'}
+        form_data = {'from': from_lan, 'to': 'zh'}
         files = {'image': img}
         response = self._post(path, form_data, files)
-        assert response.status_code == 200, f'提取文字失败！（{response.status_code}）'
         data = json.loads(response.content)
-        src = '\n'.join(data.get('data', {}).get('src', []))
+        src = ''.join(data.get('data', {}).get('src', []))
         return src
 
 
