@@ -263,14 +263,16 @@ class BaiduTranslate(BaseTranslate):
         content = response.content
         return content
 
-    def get_ocr(self, img, *args, **kwargs):
-        """从图片中提取文字(精度差)"""
+    def get_ocr(self, img, from_lan='auto', *args, **kwargs):
+        """ 从图片中提取文字(精度差)
+        识别结果为空时，可尝试切换识别语言
+        """
         path = 'getocr'
-        form_data = {'from': 'auto', 'to': 'zh'}
+        form_data = {'from': from_lan, 'to': 'zh'}
         files = {'image': img}
         response = self._post(path, form_data, files)
         data = json.loads(response.content)
-        src = '\n'.join(data.get('data', {}).get('src', []))
+        src = ''.join(data.get('data', {}).get('src', []))
         return src
 
 
