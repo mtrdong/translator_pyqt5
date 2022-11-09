@@ -1,4 +1,5 @@
 import httpx
+from retrying import retry
 
 
 class BaseTranslate(object):
@@ -15,6 +16,22 @@ class BaseTranslate(object):
         self.home = None
         # 翻译结果
         self.data = None
+
+    @retry(stop_max_attempt_number=3)
+    def _post(self, path='', data=None, files=None, json=None, params=None):
+        """发送 POST 请求"""
+        url = self.home + path
+        response = self.session.post(url, data=data, files=files, json=json, params=params, headers=self.headers)
+        assert response.status_code == 200, f'请求失败！URL：{response.url}；状态码：{response.status_code}。'
+        return response
+
+    @retry(stop_max_attempt_number=3)
+    def _get(self, path='', params=None):
+        """发送 GET 请求"""
+        url = self.home + path
+        response = self.session.get(url, params=params, headers=self.headers)
+        assert response.status_code == 200, f'请求失败！URL：{response.url}；状态码：{response.status_code}。'
+        return response
 
     def translate(self, query, from_lan, to_lan, *args, **kwargs):
         """ 启动翻译

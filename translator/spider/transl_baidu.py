@@ -4,8 +4,6 @@ import math
 import re
 from threading import Lock
 
-from retrying import retry
-
 from spider import BaseTranslate
 
 
@@ -92,16 +90,6 @@ class BaiduTranslate(BaseTranslate):
             }
             # 标记初始化完成
             self._init_flag = True
-
-    @retry(stop_max_attempt_number=3)
-    def _post(self, path='', form_data=None, files=None, params=None):
-        """发送请求"""
-        return self.session.post(self.home + path, data=form_data, files=files, params=params, headers=self.headers)
-
-    @retry(stop_max_attempt_number=3)
-    def _get(self, path='', params=None):
-        """发送请求"""
-        return self.session.get(self.home + path, params=params, headers=self.headers)
 
     def _get_lan(self, query):
         """查询语言种类"""

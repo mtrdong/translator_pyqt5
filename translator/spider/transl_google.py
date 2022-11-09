@@ -4,8 +4,6 @@ import json
 from contextlib import suppress
 from threading import Lock
 
-from retrying import retry
-
 from spider import BaseTranslate
 
 
@@ -30,16 +28,6 @@ class GoogleTranslate(BaseTranslate):
             self._get()
             # 标记初始化完成
             self._init_flag = True
-
-    @retry(stop_max_attempt_number=3)
-    def _post(self, path='', form_data=None, params=None):
-        """发送请求"""
-        return self.session.post(self.home + path, data=form_data, params=params, headers=self.headers)
-
-    @retry(stop_max_attempt_number=3)
-    def _get(self, path='', params=None):
-        """发送请求"""
-        return self.session.get(self.home + path, params=params, headers=self.headers)
 
     @staticmethod
     def _get_form_data(rpcids, query, from_lan, to_lan=None):
