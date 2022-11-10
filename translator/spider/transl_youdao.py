@@ -126,7 +126,7 @@ class YoudaoTranslate(BaseTranslate):
             return explanation_data
         # 【中英】翻译结果解析
         elif self.data.get('le') == 'en' and self.data.get('ce', self.data.get('ec')):
-            word = self.data.get('ce', self.data.get('ec'))['word']
+            word = self.data.get('ce', self.data.get('ec')).get('word', {})
             # 解析音标
             symbol_list = []
             if word.get('phone'):
@@ -137,7 +137,7 @@ class YoudaoTranslate(BaseTranslate):
                 symbol_list.append([f'美 [{word["usphone"]}]', [input_text, guess_language]])
             # 解析释义
             explain_list = []
-            for index, trs in enumerate(word['trs']):
+            for index, trs in enumerate(word.get('trs', [])):
                 b = trs.get('#text') is not None  # 「中 > 英」标记
                 explain_list.append({
                     'part': trs.get('pos') or index + 1,
