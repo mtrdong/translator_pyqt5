@@ -102,9 +102,8 @@ def generate_output(obj: BaseTranslate, more=False, reverse=False):
     explanation_list = []
     for explanation in explanations:
         # 音标/读音
-        symbol_html = '<span style="color: #8C8C8C; font-weight: bold;">' \
-                      '{} <a style="text-decoration: none;" href="#{}">🔊</a>' \
-                      '</span>'
+        symbol_html = '<span style="color: #8C8C8C; font-weight: bold;">{}</span>' \
+                      '&nbsp;<a style="text-decoration: none;" href="#{}">🔊</a>'
         symbol_list = [symbol_html.format(symbol[0], b64encode(symbol[1])) for symbol in explanation.get('symbols', [])]
         symbol_contents = '&nbsp;&nbsp;&nbsp;'.join(symbol_list)
         if symbol_contents:
