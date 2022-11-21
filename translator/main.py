@@ -425,8 +425,6 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         # 翻译定时器。输入框内容发生变化时，延时一定时间后自动发起翻译
         self.timer = QtCore.QTimer(self)
         self.timer.timeout.connect(self.startTransl)
-        # 文本输入框当前内容。记录当前翻译内容，防止连续输入相同内容时，再次触发自动翻译（不影响主动翻译）
-        self.textEditCurrentContent = ''
         # 翻译状态（True-正在翻译；False-翻译结束）。当有正在进行的翻译时，不允许发起二次翻译
         self.transl_started = False
         # 注册热键
@@ -439,6 +437,11 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         2. 取消勾选关闭复制翻译
         """
         if self.checkBox.isChecked():
+            # 翻译引擎未准备就绪时，弹窗提示并终止开启划词翻译
+            if self.transl_engine is None:
+                self.checkBox.setChecked(False)
+                QtWidgets.QMessageBox.information(self, '翻译引擎始化中', '翻译引擎正在初始化中，请稍后重试！')
+                return None
             self.clipboard_flag = True
         else:
             self.clipboard_flag = False
@@ -458,6 +461,12 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """ 点击截图翻译按钮
         隐藏主窗口，启动截屏
         """
+        # 翻译引擎未准备就绪时，弹窗提示并终止启动截图翻译
+        if self.transl_engine is None:
+            QtWidgets.QMessageBox.information(self, '翻译引擎始化中', '翻译引擎正在初始化中，请稍后重试！')
+            return None
+
+        # 防止重复创建截屏窗口
         if not hasattr(self, 'screenshot_window'):
 
             def completed(img_data):
@@ -510,8 +519,13 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """
         self.timer.stop()  # 每当文本框内容发生变化时停止定时翻译，防止连续输入触发多次定时翻译
         text = self.textEdit.toPlainText().strip()
-        if text:  # 有内容输入
-            if text.find('file:///') == 0:  # 输入文件时，如果输入的是图片则进行识别翻译（多张图片只取一张），否则弹窗提示
+        # 有内容输入时，对输入内容进行检查
+        if text:
+            # 翻译引擎未准备就绪时，弹窗提示并终止操作
+            if self.transl_engine is None:
+                QtWidgets.QMessageBox.information(self, '翻译引擎始化中', '翻译引擎正在初始化中，请稍后重试！')
+            # 输入文件时，如果输入的是图片则进行识别翻译（多张图片只取一张），否则弹窗提示
+            elif text.find('file:///') == 0:
                 file_list = text.split('\n')
                 for file in file_list:
                     file_name = file.split('file:///')[-1]
@@ -524,10 +538,11 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                 with open(file_name, 'rb') as f:
                     img_data = f.read()
                 self.ocr(img_data)  # 识别图片中的文本并发起翻译
-            elif text != self.textEditCurrentContent:  # 检查输入文本是否和上一次翻译的文本相同，如果相同则跳过，否则启动但是翻译
+            # 输入文本时，启动定时翻译对输入的文本进行翻译
+            else:
                 self.timer.start(1000)  # 启动定时翻译
-            self.textEditCurrentContent = text  # 记录当前输入内容
-        else:  # 输入内容为空或空白字符时收起输出文本框
+        # 输入内容为空或空白字符时，收起输出文本框
+        else:
             self.textBrowser.clear()  # 清空输出框内容
             self.textBrowser_2.clear()
             self.updateUI()  # 收起输出文本框
