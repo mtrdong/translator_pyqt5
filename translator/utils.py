@@ -97,14 +97,17 @@ def generate_output(obj: BaseTranslate, more=False, reverse=False):
     if not explanations:
         # 没有释义时直接返回译文
         return translation_contents, ''
-    no_html = '<span style="color: #8C8C8C;">{}&nbsp;&nbsp;</span>'
+    no_html = '<span style="color: #8C8C8C;">{}</span>'
+    speech_html = '<a style="text-decoration: none;" href="#{}">🔊</a>'
     explanation_html = '<div style="font-size: 14px; color: #3C3C3C;">{}</div>'
     explanation_list = []
     for explanation in explanations:
         # 音标/读音
-        symbol_html = '<span style="color: #8C8C8C; font-weight: bold;">{}</span>' \
-                      '&nbsp;<a style="text-decoration: none;" href="#{}">🔊</a>'
-        symbol_list = [symbol_html.format(symbol[0], b64encode(symbol[1])) for symbol in explanation.get('symbols', [])]
+        symbol_html = '<span style="color: #8C8C8C; font-weight: bold;">{}</span>&nbsp;{}'
+        symbol_list = [symbol_html.format(
+            symbol[0],
+            speech_html.format(b64encode(symbol[1]))
+        ) for symbol in explanation.get('symbols', [])]
         symbol_contents = '&nbsp;&nbsp;&nbsp;'.join(symbol_list)
         if symbol_contents:
             explanation_list.append(explanation_html.format(symbol_contents))
@@ -115,59 +118,63 @@ def generate_output(obj: BaseTranslate, more=False, reverse=False):
             part = f"No.{explain['part']}" if isinstance(explain['part'], int) else explain['part']
             mean_list = []
             for index, mean in enumerate(explain['means']):
-                text = mean[0]
-                text_tr = mean[1]
-                if mean[2]:
-                    a_html = '<a style="text-decoration: none; color: #506EFF;" href="#{}">{}</a>'
-                    text = a_html.format(b64encode(mean[0]), mean[0])
-                if mean[1]:
-                    span_html = '<br><span style="color: #8C8C8C;">{}</span>'
-                    text_tr = span_html.format(mean[1])
-                text_contents = text + text_tr
-                if len(explain['means']) > 1:
-                    text_contents = no_html.format(index + 1) + text_contents
+                span_html = '<span style="color: #8C8C8C;">{}</span>'
+                a_html = '<a style="text-decoration: none; color: #506EFF;" href="#{}">{}</a>'
+                text = a_html.format(b64encode(mean[0]), mean[0]) if mean[2] else mean[0]
+                text_tr = span_html.format(mean[1]) if mean[1] else mean[1]
+                if len(explain['means']) > 1 and mean[1]:
+                    text_contents = f'<tr><td>{no_html.format(index + 1)}</td><td>&nbsp;</td><td>{text}</td></tr>' \
+                                    f'<tr><td></td><td></td><td>{text_tr}</td></tr>'
+                elif len(explain['means']) > 1:
+                    text_contents = f'<tr><td>{no_html.format(index + 1)}</td><td>&nbsp;</td><td>{text}</td></tr>'
+                elif mean[1]:
+                    text_contents = f'<tr><td>{text}</td></tr>' \
+                                    f'<tr><td>{text_tr}</td></tr>'
+                else:
+                    text_contents = f'<tr><td>{text}</td></tr>'
                 mean_list.append(text_contents)
-            mean_contents = '<br>'.join(mean_list)
+            mean_contents = f"<table>{''.join(mean_list)}</table>"
             explain_list.append(explain_html.format(part, mean_contents))
         explain_contents = '<br><br>'.join(explain_list)
         if explain_contents:
             explanation_list.append(explanation_html.format(explain_contents))
         if more:
             # 单词语法
-            grammar_html = '<span>' \
-                           '<span style="color: #8C8C8C;">{}</span>&nbsp;&nbsp;&nbsp;' \
-                           '<a style="text-decoration: none; color: #506EFF;" href="#{}">{}</a>' \
-                           '</span>'
+            grammar_html = '<tr style="color: #8C8C8C;">' \
+                           '<td>{}</td>' \
+                           '<td>&nbsp;&nbsp;&nbsp;</td>' \
+                           '<td><a style="text-decoration: none; color: #506EFF;" href="#{}">{}</a></td>' \
+                           '</tr>'
             grammar_list = []
             for grammar in explanation.get('grammars', []):
                 grammar_list.append(grammar_html.format(grammar['name'], b64encode(grammar['value']), grammar['value']))
-            grammar_contents = '<br>'.join(grammar_list)
-            if grammar_contents:
+            if grammar_list:
+                grammar_contents = f"<table>{''.join(grammar_list)}</table>"
                 explanation_list.append(explanation_html.format(grammar_contents))
     if more:
         # 双语例句
-        sentence_html = '<span style="font-size: 14px;">{}</span>'
-        a_html = ' <a style="text-decoration: none;" href="#{}">🔊</a>'
         sentence_list = []
         sentences = obj.get_sentence(True)
         if len(sentences) > 3:
             # 例句数量大于3条时，随机选取其中3条例句
             sentences = random.sample(sentences, 3)
         for index, sentence in enumerate(sentences):
-            replace = '<b style="color: #F0374B;">'
-            sentence_text = sentence[0].replace('<b>', replace)
-            sentence_tr = sentence[1].replace('<b>', replace)
-            if sentence_tr:
-                span_html = '<br><span style="color: #8C8C8C;">{}</span>'
-                sentence_tr = span_html.format(sentence_tr)
-            if sentence[3] == 0:
-                sentence_text += a_html.format(b64encode(sentence[2]))
-            elif sentence_tr:
-                sentence_tr += a_html.format(b64encode(sentence[2]))
             no = no_html.format(index + 1)
-            sentence_list.append(sentence_html.format(no + sentence_text + sentence_tr))
-        sentence_contents = '<br><br>'.join(sentence_list)
-        if sentence_contents:
+            speech = speech_html.format(b64encode(sentence[2]))
+            replace = '<b style="color: #F0374B;">'
+            text = sentence[0].replace('<b>', replace)
+            text_tr = sentence[1].replace('<b>', replace)
+            if text_tr and sentence[3] == 1:
+                text_contents = f'<tr><td>{no}</td><td>&nbsp;</td><td>{text}</td></tr>' \
+                                f'<tr style="color: #8C8C8C;"><td></td><td></td><td>{text_tr}&nbsp;{speech}</td></tr>'
+            elif text_tr and sentence[3] == 0:
+                text_contents = f'<tr><td>{no}</td><td>&nbsp;</td><td>{text}&nbsp;{speech}</td></tr>' \
+                                f'<tr style="color: #8C8C8C;"><td></td><td></td><td>{text_tr}</td></tr>'
+            else:
+                text_contents = f'<tr><td>{no}</td><td>&nbsp;</td><td>{text}&nbsp;{speech}</td></tr>'
+            sentence_list.append(text_contents)
+        if sentence_list:
+            sentence_contents = f'<table>{"<hr width=0>".join(sentence_list)}</table>'
             explanation_list.append(explanation_html.format(sentence_contents))
     # 拼接HTML内容
     explanation_contents = '<hr width=0>'.join(explanation_list)
