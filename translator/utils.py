@@ -19,33 +19,24 @@ __all__ = [
 ]
 
 
-def move_widget(widget: QWidget, geometry: QRect, pos: QPoint = None, offset: int = 20):
-    """ 移动窗口，保持窗口始终显示在屏幕内
+def move_widget(widget: QWidget, geometry: QRect, cursor: QPoint, offset: int = 20):
+    """ 移动窗口到鼠标所在位置，并保持窗口始终显示在屏幕内
 
-    :param widget: 移动部件
-    :param geometry: 屏幕宽高
-    :param pos: 鼠标坐标。窗口跟随鼠标移动
-    :param offset: 窗口跟随鼠标移动时窗口与鼠标的间距
+    :param widget: 窗口部件
+    :param geometry: 屏幕信息
+    :param cursor: 鼠标指针
+    :param offset: 窗口与鼠标指针的间距
     """
-    screen_w = geometry.width()  # 屏幕宽
-    screen_h = geometry.height()  # 屏幕高
-    if pos is None:  # 窗口不跟随鼠标
-        x = widget.geometry().x()  # 部件X坐标
-        y = widget.geometry().y()  # 部件Y坐标
-        # 保持部件始终显示在屏幕内
-        if x < 0 or x + widget.width() > screen_w:
-            x = 0 if x < 0 else screen_w - widget.width()
-        if y < 0 or y + widget.height() > screen_h:
-            y = 0 if y < 0 else screen_h - widget.height()
-    else:  # 窗口跟随鼠标
-        x = pos.x() + offset  # 鼠标X坐标
-        y = pos.y() + offset  # 鼠标Y坐标
-        # 保持部件始终显示在屏幕内
-        if x + widget.width() > screen_w:  # 部件右侧超出边界
-            x = screen_w - widget.width() if x - widget.width() < offset * 2 else x - widget.width() - offset * 2
-        if y + widget.height() > screen_h:  # 部件底部超出边界
-            y = screen_h - widget.height() if y - widget.height() < offset * 2 else y - widget.height() - offset * 2
-    widget.move(x, y)  # 移动部件
+    w = geometry.width()  # 屏幕宽
+    h = geometry.height()  # 屏幕高
+    x = cursor.x() + offset  # 鼠标X坐标
+    y = cursor.y() + offset  # 鼠标Y坐标
+    # 保持部件始终显示在屏幕内
+    if x + widget.width() > w:  # 窗口右侧超出边界
+        x = w - widget.width() if x - widget.width() < offset * 2 else x - widget.width() - offset * 2
+    if y + widget.height() > h:  # 窗口底部超出边界
+        y = h - widget.height() if y - widget.height() < offset * 2 else y - widget.height() - offset * 2
+    widget.move(x, y)  # 移动窗口
 
 
 def baidu_ocr(img_bytes):

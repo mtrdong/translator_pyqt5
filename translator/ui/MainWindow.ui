@@ -2,6 +2,12 @@
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QWidget" name="MainWindow">
+  <property name="minimumSize">
+   <size>
+    <width>422</width>
+    <height>249</height>
+   </size>
+  </property>
   <property name="windowTitle">
    <string>翻译</string>
   </property>

@@ -429,6 +429,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.transl_started = False
         # 注册热键
         self.registerHotKey()
+        # 窗口剧中显示
+        self.center()
 
     @QtCore.pyqtSlot()
     def on_checkBox_clicked(self):
@@ -961,6 +963,14 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             # 注册“F1”为全局截屏翻译快捷键
             screen_trans_hot_key = SystemHotkey()
             screen_trans_hot_key.register(['f1'], callback=lambda x: self.pushButton_4.click())
+
+    def center(self):
+        """窗口剧中显示"""
+        screen_geometry = QtGui.QGuiApplication.primaryScreen().geometry()
+        window_geometry = self.geometry()
+        x = int((screen_geometry.width() - window_geometry.width()) / 2)
+        y = int((screen_geometry.height() - window_geometry.height()) / 4)
+        self.move(x, y)
 
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 from PyQt5.QtCore import QRect, qAbs, Qt, pyqtSignal, QBuffer, QIODevice
 from PyQt5.QtGui import QCursor, QColor, QKeySequence, QPen, QPainter, QGuiApplication
-from PyQt5.QtWidgets import QWidget, QShortcut, QDesktopWidget, QApplication
+from PyQt5.QtWidgets import QWidget, QShortcut, QApplication
 
 from utils import move_widget
 from widgets import Label
@@ -17,7 +18,7 @@ class ScreenshotWindow(QWidget):
         self.setCursor(Qt.CrossCursor)  # 十字光标
         self.setWindowFlags(Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)  # 无边框置顶
         # 初始化变量
-        self.screenGeometry = QDesktopWidget().screenGeometry()
+        self.screenGeometry = QGuiApplication.primaryScreen().geometry()
         self.fullScreenImage = QGuiApplication.primaryScreen().grabWindow(QApplication.desktop().winId())
         self.pressLeftButton = False
         self.beginPos = None

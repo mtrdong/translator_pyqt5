@@ -131,7 +131,7 @@ class FloatWidget(QtWidgets.QWidget):
         扫描鼠标位置
         """
         # 先显示窗口再执行动画
-        move_widget(self, QtWidgets.QDesktopWidget().screenGeometry(), QtGui.QCursor.pos(), 10)  # 移动窗口到鼠标的位置
+        move_widget(self, QtGui.QGuiApplication.primaryScreen().geometry(), QtGui.QCursor.pos(), 10)  # 移动窗口到鼠标的位置
         super(FloatWidget, self).show()
         self.animation.setStartValue(0)
         self.animation.setEndValue(1)

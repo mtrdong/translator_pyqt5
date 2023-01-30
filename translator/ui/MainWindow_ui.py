@@ -16,6 +16,7 @@ from widgets import TextEdit
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
+        MainWindow.setMinimumSize(QtCore.QSize(422, 249))
         self.verticalLayout = QtWidgets.QVBoxLayout(MainWindow)
         self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName("verticalLayout")
