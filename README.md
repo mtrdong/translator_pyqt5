@@ -1,6 +1,6 @@
 # 基于PyQT5制作的翻译小程序
 
-**通过`requests`获取翻译结果，使用`PyQT5`设计界面，使用`SystemHotkey`设置全局快捷键**
+**通过`httpx`获取翻译结果，使用`PyQT5`设计界面，使用`SystemHotkey`设置全局快捷键**
 
 **1. 实现基本翻译功能**
 
@@ -12,15 +12,7 @@
 
 **5. 支持一键复制翻译结果**
 
-**6. `Python`翻译`JavaScript`方法，不再依赖执行`JS`文件获取`sign`**
-
-**7. 取消默认窗口置顶，新增支持置顶/取消置顶**
-
-**8. UI调整。新增支持切换源语言与目标语言，新增翻译引擎选择（功能待实现）**
-
-**9. 正式加入有道词典**
-
-**10. 网络请求库修改为`httpx`**
+**6. 支持百度翻译和有道词典**
 
 ......
 
@@ -29,7 +21,7 @@
 > 封装`exe`单文件版（启动慢）：
 
 ```shell
-pyinstaller main-single.spec
+pyinstaller pyinstaller-single.spec
 ```
 
 
@@ -37,7 +29,7 @@ pyinstaller main-single.spec
 > 封装`exe`便携版（启动快）：
 
 ```shell
-pyinstaller main-portable.spec
+pyinstaller pyinstaller-portable.spec
 ```
 
 
