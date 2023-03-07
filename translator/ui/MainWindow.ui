@@ -535,7 +535,7 @@
                    <string>复制</string>
                   </property>
                   <property name="text">
-                   <string>📑</string>
+                   <string>📋</string>
                   </property>
                  </widget>
                 </item>
@@ -638,7 +638,7 @@
                  <string>复制</string>
                 </property>
                 <property name="text">
-                 <string>📑</string>
+                 <string>📋</string>
                 </property>
                </widget>
               </item>

@@ -11,8 +11,7 @@ from system_hotkey import SystemHotkey, user32
 from win32con import HWND_TOPMOST, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW, HWND_NOTOPMOST, VK_F1
 from win32gui import SetWindowPos
 
-from rc import images_rc  # 导入图片资源
-from res import widgets_zh_CN_qm
+from res import widgets_zh_CN_qm, favicon_ico
 from spider import BaseTranslate
 from threads import *
 from ui.MainWindow_ui import Ui_MainWindow
@@ -388,7 +387,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
     def __init__(self, *args, **kwargs):
         # 窗口设置
         super().__init__(*args, **kwargs)
-        self.setWindowIcon(QtGui.QIcon(':icon/favicon.ico'))
+        self.setWindowIcon(QtGui.QIcon(favicon_ico))
         font = QtGui.QFont('微软雅黑')
         font.setPixelSize(14)
         self.setFont(font)
