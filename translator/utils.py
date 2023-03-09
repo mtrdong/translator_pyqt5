@@ -52,8 +52,8 @@ def baidu_ocr(img_bytes):
     # 通用文字识别（高精度版），500次/天免费
     # message = client.basicAccurate(img_bytes, options={'language_type': 'auto_detect'})
     try:
-        text = '\n'.join([words.get('words') for words in message.get('words_result')])
-    except:
+        text = ' '.join([words['words'] for words in message['words_result']])
+    except (KeyError, TypeError):
         return ''
     return text
 

@@ -272,7 +272,7 @@ class BaiduTranslate(BaseTranslate):
         files = {'image': img}
         response = self._post(path, form_data, files)
         data = json.loads(response.content)
-        src = ''.join(data.get('data', {}).get('src', []))
+        src = ' '.join(data.get('data', {}).get('src', []))
         return src
 
 
