@@ -80,7 +80,7 @@ class BaiduTranslate(BaseTranslate):
             # 添加请求头
             response = self._get()
             self.headers.update({
-                'cookie': response.headers.get('Set-Cookie'),
+                'cookie': '; '.join([f'{k}={v}' for k, v in response.cookies.items()]),
                 'acs-token': ''  # TODO 新增请求头。服务端尚未做校验，暂时为空
             })
             # 获取Token

@@ -951,7 +951,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                 QtWidgets.QMessageBox.information(self, '提示', '没有从图片中识别到文字！')
 
         # 提取图片中的文字
-        self.ocr_thread = BaiduOCRThread(img_data, self.source_lan)
+        self.ocr_thread = OCRThread(img_data, self.source_lan)
         self.ocr_thread.trigger.connect(trigger)
         self.ocr_thread.start()
 

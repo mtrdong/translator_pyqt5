@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QWidget
 from spider import BaseTranslate
 from spider.transl_baidu import BaiduTranslate
 from spider.transl_google import GoogleTranslate
+from spider.transl_sougou import SougouTranslate
 from spider.transl_youdao import YoudaoTranslate
 from utils import baidu_ocr
 
@@ -17,7 +18,7 @@ __all__ = [
     'EngineThread',
     'TranslThread',
     'VoiceThread',
-    'BaiduOCRThread',
+    'OCRThread',
 ]
 
 
@@ -109,8 +110,8 @@ class VoiceThread(QThread):
         self.trigger.emit(data)  # 发送数据
 
 
-class BaiduOCRThread(QThread):
-    """百度图象识别"""
+class OCRThread(QThread):
+    """文字识别"""
     trigger = pyqtSignal(str)
 
     def __init__(self, image: bytes, from_lan):
@@ -120,8 +121,9 @@ class BaiduOCRThread(QThread):
 
     def run(self):
         try:
-            # text = baidu_ocr(self.image)  # 精度高，推荐
-            text = BaiduTranslate().get_ocr(self.image, self.from_lan)  # 精度低，备用
+            # text = baidu_ocr(self.image)  # 百度API，精度较高
+            # text = BaiduTranslate().get_ocr(self.image, self.from_lan)  # 百度翻译接口，精度较低
+            text = SougouTranslate().get_ocr(self.image, self.from_lan)  # 搜狗翻译接口，精度适中
         except (AssertionError, httpx.ConnectError, httpx.ConnectTimeout):
             text = ''
         self.trigger.emit(text)  # 信号发送文本
