@@ -115,8 +115,8 @@ class SougouTranslate(BaseTranslate):
         }
         files = {'fileData': img}
         response = self._post(path, form_data, files)
-        data = json.loads(response.content)
-        result = data.get('data', {}).get('result', [])
+        data = response.json().get('data') or {}
+        result = data.get('result', [])
         src = '\n'.join([item['content'] for item in result])
         return src
 

@@ -122,8 +122,8 @@ class OCRThread(QThread):
     def run(self):
         try:
             # text = baidu_ocr(self.image)  # 百度API，精度较高
-            # text = BaiduTranslate().get_ocr(self.image, self.from_lan)  # 百度翻译接口，精度较低
-            text = SougouTranslate().get_ocr(self.image, self.from_lan)  # 搜狗翻译接口，精度适中
+            # text = BaiduTranslate().get_ocr(self.image)  # 百度翻译接口，精度较低
+            text = SougouTranslate().get_ocr(self.image)  # 搜狗翻译接口，精度适中
         except (AssertionError, httpx.ConnectError, httpx.ConnectTimeout):
             text = ''
         self.trigger.emit(text)  # 信号发送文本
