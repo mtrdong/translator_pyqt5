@@ -90,8 +90,8 @@ class YoudaoTranslate(BaseTranslate):
         """ 获取释义
         [{
             "symbols": [
-                ["英[həˈləʊ]", ["hello", "", 1]],
-                ["美[heˈloʊ]", ["hello", "", 2]]
+                ["英 [həˈləʊ]", ["hello", "", 1]],
+                ["美 [heˈloʊ]", ["hello", "", 2]]
             ],
             "explains": [
                 {

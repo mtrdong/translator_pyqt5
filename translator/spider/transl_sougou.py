@@ -8,8 +8,6 @@ from contextlib import suppress
 from hashlib import md5
 from threading import Lock
 
-from Crypto.Cipher import AES
-
 from spider import BaseTranslate
 from utils import aes_encrypt
 
@@ -92,8 +90,8 @@ class SougouTranslate(BaseTranslate):
         """ 获取释义
         [{
             "symbols": [
-                ["英[həˈləʊ]", ["hello", "uk"]],
-                ["美[heˈloʊ]", ["hello", "en"]]
+                ["英 [həˈləʊ]", ["hello", "uk"]],
+                ["美 [heˈloʊ]", ["hello", "en"]]
             ],
             "explains": [
                 {
@@ -112,6 +110,21 @@ class SougouTranslate(BaseTranslate):
         }]
         """
         explanation_data = []
+        # 解析音标
+        symbol_list = []
+        translate = self.data['translate']
+        phonetic = self.data['voice']['phonetic']
+        for item in phonetic:
+            voice_type = item.get('type')
+            if voice_type:
+                voice_url = 'https:' + item.get('filename')
+                if voice_type == 'uk':
+                    symbol_list.append([f'英 [{item["text"]}]', [translate['orig_text'], translate['from'], voice_url]])
+                else:
+                    symbol_list.append([f'美 [{item["text"]}]', [translate['orig_text'], translate['from'], voice_url]])
+            else:
+                symbol_list.append([f'音 [{item["text"]}]', [translate['orig_text'], translate['from']]])
+                break
         return explanation_data
 
     def get_sentence(self, *args, **kwargs):
@@ -146,28 +159,32 @@ class SougouTranslate(BaseTranslate):
                 sentence_data.append([sentence_text, sentence_tr, sentence_speech, idx])
         return sentence_data
 
-    def get_tts(self, text, lan, *args, **kwargs):
+    def get_tts(self, text, lan, url='', *args, **kwargs):
         """ 获取发音
 
         :param text: 源文本
         :param lan: 文本语言
+        :param url: 单词发音直链
         :return: 文本语音
         """
-        params = {
-            'S-AppId': 102356845,
-            'S-Param': aes_encrypt(
-                json.dumps({
-                    'curTime': int(time.time() * 1000),
-                    'text': text,
-                    'spokenDialect': lan,
-                    'rate': '0.8'
-                }),
-                '76350b1840ff9832eb6244ac6d444366',
-                iv=base64.b64decode('AAAAAAAAAAAAAAAAAAAAAA==').decode()
-            )
-        }
-        path = 'openapi/external/getWebTTS'
-        response = self._get(path, params)
+        if url:
+            response = self.session.get(url)
+        else:
+            params = {
+                'S-AppId': 102356845,
+                'S-Param': aes_encrypt(
+                    json.dumps({
+                        'curTime': int(time.time() * 1000),
+                        'text': text,
+                        'spokenDialect': lan,
+                        'rate': '0.8'
+                    }),
+                    '76350b1840ff9832eb6244ac6d444366',
+                    iv=base64.b64decode('AAAAAAAAAAAAAAAAAAAAAA==').decode()
+                )
+            }
+            path = 'openapi/external/getWebTTS'
+            response = self._get(path, params)
         content = response.content
         return content
 
@@ -193,7 +210,7 @@ class SougouTranslate(BaseTranslate):
 
 if __name__ == '__main__':
     st = SougouTranslate()
-    st.translate('hello', 'zh-CHS')
+    st.translate('你好', 'en')
     translations = st.get_translation()
     explanations = st.get_explanation()
     sentences = st.get_sentence()

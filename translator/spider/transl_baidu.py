@@ -147,8 +147,8 @@ class BaiduTranslate(BaseTranslate):
         """ 获取释义
         [{
             "symbols": [
-                ["英[həˈləʊ]", ["hello", "uk"]],
-                ["美[heˈloʊ]", ["hello", "en"]]
+                ["英 [həˈləʊ]", ["hello", "uk"]],
+                ["美 [heˈloʊ]", ["hello", "en"]]
             ],
             "explains": [
                 {
