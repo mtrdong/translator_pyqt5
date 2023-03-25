@@ -3,7 +3,9 @@ import base64
 import html
 import json
 import random
+from typing import Union, Literal
 
+from Crypto.Cipher import AES
 from PyQt5.QtCore import QRect, QPoint
 from PyQt5.QtWidgets import QWidget
 from aip import AipOcr
@@ -11,12 +13,73 @@ from aip import AipOcr
 from spider import BaseTranslate
 
 __all__ = [
+    'aes_encrypt',
+    'aes_decrypt',
     'move_widget',
     'baidu_ocr',
-    'b64encode',
-    'b64decode',
+    'b64encode_json',
+    'b64decode_json',
     'generate_output',
 ]
+
+
+def aes_encrypt(
+        text: str,
+        key: Union[str, bytes],
+        iv: Union[str, bytes] = None,
+        mode: int = AES.MODE_CBC,
+        padding: Literal['PKCS7', 'ZeroPadding', 'ISO10126', 'X923', 'NoPadding'] = 'PKCS7'
+):
+    """AES加密"""
+    key = key.encode('utf-8')
+    # ECB模式不需要IV
+    if mode == AES.MODE_ECB:
+        cipher = AES.new(key, mode)
+    else:
+        iv = iv.encode('utf-8')
+        cipher = AES.new(key, mode, iv)
+    # 根据填充模式计算填充字符
+    text = text.encode('utf-8')
+    pad_num = AES.block_size - len(text) % AES.block_size
+    if padding == 'PKCS7':
+        pad_text = chr(pad_num) * pad_num
+    elif padding == 'ZeroPadding':
+        pad_text = chr(0) * pad_num
+    elif padding == 'ISO10126':
+        pad_text = ''
+        for _ in range(pad_num - 1):
+            pad_text += chr(random.randint(0, 9))
+        pad_text += chr(pad_num)
+    elif padding == 'X923':
+        pad_text = chr(0) * (pad_num - 1) + chr(pad_num)
+    else:
+        pad_text = ''
+    # 拼接原文与填充字符
+    pad_text = pad_text.encode('utf-8')
+    text += pad_text
+    # AES加密
+    encrypted_bytes = cipher.encrypt(text)
+    # Base64编码
+    base64_bytes = base64.b64encode(encrypted_bytes)
+    base64_str = base64_bytes.decode('utf-8')
+    return base64_str
+
+
+def aes_decrypt(text: str, key: Union[str, bytes], iv: Union[str, bytes] = None, mode: int = AES.MODE_CBC):
+    """AES解密"""
+    key = key.encode('utf-8')
+    iv = iv.encode('utf-8')
+    # Base64解码
+    base64_bytes = base64.b64decode(text)
+    # AES解密
+    cipher = AES.new(key, mode, iv)
+    decrypted_bytes = cipher.decrypt(base64_bytes)
+    decrypted_str = decrypted_bytes.decode('utf-8')
+    # 去除填充字符
+    pad_num = ord(decrypted_str[-1])
+    if pad_num < AES.block_size:
+        decrypted_str = decrypted_str[:-pad_num]
+    return decrypted_str
 
 
 def move_widget(widget: QWidget, geometry: QRect, cursor: QPoint, offset: int = 20):
@@ -58,14 +121,14 @@ def baidu_ocr(img_bytes):
     return text
 
 
-def b64encode(o):
-    """base64编码"""
+def b64encode_json(o):
+    """base64编码（JSON）"""
     b64ec = base64.b64encode(json.dumps(o).encode())
     return b64ec.decode()
 
 
-def b64decode(s):
-    """base64解码"""
+def b64decode_json(s):
+    """base64解码（JSON）"""
     b64dc = base64.b64decode(s)
     return json.loads(b64dc.decode())
 
@@ -97,7 +160,7 @@ def generate_output(obj: BaseTranslate, more=False, reverse=False):
         symbol_html = '<span style="color: #8C8C8C; font-weight: bold;">{}</span>&nbsp;{}'
         symbol_list = [symbol_html.format(
             symbol[0],
-            speech_html.format(b64encode(symbol[1]))
+            speech_html.format(b64encode_json(symbol[1]))
         ) for symbol in explanation.get('symbols', [])]
         symbol_contents = '&nbsp;&nbsp;&nbsp;'.join(symbol_list)
         if symbol_contents:
@@ -111,7 +174,7 @@ def generate_output(obj: BaseTranslate, more=False, reverse=False):
             for index, mean in enumerate(explain['means']):
                 span_html = '<span style="color: #8C8C8C;">{}</span>'
                 a_html = '<a style="text-decoration: none; color: #506EFF;" href="#{}">{}</a>'
-                text = a_html.format(b64encode(mean[0]), mean[0]) if mean[2] else mean[0]
+                text = a_html.format(b64encode_json(mean[0]), mean[0]) if mean[2] else mean[0]
                 text_tr = span_html.format(mean[1]) if mean[1] else mean[1]
                 if len(explain['means']) > 1 and mean[1]:
                     text_contents = f'<tr><td>{no_html.format(index + 1)}</td><td>&nbsp;</td><td>{text}</td></tr>' \
@@ -138,7 +201,11 @@ def generate_output(obj: BaseTranslate, more=False, reverse=False):
                            '</tr>'
             grammar_list = []
             for grammar in explanation.get('grammars', []):
-                grammar_list.append(grammar_html.format(grammar['name'], b64encode(grammar['value']), grammar['value']))
+                grammar_list.append(grammar_html.format(
+                    grammar['name'],
+                    b64encode_json(grammar['value']),
+                    grammar['value']
+                ))
             if grammar_list:
                 grammar_contents = f"<table>{''.join(grammar_list)}</table>"
                 explanation_list.append(explanation_html.format(grammar_contents))
@@ -151,7 +218,7 @@ def generate_output(obj: BaseTranslate, more=False, reverse=False):
             sentences = random.sample(sentences, 3)
         for index, sentence in enumerate(sentences):
             no = no_html.format(index + 1)
-            speech = speech_html.format(b64encode(sentence[2]))
+            speech = speech_html.format(b64encode_json(sentence[2]))
             replace = '<b style="color: #F0374B;">'
             text = sentence[0].replace('<b>', replace)
             text_tr = sentence[1].replace('<b>', replace)

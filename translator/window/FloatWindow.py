@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import QApplication
 
 from ui.FloatWindow_ui import Ui_FloatWindow
 from threads import VoiceThread
-from utils import generate_output, b64decode
+from utils import generate_output, b64decode_json
 from widgets import FloatWidget
 
 
@@ -57,7 +57,7 @@ class FloatWindow(FloatWidget, Ui_FloatWindow):
         点击输出框中音标发音按钮时，获取单词发音并播放
         """
         url = url.url().replace('#', '')
-        res = b64decode(url)
+        res = b64decode_json(url)
         if isinstance(res, list):
             # 通过线程下载并播放发音
             self.tts(*res)

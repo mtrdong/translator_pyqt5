@@ -15,7 +15,7 @@ from res import widgets_zh_CN_qm, favicon_ico
 from spider import BaseTranslate
 from threads import *
 from ui.MainWindow_ui import Ui_MainWindow
-from utils import b64decode, generate_output
+from utils import b64decode_json, generate_output
 from widgets import FramelessWidget
 from window.FloatWindow import FloatWindow
 from window.ScreenshotWindow import ScreenshotWindow
@@ -827,7 +827,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         点击输出框中文本链接的时候，提取文本并进行翻译
         """
         url = url.url()[1:]
-        res = b64decode(url)
+        res = b64decode_json(url)
         if isinstance(res, list):  # 点击发音按钮
             # 通过线程下载并播放发音
             self.tts(*res)

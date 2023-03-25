@@ -1,6 +1,7 @@
 chardet
 baidu-aip
 httpx
+pycryptodome
 pyinstaller
 PyQt5-stubs
 pyqt5-tools

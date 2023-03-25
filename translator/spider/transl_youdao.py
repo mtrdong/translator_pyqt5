@@ -23,7 +23,7 @@ class YoudaoTranslate(BaseTranslate):
             super(YoudaoTranslate, self).__init__()
             # 有道词典主页
             self.home = 'https://dict.youdao.com/'
-            # 发送请求检查服务是否可用
+            # 请求一下首页以更新客户端的cookies
             self._get()
             # 中日互译时如果有两种结果，则该标志为 True
             self.reverse_flag = False

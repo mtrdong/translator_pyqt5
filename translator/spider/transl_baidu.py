@@ -77,17 +77,12 @@ class BaiduTranslate(BaseTranslate):
             super(BaiduTranslate, self).__init__()
             # 百度翻译主页
             self.home = 'https://fanyi.baidu.com/'
-            # 添加请求头
+            # 请求一下首页以更新客户端的cookies
+            self._get()
+            # 获取token（必须先更新客户端的cookies，再次请求首页时才会有token）
+            # 发送翻译请求时需携带此token
             response = self._get()
-            self.headers.update({
-                'cookie': '; '.join([f'{k}={v}' for k, v in response.cookies.items()]),
-                'acs-token': ''  # TODO 新增请求头。服务端尚未做校验，暂时为空
-            })
-            # 获取Token
-            response = self._get()
-            self.form_data = {
-                'token': re.findall(r'token:[\s\'\"]+([a-z\d]+)[\'\"]', response.content.decode())
-            }
+            self.token = re.findall(r'token:[\s\'"]+([a-z\d]+)[\'"],', response.text)[0]
             # 标记初始化完成
             self._init_flag = True
 
@@ -101,19 +96,21 @@ class BaiduTranslate(BaseTranslate):
         content = json.loads(response.content)
         return content.get('lan')
 
-    def _update_form_data(self, query, to_lan, from_lan):
-        """构建表单参数"""
+    def _get_form_data(self, query, from_lan, to_lan):
+        """构建表单数据"""
         # with open(index_d52622f_js, 'r', encoding='UTF-8') as f:
         #     js = f.read()
         # eval_js = js2py.eval_js(js)
         # sign = eval_js(query)
         sign = e(query)
-        self.form_data.update({
+        form_data = {
             'to': to_lan,
             'from': from_lan,
             'query': query,
             'sign': sign,
-        })
+            'token': self.token,
+        }
+        return form_data
 
     def translate(self, query, to_lan, from_lan=None, *args, **kwargs):
         """ 启动翻译
@@ -129,9 +126,10 @@ class BaiduTranslate(BaseTranslate):
             to_lan = 'en' if from_lan == 'zh' else 'zh'
         path = 'v2transapi'
         params = {'from': from_lan, 'to': to_lan}
-        self._update_form_data(query, to_lan, from_lan)
-        response = self._post(path, self.form_data, params=params)
-        data = json.loads(response.content)
+        form_data = self._get_form_data(query, from_lan, to_lan)
+        headers = {'Acs-Token': ''}  # TODO 新增的请求头。服务端尚未做校验，暂时为空
+        response = self._post(path, form_data, params=params, headers=headers)
+        data = response.json()
         assert data.get('errno') is None, f'翻译失败！（{data["errno"]}，{data["errmsg"]}）'
         self.data = data
 

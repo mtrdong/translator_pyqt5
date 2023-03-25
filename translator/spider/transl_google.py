@@ -24,7 +24,7 @@ class GoogleTranslate(BaseTranslate):
             super(GoogleTranslate, self).__init__()
             # 谷歌翻译主页
             self.home = 'https://translate.google.cn/'
-            # 发送请求检查服务是否可用
+            # 请求一下首页以更新客户端的cookies
             self._get()
             # 标记初始化完成
             self._init_flag = True

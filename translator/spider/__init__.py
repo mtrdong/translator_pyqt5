@@ -6,30 +6,29 @@ class BaseTranslate(object):
     """翻译爬虫的基类"""
 
     def __init__(self):
+        # 创建客户端并设置客户端UA
         self.session = httpx.Client()
-        self.headers = {
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                          'AppleWebKit/537.36 (KHTML, like Gecko) '
-                          'Chrome/106.0.0.0 Safari/537.36'
-        }
+        self.session.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ' \
+                                             'AppleWebKit/537.36 (KHTML, like Gecko) ' \
+                                             'Chrome/111.0.0.0 Safari/537.36'
         # 主页
         self.home = None
         # 翻译结果
         self.data = None
 
     @retry(stop_max_attempt_number=3)
-    def _post(self, path='', data=None, files=None, json=None, params=None):
+    def _post(self, path='', data=None, files=None, json=None, params=None, headers=None):
         """发送 POST 请求"""
         url = self.home + path
-        response = self.session.post(url, data=data, files=files, json=json, params=params, headers=self.headers)
+        response = self.session.post(url, data=data, files=files, json=json, params=params, headers=headers)
         assert response.status_code == 200, f'请求失败！URL：{response.url}；状态码：{response.status_code}。'
         return response
 
     @retry(stop_max_attempt_number=3)
-    def _get(self, path='', params=None):
+    def _get(self, path='', params=None, headers=None):
         """发送 GET 请求"""
         url = self.home + path
-        response = self.session.get(url, params=params, headers=self.headers)
+        response = self.session.get(url, params=params, headers=headers)
         assert response.status_code == 200, f'请求失败！URL：{response.url}；状态码：{response.status_code}。'
         return response
 
