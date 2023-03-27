@@ -3,7 +3,7 @@ import base64
 import html
 import json
 import random
-from typing import Union, Literal
+from typing import Literal
 
 from Crypto.Cipher import AES
 from PyQt5.QtCore import QRect, QPoint
@@ -25,20 +25,13 @@ __all__ = [
 
 def aes_encrypt(
         text: str,
-        key: Union[str, bytes],
-        iv: Union[str, bytes] = None,
-        mode: int = AES.MODE_CBC,
+        key: str,
+        iv: str = None,
+        mode: Literal[1, 2, 3, 5, 6] = AES.MODE_CBC,
         padding: Literal['PKCS7', 'ZeroPadding', 'ISO10126', 'X923', 'NoPadding'] = 'PKCS7'
 ):
     """AES加密"""
-    key = key.encode('utf-8')
-    # ECB模式不需要IV
-    if mode == AES.MODE_ECB:
-        cipher = AES.new(key, mode)
-    else:
-        iv = iv.encode('utf-8')
-        cipher = AES.new(key, mode, iv)
-    # 根据填充模式计算填充字符
+    # 根据填充模式计算填充字符，并与原文进行拼接
     text = text.encode('utf-8')
     pad_num = AES.block_size - len(text) % AES.block_size
     if padding == 'PKCS7':
@@ -46,18 +39,20 @@ def aes_encrypt(
     elif padding == 'ZeroPadding':
         pad_text = chr(0) * pad_num
     elif padding == 'ISO10126':
-        pad_text = ''
-        for _ in range(pad_num - 1):
-            pad_text += chr(random.randint(0, 9))
-        pad_text += chr(pad_num)
+        pad_text = ''.join([chr(random.randint(0, 9)) for _ in range(pad_num - 1)]) + chr(pad_num)
     elif padding == 'X923':
         pad_text = chr(0) * (pad_num - 1) + chr(pad_num)
     else:
         pad_text = ''
-    # 拼接原文与填充字符
     pad_text = pad_text.encode('utf-8')
     text += pad_text
     # AES加密
+    key = key.encode('utf-8')
+    if mode == [AES.MODE_ECB, AES.MODE_CTR]:
+        cipher = AES.new(key, mode)
+    else:
+        iv = iv.encode('utf-8')
+        cipher = AES.new(key, mode, iv)
     encrypted_bytes = cipher.encrypt(text)
     # Base64编码
     base64_bytes = base64.b64encode(encrypted_bytes)
@@ -65,20 +60,32 @@ def aes_encrypt(
     return base64_str
 
 
-def aes_decrypt(text: str, key: Union[str, bytes], iv: Union[str, bytes] = None, mode: int = AES.MODE_CBC):
+def aes_decrypt(
+        text: str,
+        key: str,
+        iv: str = None,
+        mode: Literal[1, 2, 3, 5, 6] = AES.MODE_CBC,
+        padding: Literal['PKCS7', 'ZeroPadding', 'ISO10126', 'X923', 'NoPadding'] = 'PKCS7'
+):
     """AES解密"""
-    key = key.encode('utf-8')
-    iv = iv.encode('utf-8')
     # Base64解码
     base64_bytes = base64.b64decode(text)
     # AES解密
-    cipher = AES.new(key, mode, iv)
+    key = key.encode('utf-8')
+    if mode == [AES.MODE_ECB, AES.MODE_CTR]:
+        cipher = AES.new(key, mode)
+    else:
+        iv = iv.encode('utf-8')
+        cipher = AES.new(key, mode, iv)
     decrypted_bytes = cipher.decrypt(base64_bytes)
     decrypted_str = decrypted_bytes.decode('utf-8')
     # 去除填充字符
     pad_num = ord(decrypted_str[-1])
     if pad_num < AES.block_size:
-        decrypted_str = decrypted_str[:-pad_num]
+        if padding == 'ZeroPadding':
+            decrypted_str = decrypted_str.rstrip(chr(0))
+        elif padding in ['PKCS7', 'ISO10126', 'X923']:
+            decrypted_str = decrypted_str[:-pad_num]
     return decrypted_str
 
 
