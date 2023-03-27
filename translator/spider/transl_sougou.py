@@ -11,6 +11,33 @@ from threading import Lock
 from spider import BaseTranslate
 from utils import aes_encrypt
 
+# 搜狗翻译语言选项
+lan_sougou = {
+    '自动检测': 'auto',
+    '阿拉伯语': 'ar',
+    '波兰语': 'pl',
+    '丹麦语': 'da',
+    '德语': 'de',
+    '俄语': 'ru',
+    '法语': 'fr',
+    '芬兰语': 'fi',
+    '韩语': 'ko',
+    '荷兰语': 'nl',
+    '捷克语': 'cs',
+    '葡萄牙语': 'pt',
+    '日语': 'ja',
+    '瑞典语': 'sv',
+    '泰语': 'th',
+    '土耳其语': 'tr',
+    '西班牙语': 'es',
+    '匈牙利语': 'hu',
+    '英语': 'en',
+    '意大利语': 'it',
+    '越南语': 'vi',
+    '中文': 'zh-CHS'
+}
+
+
 
 class SougouTranslate(BaseTranslate):
     """搜狗翻译爬虫"""
@@ -74,6 +101,8 @@ class SougouTranslate(BaseTranslate):
         data = response.json()
         assert data.get('status') == 0, f'翻译失败！（{data["status"]}，{data["info"]}）'
         self.data = data['data']
+        self.from_lan = self.data['translate']['from']
+        self.to_lan = self.data['translate']['to']
 
     def get_translation(self, *args, **kwargs):
         """ 获取译文
@@ -101,7 +130,7 @@ class SougouTranslate(BaseTranslate):
                     ]
                 }
             ],
-            "grammars": [
+            "exchanges": [
                 {
                     "name": "复数",
                     "value": "hellos"
@@ -111,20 +140,52 @@ class SougouTranslate(BaseTranslate):
         """
         explanation_data = []
         # 解析音标
-        symbol_list = []
+        symbols = []
         translate = self.data['translate']
-        phonetic = self.data['voice']['phonetic']
+        phonetic = (self.data.get('voice') or {}).get('phonetic', [])
         for item in phonetic:
             voice_type = item.get('type')
             if voice_type:
                 voice_url = 'https:' + item.get('filename')
                 if voice_type == 'uk':
-                    symbol_list.append([f'英 [{item["text"]}]', [translate['orig_text'], translate['from'], voice_url]])
+                    symbols.append([f'英 [{item["text"]}]', [translate['orig_text'], translate['from'], voice_url]])
                 else:
-                    symbol_list.append([f'美 [{item["text"]}]', [translate['orig_text'], translate['from'], voice_url]])
+                    symbols.append([f'美 [{item["text"]}]', [translate['orig_text'], translate['from'], voice_url]])
             else:
-                symbol_list.append([f'音 [{item["text"]}]', [translate['orig_text'], translate['from']]])
+                symbols.append([f'音 [{item["text"]}]', [translate['orig_text'], translate['from']]])
                 break
+        word_card = self.data['wordCard']
+        # 解析释义
+        explains = []
+        second_query = word_card.get('secondQuery') or []
+        usual_dict = word_card.get('usualDict') or []
+        for idx, val in enumerate(usual_dict):
+            pos = val.get('pos') or idx + 1
+            values = val.get('values')[0]
+            means = []
+            if self.data['Zh2En']:
+                means = []
+                for word in values.split('; '):
+                    for item in second_query:
+                        if item['k'] == word:
+                            means.append([word, re.split(r'[a-z]+.', item['v'])[-1], True])
+            else:
+                means.append([values, '', False])
+            explains.append({'part': pos, 'means': means})
+        # 解析形态
+        exchange_dict = {
+            'word_third': '第三人称单数',
+            'word_pl': '复数',
+            'word_ing': '现在分词',
+            'word_done': '过去式',
+            'word_past': '过去分词',
+            'word_er': '比较级',
+            'word_est': '最高级',
+            'word_proto': '原形',
+        }
+        exchanges = [{'name': exchange_dict[k], 'value': v[0]} for k, v in (word_card.get('exchange') or {}).items()]
+        # 添加数据
+        explanation_data.append({'symbols': symbols, 'explains': explains, 'exchanges': exchanges})
         return explanation_data
 
     def get_sentence(self, *args, **kwargs):
@@ -148,18 +209,17 @@ class SougouTranslate(BaseTranslate):
         with suppress(KeyError, TypeError):
             bilingual = self.data['detail']['bilingual']
             to_lan = self.data['translate']['to']
-            from_lan = self.data['translate']['from']
             for item in bilingual:
                 sentence_text = item['source'].replace('<em>', '<b>').replace('</em>', '</b>')  # 例句原文
                 sentence_tr = item['target']  # 例句译文
                 # 构建例句 TTS 获取参数
-                text, lan, idx = (sentence_text, from_lan, 0) if self.data.get('dictType') else (sentence_tr, to_lan, 1)
+                text, lan, idx = (sentence_tr, to_lan, 1) if self.data.get('Zh2En') else (sentence_text, to_lan, 0)
                 sentence_speech = [text, lan]
                 # 添加例句
                 sentence_data.append([sentence_text, sentence_tr, sentence_speech, idx])
         return sentence_data
 
-    def get_tts(self, text, lan, url='', *args, **kwargs):
+    def get_tts(self, text, lan, url=None, *args, **kwargs):
         """ 获取发音
 
         :param text: 源文本
@@ -180,7 +240,7 @@ class SougouTranslate(BaseTranslate):
                         'rate': '0.8'
                     }),
                     '76350b1840ff9832eb6244ac6d444366',
-                    iv=base64.b64decode('AAAAAAAAAAAAAAAAAAAAAA==').decode()
+                    base64.b64decode('AAAAAAAAAAAAAAAAAAAAAA==').decode()
                 )
             }
             path = 'openapi/external/getWebTTS'
@@ -210,7 +270,7 @@ class SougouTranslate(BaseTranslate):
 
 if __name__ == '__main__':
     st = SougouTranslate()
-    st.translate('你好', 'en')
+    st.translate('result', 'zh-CHS')
     translations = st.get_translation()
     explanations = st.get_explanation()
     sentences = st.get_sentence()

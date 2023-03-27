@@ -15,6 +15,9 @@ class BaseTranslate(object):
         self.home = None
         # 翻译结果
         self.data = None
+        # 源语言和目标语言
+        self.from_lan = None
+        self.to_lan = None
 
     @retry(stop_max_attempt_number=3)
     def _post(self, path='', data=None, files=None, json=None, params=None, headers=None):

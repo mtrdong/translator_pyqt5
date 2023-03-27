@@ -5,6 +5,15 @@ from urllib.parse import parse_qs
 
 from spider import BaseTranslate
 
+# 有道词典语言选项
+lan_youdao = {
+    '自动检测语言': '',
+    '中英': 'en',
+    '中法': 'fr',
+    '中韩': 'ko',
+    '中日': 'ja',
+}
+
 
 class YoudaoTranslate(BaseTranslate):
     """有道词典爬虫"""
@@ -71,6 +80,7 @@ class YoudaoTranslate(BaseTranslate):
             newjc = self.data.get('newjc', {}).get('word')
             cj = self.data.get('cj', {}).get('word')
             self.reverse_flag = newjc and cj
+        self.to_lan = to_lan
 
     def get_translation(self, *args, **kwargs):
         """ 获取译文
@@ -107,7 +117,7 @@ class YoudaoTranslate(BaseTranslate):
                     ]
                 }
             ],
-            "grammars": [
+            "exchanges": [
                 {
                     "name": "复数",
                     "value": "hellos"
@@ -143,10 +153,10 @@ class YoudaoTranslate(BaseTranslate):
                     'part': trs.get('pos') or index + 1,
                     'means': [[trs.get('tran', trs.get('#text')), trs.get('#tran', ''), b]]
                 })
-            # 解析语法
-            grammar_list = [item['wf'] for item in word.get('wfs', [])]
+            # 解析形态
+            exchange_list = [item['wf'] for item in word.get('wfs', [])]
             # 添加数据
-            explanation_data.append({'symbols': symbol_list, 'explains': explain_list, 'grammars': grammar_list})
+            explanation_data.append({'symbols': symbol_list, 'explains': explain_list, 'exchanges': exchange_list})
         # 【中法】翻译结果解析
         elif self.data.get('le') == 'fr' and self.data.get('cf', self.data.get('fc')):
             word = self.data.get('cf', self.data.get('fc'))['word'][0]

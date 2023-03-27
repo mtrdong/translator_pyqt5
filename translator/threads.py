@@ -48,6 +48,12 @@ class MouseCheckThread(QThread):
 class EngineThread(QThread):
     """创建翻译引擎对象"""
     trigger = pyqtSignal(dict)
+    engine_classes = {
+        'baidu': BaiduTranslate,
+        'youdao': YoudaoTranslate,
+        'sougou': SougouTranslate,
+        'google': GoogleTranslate
+    }
 
     def __init__(self, select: str):
         super(EngineThread, self).__init__()
@@ -56,12 +62,8 @@ class EngineThread(QThread):
     def run(self):
         result = {'code': 0, 'msg': 'OK', 'obj': None}
         try:
-            if self.select == 'youdao':
-                obj = YoudaoTranslate()  # 创建有道词典
-            elif self.select == 'google':
-                obj = GoogleTranslate()  # 创建谷歌翻译
-            else:
-                obj = BaiduTranslate()  # 创建百度翻译
+            engine_class = self.engine_classes.get(self.select)
+            obj = engine_class()  # 实例化翻译引擎
         except (httpx.ConnectError, httpx.ProxyError, httpx.ConnectTimeout) as exc:
             result.update({'msg': str(exc)})
         else:

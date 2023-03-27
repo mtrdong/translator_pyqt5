@@ -200,22 +200,22 @@ def generate_output(obj: BaseTranslate, more=False, reverse=False):
         if explain_contents:
             explanation_list.append(explanation_html.format(explain_contents))
         if more:
-            # 单词语法
-            grammar_html = '<tr style="color: #8C8C8C;">' \
-                           '<td>{}</td>' \
-                           '<td>&nbsp;&nbsp;&nbsp;</td>' \
-                           '<td><a style="text-decoration: none; color: #506EFF;" href="#{}">{}</a></td>' \
-                           '</tr>'
-            grammar_list = []
-            for grammar in explanation.get('grammars', []):
-                grammar_list.append(grammar_html.format(
-                    grammar['name'],
-                    b64encode_json(grammar['value']),
-                    grammar['value']
+            # 单词形态
+            exchange_html = '<tr style="color: #8C8C8C;">' \
+                            '<td>{}</td>' \
+                            '<td>&nbsp;&nbsp;&nbsp;</td>' \
+                            '<td><a style="text-decoration: none; color: #506EFF;" href="#{}">{}</a></td>' \
+                            '</tr>'
+            exchange_list = []
+            for exchange in explanation.get('exchanges', []):
+                exchange_list.append(exchange_html.format(
+                    exchange['name'],
+                    b64encode_json(exchange['value']),
+                    exchange['value']
                 ))
-            if grammar_list:
-                grammar_contents = f"<table>{''.join(grammar_list)}</table>"
-                explanation_list.append(explanation_html.format(grammar_contents))
+            if exchange_list:
+                exchange_contents = f"<table>{''.join(exchange_list)}</table>"
+                explanation_list.append(explanation_html.format(exchange_contents))
     if more:
         # 双语例句
         sentence_list = []
