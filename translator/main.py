@@ -11,11 +11,11 @@ from system_hotkey import SystemHotkey, user32
 from win32con import HWND_TOPMOST, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW, HWND_NOTOPMOST, VK_F1
 from win32gui import SetWindowPos
 
+from common import engine_lang, engine_name
 from res import widgets_zh_CN_qm, favicon_ico
 from spider import BaseTranslate
 from spider.transl_youdao import youdao_lang
 from threads import *
-from translator import engine_name, engine_lang
 from ui.MainWindow_ui import Ui_MainWindow
 from utils import b64decode_json, generate_output
 from widgets import FramelessWidget

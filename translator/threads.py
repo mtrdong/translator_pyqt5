@@ -6,9 +6,9 @@ from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QWidget
 
+from common import engine_class
 from spider import BaseTranslate
 from spider.transl_sougou import SougouTranslate
-from translator import engine_class
 
 __all__ = [
     'MouseCheckThread',
