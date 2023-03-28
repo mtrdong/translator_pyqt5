@@ -13,26 +13,14 @@ from win32gui import SetWindowPos
 
 from res import widgets_zh_CN_qm, favicon_ico
 from spider import BaseTranslate
-from spider.transl_baidu import lan_baidu
-from spider.transl_google import lan_google
-from spider.transl_sougou import lan_sougou
-from spider.transl_youdao import lan_youdao
+from spider.transl_youdao import youdao_lang
 from threads import *
+from translator import engine_name, engine_lang
 from ui.MainWindow_ui import Ui_MainWindow
 from utils import b64decode_json, generate_output
 from widgets import FramelessWidget
 from window.FloatWindow import FloatWindow
 from window.ScreenshotWindow import ScreenshotWindow
-
-print(f'语言选项：{lan_baidu}、{lan_google}、{lan_sougou}、{lan_youdao}')
-
-# 翻译引擎
-engine = {
-    '百度翻译': 'baidu',
-    '有道词典': 'youdao',
-    '搜狗翻译': 'sougou',
-    '谷歌翻译': 'google',
-}
 
 # 窗口最大高度
 MAX_H = 682
@@ -59,10 +47,10 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         # 底部输出框链接点击事件
         self.textBrowser_2.anchorClicked.connect(self.anchorClicked)
         # 下拉列表初始化
-        self.comboBox.addItems(engine.keys())
+        self.comboBox.addItems(engine_name.keys())
         self.comboBox.setCurrentIndex(0)
         # TODO 谷歌翻译已挂，暂时禁用
-        google_idx = list(engine.values()).index('google')
+        google_idx = list(engine_name.values()).index('google')
         self.comboBox.setItemData(google_idx, 0, QtCore.Qt.UserRole - 1)
         # TODO end
         self.comboBox.currentIndexChanged.connect(self.comboBoxCurrentIndexChanged)
@@ -160,7 +148,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """ 点击语言对调按钮
         调换源语言与目标语言
         """
-        if engine.get(self.comboBox.currentText()) != 'youdao':
+        if engine_name.get(self.comboBox.currentText()) != 'youdao':
             if self.source_lan and self.source_lan != 'auto':
                 combobox_2_index = self.comboBox_2.currentIndex()
                 combobox_3_index = self.comboBox_3.currentIndex()
@@ -275,19 +263,19 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             if self.textEdit.toPlainText():
                 self.startTransl()
 
-        self.engine_thread = EngineThread(engine.get(self.comboBox.currentText()))
+        self.engine_thread = EngineThread(engine_name.get(self.comboBox.currentText()))
         self.engine_thread.trigger.connect(trigger)
         self.engine_thread.start()
 
     def setLangItems(self):
         """设置源语言和目标语言下拉列表"""
-        engine_val = engine.get(self.comboBox.currentText())
+        engine_val = engine_name.get(self.comboBox.currentText())
         if engine_val == 'youdao':
-            youdao_keys = list(lan_youdao.keys())
+            youdao_keys = list(youdao_lang.keys())
             source_lan_items = [youdao_keys.pop(0)]
             target_lan_items = youdao_keys
         else:
-            source_lan_items = list(eval(f'lan_{engine_val}.keys()'))
+            source_lan_items = list(engine_lang[engine_val].keys())
             target_lan_items = source_lan_items.copy()
             target_lan_items.pop(0)
         # 源语言下拉列表
@@ -303,8 +291,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         self.comboBox_3.setCurrentIndex(0)
         self.comboBox_3.blockSignals(False)
         # 设置源语言和目标语言，并刷新源语言/目标语言下拉列表禁用选项
-        self.source_lan = eval(f'lan_{engine_val}.get("{source_lan_items[0]}")')
-        self.target_lan = eval(f'lan_{engine_val}.get("{target_lan_items[0]}")')
+        self.source_lan = engine_lang[engine_val][source_lan_items[0]]
+        self.target_lan = engine_lang[engine_val][target_lan_items[0]]
         self.refreshComboBoxItems()
 
     def comboBoxCurrentIndexChanged(self):
@@ -320,8 +308,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         2. 刷新语言下拉禁用选项
         3. 发起翻译
         """
-        engine_val = engine.get(self.comboBox.currentText())
-        self.source_lan = eval(f'lan_{engine_val}.get("{self.comboBox_2.currentText()}")')
+        engine_val = engine_name.get(self.comboBox.currentText())
+        self.source_lan = engine_lang[engine_val][self.comboBox_2.currentText()]
         if engine_val == 'youdao':
             # 0--中译日（默认）；1--日译中
             index = self.comboBox_2.currentIndex()
@@ -337,8 +325,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         2. 刷新语言下拉禁用选项
         3. 发起翻译
         """
-        engine_val = engine.get(self.comboBox.currentText())
-        self.target_lan = eval(f'lan_{engine_val}.get("{self.comboBox_3.currentText()}")')
+        engine_val = engine_name.get(self.comboBox.currentText())
+        self.target_lan = engine_lang[engine_val][self.comboBox_3.currentText()]
         if self.textEdit.toPlainText():
             self.startTransl()
         if engine_val != 'youdao':
@@ -346,7 +334,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
 
     def refreshComboBoxItems(self):
         """刷新源语言/目标语言下拉禁用选项"""
-        if engine.get(self.comboBox.currentText()) == 'youdao':
+        if engine_name.get(self.comboBox.currentText()) == 'youdao':
             self.comboBox_2.setItemData(self.comboBox_2DisableIndex, 1 | 32, QtCore.Qt.UserRole - 1)
             self.comboBox_2DisableIndex = self.comboBox_2.currentIndex()
             self.comboBox_2.setItemData(self.comboBox_2DisableIndex, 0, QtCore.Qt.UserRole - 1)
@@ -367,11 +355,11 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """更新下拉列表"""
         # 有道词典切换目标语言为“中日”时，由于翻译结果会有“中译日”和“日译中”两种
         # 因此源语言选项修改为 ['中文 >> 日语', '日语 >> 中文']，用于切换输出结果
-        if engine.get(self.comboBox.currentText()) == 'youdao':
-            if lan_youdao.get(self.comboBox_3.currentText()) == 'ja' and self.transl_engine.reverse_flag:
+        if engine_name.get(self.comboBox.currentText()) == 'youdao':
+            if youdao_lang.get(self.comboBox_3.currentText()) == 'ja' and self.transl_engine.reverse_flag:
                 items = ['中文 >> 日语', '日语 >> 中文']
             else:
-                items = [list(lan_youdao.keys())[0]]
+                items = [list(youdao_lang.keys())[0]]
             self.comboBox_2.blockSignals(True)  # 关闭信号连接
             self.comboBox_2.clear()
             self.comboBox_2.addItems(items)
@@ -382,7 +370,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         to_lan = self.transl_engine.to_lan
         if self.target_lan != to_lan:
             self.target_lan = to_lan
-            index = list(eval(f'lan_{engine.get(self.comboBox.currentText())}.values()')).index(to_lan) - 1
+            index = list(engine_lang[engine_name[self.comboBox.currentText()]].values()).index(to_lan) - 1
             self.comboBox_3.blockSignals(True)
             self.comboBox_3.setCurrentIndex(index)
             self.refreshComboBoxItems()

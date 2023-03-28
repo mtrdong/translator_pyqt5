@@ -6,7 +6,7 @@ from urllib.parse import parse_qs
 from spider import BaseTranslate
 
 # 有道词典语言选项
-lan_youdao = {
+youdao_lang = {
     '自动检测语言': '',
     '中英': 'en',
     '中法': 'fr',

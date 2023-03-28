@@ -18,6 +18,20 @@
 
 
 
+### 环境搭建
+
+- 安装`Python`
+
+推荐安装[👉Python 3.8.10](https://mirrors.huaweicloud.com/python/3.8.10/)
+
+- 安装依赖包
+
+```shell
+pip install -r requirements.txt
+```
+
+
+
 ### 程序封装
 
 > 封装`exe`单文件版（启动慢）：
@@ -50,7 +64,7 @@ pyinstaller pyinstaller-portable.spec
 
 ### 常见问题
 
-> 解决`Linux`运行程序无法输入中文：
+- 解决`Linux`运行程序无法输入中文：
 
 复制文件：`/usr/lib/x86_64-linux-gnu/qt5/plugins/platforminputcontexts/libfcitxplatforminputcontextplugin.so`
 
@@ -58,7 +72,7 @@ pyinstaller pyinstaller-portable.spec
 
 
 
-> 解决`Linux`运行程序时报错：`Could not load the Qt platform plugin "xcb" in "" even though it was found.`：
+- 解决`Linux`运行程序时报错：`Could not load the Qt platform plugin "xcb" in "" even though it was found.`：
 
 ```shell
 sudo apt-get install libxcb-xinerama0

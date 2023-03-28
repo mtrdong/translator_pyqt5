@@ -7,7 +7,7 @@ from threading import Lock
 from spider import BaseTranslate
 
 # 谷歌翻译语言选项
-lan_google = {
+google_lang = {
     '检测语言': 'auto',
     '阿尔巴尼亚语': 'sq',
     '阿拉伯语': 'ar',

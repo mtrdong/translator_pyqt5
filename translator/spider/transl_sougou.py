@@ -12,7 +12,7 @@ from spider import BaseTranslate
 from utils import aes_encrypt
 
 # 搜狗翻译语言选项
-lan_sougou = {
+sougou_lang = {
     '自动检测': 'auto',
     '阿拉伯语': 'ar',
     '波兰语': 'pl',
@@ -36,7 +36,6 @@ lan_sougou = {
     '越南语': 'vi',
     '中文': 'zh-CHS'
 }
-
 
 
 class SougouTranslate(BaseTranslate):
@@ -273,5 +272,6 @@ if __name__ == '__main__':
     st.translate('result', 'zh-CHS')
     translations = st.get_translation()
     explanations = st.get_explanation()
+    tts = st.get_tts(*explanations[0]['symbols'][0][1])
     sentences = st.get_sentence()
-    tts = st.get_tts('hello', 'en')
+    print(st.data)

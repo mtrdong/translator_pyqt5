@@ -7,11 +7,8 @@ from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QWidget
 
 from spider import BaseTranslate
-from spider.transl_baidu import BaiduTranslate
-from spider.transl_google import GoogleTranslate
 from spider.transl_sougou import SougouTranslate
-from spider.transl_youdao import YoudaoTranslate
-from utils import baidu_ocr
+from translator import engine_class
 
 __all__ = [
     'MouseCheckThread',
@@ -48,12 +45,6 @@ class MouseCheckThread(QThread):
 class EngineThread(QThread):
     """创建翻译引擎对象"""
     trigger = pyqtSignal(dict)
-    engine_classes = {
-        'baidu': BaiduTranslate,
-        'youdao': YoudaoTranslate,
-        'sougou': SougouTranslate,
-        'google': GoogleTranslate
-    }
 
     def __init__(self, select: str):
         super(EngineThread, self).__init__()
@@ -62,8 +53,8 @@ class EngineThread(QThread):
     def run(self):
         result = {'code': 0, 'msg': 'OK', 'obj': None}
         try:
-            engine_class = self.engine_classes.get(self.select)
-            obj = engine_class()  # 实例化翻译引擎
+            engine = engine_class.get(self.select)
+            obj = engine()  # 实例化翻译引擎
         except (httpx.ConnectError, httpx.ProxyError, httpx.ConnectTimeout) as exc:
             result.update({'msg': str(exc)})
         else:

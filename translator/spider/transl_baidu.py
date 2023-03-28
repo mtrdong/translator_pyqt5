@@ -7,7 +7,7 @@ from threading import Lock
 from spider import BaseTranslate
 
 # 百度翻译语言选项
-lan_baidu = {
+baidu_lang = {
     '自动检测': '',
     '中文(简体)': 'zh',
     '英语': 'en',
