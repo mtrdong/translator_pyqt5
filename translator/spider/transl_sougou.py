@@ -171,6 +171,9 @@ class SougouTranslate(BaseTranslate):
             else:
                 means.append([values, '', False])
             explains.append({'part': pos, 'means': means})
+        network_mean = '; '.join([item['explanation'] for item in self.data.get('network', {}).get('network_mean', [])])
+        if network_mean:
+            explains.append({'part': '网络释义', 'means': [[network_mean, '', False]]})
         # 解析形态
         exchange_dict = {
             'word_third': '第三人称单数',
