@@ -157,6 +157,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                 self.comboBox_3.blockSignals(True)  # 关闭信号连接
                 self.comboBox_3.setCurrentIndex(combobox_2_index - 1)
                 self.comboBox_3.blockSignals(False)  # 恢复信号连接
+                self.refreshComboBoxItems()
 
     @QtCore.pyqtSlot()
     def on_textEdit_textChanged(self):
