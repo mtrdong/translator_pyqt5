@@ -36,7 +36,8 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['translator/res/images/favicon.ico'],
+    version='file_version_info.txt',
+    icon='translator/res/images/favicon.ico',
 )
 
 coll = COLLECT(

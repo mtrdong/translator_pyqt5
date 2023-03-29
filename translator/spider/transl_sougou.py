@@ -145,7 +145,7 @@ class SougouTranslate(BaseTranslate):
         for item in phonetic:
             voice_type = item.get('type')
             if voice_type:
-                voice_url = 'https:' + item.get('filename')
+                voice_url = 'https://' + item.get('filename', '').split('//')[-1]
                 if voice_type == 'uk':
                     symbols.append([f'英 [{item["text"]}]', [translate['orig_text'], translate['from'], voice_url]])
                 else:
@@ -210,12 +210,13 @@ class SougouTranslate(BaseTranslate):
         sentence_data = []
         with suppress(KeyError, TypeError):
             bilingual = self.data['detail']['bilingual']
+            from_lan = self.data['translate']['from']
             to_lan = self.data['translate']['to']
             for item in bilingual:
                 sentence_text = item['source'].replace('<em>', '<b>').replace('</em>', '</b>')  # 例句原文
                 sentence_tr = item['target']  # 例句译文
                 # 构建例句 TTS 获取参数
-                text, lan, idx = (sentence_tr, to_lan, 1) if self.data.get('Zh2En') else (sentence_text, to_lan, 0)
+                text, lan, idx = (sentence_tr, to_lan, 1) if self.data.get('Zh2En') else (sentence_text, from_lan, 0)
                 sentence_speech = [text, lan]
                 # 添加例句
                 sentence_data.append([sentence_text, sentence_tr, sentence_speech, idx])
