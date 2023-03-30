@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import base64
 import sys
 
 from PyQt5 import QtCore, QtWidgets, QtGui
@@ -234,10 +235,25 @@ class TextEdit(QtWidgets.QTextEdit):
     #     elif action == select_all:
     #         self.selectAll()
 
-    def insertFromMimeData(self, mime_data):
-        """插入文件时清空文本框内容，便于读取文件名"""
+    def insertFromMimeData(self, mime_data: QtCore.QMimeData):
+        """ 向文本框中插入数据
+        1. 将剪切板的图片数据编码后转成QUrl，以实现向文本框粘贴图片
+        2. 插入文件时先清空文本框，以便获取文件信息
+        """
+        image_data = mime_data.imageData()
+        if image_data:
+            # 图片数据来至剪切板，不能直接粘贴到文本框
+            # 这里将图片数据编码后转成QUrl，以实现向文本框粘贴剪切板的图片
+            buffer = QtCore.QBuffer(self)
+            buffer.open(QtCore.QIODevice.WriteOnly)
+            image_data.save(buffer, 'PNG')
+            image_b64 = base64.b64encode(buffer.data()).decode()
+            mime_data = QtCore.QMimeData()
+            mime_data.setUrls([QtCore.QUrl('base64:///' + image_b64)])
         if mime_data.urls():
-            if mime_data.urls()[0].url().find('file:///') == 0:
+            # 向文本框中插入文件时先清空文本框，以便获取文件信息
+            url_str = mime_data.urls()[0].url()
+            if url_str.find('file:///') == 0 or url_str.find('base64:///') == 0:
                 self.blockSignals(True)
                 self.clear()
                 self.blockSignals(False)

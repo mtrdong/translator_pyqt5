@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import base64
 import os
 import sys
 from time import sleep
@@ -174,18 +175,21 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             if self.transl_engine is None:
                 QtWidgets.QMessageBox.information(self, '翻译引擎始化中', '翻译引擎正在初始化中，请稍后重试！')
             # 输入文件时，如果输入的是图片则进行识别翻译（多张图片只取一张），否则弹窗提示
-            elif text.find('file:///') == 0:
+            elif text.find('file:///') == 0 or text.find('base64:///') == 0:
                 file_list = text.split('\n')
                 for file in file_list:
-                    file_name = file.split('file:///')[-1]
-                    if os.path.splitext(file_name)[-1] in ['.jpg', '.png']:
+                    label, string = file.split(':///')
+                    if label == 'base64':
+                        img_data = base64.b64decode(string)
+                        break
+                    elif os.path.splitext(string)[-1].lower() in ['.jpg', '.png']:
+                        with open(string, 'rb') as f:
+                            img_data = f.read()
                         break
                 else:
                     self.textEdit.clear()
                     QtWidgets.QMessageBox.information(self, '提示', '仅支持 jpg 或 png 格式的图片')
                     return None
-                with open(file_name, 'rb') as f:
-                    img_data = f.read()
                 self.ocr(img_data)  # 识别图片中的文本并发起翻译
             # 输入文本时，启动定时翻译对输入的文本进行翻译
             else:
