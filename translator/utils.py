@@ -28,7 +28,7 @@ def aes_encrypt(
         key: str,
         iv: str = None,
         mode: Literal[1, 2, 3, 5, 6] = AES.MODE_CBC,
-        padding: Literal['PKCS7', 'ZeroPadding', 'ISO10126', 'X923', 'NoPadding'] = 'PKCS7'
+        padding: Literal['PKCS7', 'ZeroPadding', 'ISO10126', 'AnsiX923', 'NoPadding'] = 'PKCS7'
 ):
     """AES加密"""
     # 根据填充模式计算填充字符，并与原文进行拼接
@@ -40,7 +40,7 @@ def aes_encrypt(
         pad_text = chr(0) * pad_num
     elif padding == 'ISO10126':
         pad_text = ''.join([chr(random.randint(0, 9)) for _ in range(pad_num - 1)]) + chr(pad_num)
-    elif padding == 'X923':
+    elif padding == 'AnsiX923':
         pad_text = chr(0) * (pad_num - 1) + chr(pad_num)
     else:
         pad_text = ''
@@ -48,7 +48,7 @@ def aes_encrypt(
     text += pad_text
     # AES加密
     key = key.encode('utf-8')
-    if mode == [AES.MODE_ECB, AES.MODE_CTR]:
+    if mode in [AES.MODE_ECB, AES.MODE_CTR]:
         cipher = AES.new(key, mode)
     else:
         iv = iv.encode('utf-8')
@@ -65,7 +65,7 @@ def aes_decrypt(
         key: str,
         iv: str = None,
         mode: Literal[1, 2, 3, 5, 6] = AES.MODE_CBC,
-        padding: Literal['PKCS7', 'ZeroPadding', 'ISO10126', 'X923', 'NoPadding'] = 'PKCS7'
+        padding: Literal['PKCS7', 'ZeroPadding', 'ISO10126', 'AnsiX923', 'NoPadding'] = 'PKCS7'
 ):
     """AES解密"""
     # Base64解码
@@ -84,7 +84,7 @@ def aes_decrypt(
     if pad_num < AES.block_size:
         if padding == 'ZeroPadding':
             decrypted_str = decrypted_str.rstrip(chr(0))
-        elif padding in ['PKCS7', 'ISO10126', 'X923']:
+        elif padding in ['PKCS7', 'ISO10126', 'AnsiX923']:
             decrypted_str = decrypted_str[:-pad_num]
     return decrypted_str
 
