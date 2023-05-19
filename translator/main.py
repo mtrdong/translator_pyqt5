@@ -2,8 +2,10 @@
 import base64
 import os
 import sys
+from threading import Thread
 from time import sleep
 
+import win32clipboard
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtMultimedia
@@ -65,10 +67,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         # 通过线程创建翻译引擎对象
         self.transl_engine: BaseTranslate = ...  # 翻译引擎对象
         self.getTranslEngine()  # 创建翻译引擎对象
-        # 监听剪切板。开启监听时，当剪切板内容发生变化时，自动获取剪切板文本发起翻译（伪划词翻译）
+        # 创建剪切板。通过设置剪切板文本以模拟复制功能
         self.clipboard = QtWidgets.QApplication.clipboard()
-        self.clipboard.dataChanged.connect(self.clipboardChanged)
-        self.clipboard_flag = False  # 监听标志（True-开启监听；False-关闭监听）
         # 翻译定时器。输入框内容发生变化时，延时一定时间后自动发起翻译
         self.timer = QtCore.QTimer(self)
         self.timer.timeout.connect(self.startTransl)
@@ -82,8 +82,8 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
     @QtCore.pyqtSlot()
     def on_checkBox_clicked(self):
         """ 复选按钮状态变更
-        1. 勾选状态开启复制翻译
-        2. 取消勾选关闭复制翻译
+        1. 勾选状态开启划词翻译
+        2. 取消勾选关闭划词翻译
         """
         if self.checkBox.isChecked():
             # 翻译引擎未准备就绪时，弹窗提示并终止开启划词翻译
@@ -91,9 +91,13 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
                 self.checkBox.setChecked(False)
                 QtWidgets.QMessageBox.information(self, '翻译引擎始化中', '翻译引擎正在初始化中，请稍后重试！')
                 return None
-            self.clipboard_flag = True
+            # 如果翻译引擎就绪，则通过线程后台模拟划词
+            self.scribe = ScribeThread()
+            self.scribe.trigger.connect(self.createFloatWindow)
+            self.scribe.start()
         else:
-            self.clipboard_flag = False
+            self.scribe.disconnect()
+            self.scribe.quit()
 
     @QtCore.pyqtSlot()
     def on_pushButton_clicked(self):
@@ -205,17 +209,11 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         else:
             self.pushButton_7.hide()
 
-    def clipboardChanged(self):
-        """ 剪切板数据变更
-        开启复制翻译时，获取剪切板内容并发起翻译
+    def createFloatWindow(self, text):
+        """ 创建悬浮窗
+        开启划词翻译并捕获到文本时，创建悬浮窗输出翻译结果
         """
-        mime_data = self.clipboard.mimeData()
-        text = mime_data.text().strip()
-        # 满足以下条件时，获取剪切板的内容进行翻译，并输出到悬浮窗
-        # 1. 开启了“划词翻译”
-        # 2. 没有正在进行中的翻译任务
-        # 3. 剪切板的内容为纯文本，且不是纯空白字符
-        if self.clipboard_flag and not self.transl_started and mime_data.hasFormat('text/plain') and text:
+        if not self.transl_started:
 
             if not hasattr(self, 'float_window'):
 

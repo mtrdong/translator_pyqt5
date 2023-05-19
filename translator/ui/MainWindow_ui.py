@@ -224,7 +224,7 @@ class Ui_MainWindow(object):
         self.pushButton_3.setToolTip(_translate("MainWindow", "关闭"))
         self.pushButton_3.setText(_translate("MainWindow", "╳"))
         self.comboBox.setToolTip(_translate("MainWindow", "翻译引擎"))
-        self.checkBox.setToolTip(_translate("MainWindow", "Ctrl+C 快速发起翻译"))
+        self.checkBox.setToolTip(_translate("MainWindow", "悬浮窗输出翻译结果"))
         self.checkBox.setText(_translate("MainWindow", "划词翻译"))
         self.pushButton_4.setToolTip(_translate("MainWindow", "截屏翻译（F1）"))
         self.pushButton_4.setText(_translate("MainWindow", "📸"))

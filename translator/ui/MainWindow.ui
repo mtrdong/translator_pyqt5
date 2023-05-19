@@ -158,7 +158,7 @@
        <item>
         <widget class="QCheckBox" name="checkBox">
          <property name="toolTip">
-          <string>Ctrl+C 快速发起翻译</string>
+          <string>悬浮窗输出翻译结果</string>
          </property>
          <property name="text">
           <string>划词翻译</string>
