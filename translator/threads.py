@@ -6,6 +6,7 @@ import pywintypes
 import win32api
 import win32clipboard
 import win32con
+import win32gui
 from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QWidget
@@ -148,31 +149,38 @@ class ScribeThread(QThread):
         self.quit_flag = True
 
     def run(self):
-        """检测到鼠标发生“拖动”事件时，触发一次复制操作"""
+        """鼠标发生“拖动”，且拖动过程中鼠标状态经历过：I，则触发一次 Ctrl + C 复制操作"""
         press = False
+        select = False
+        count = 0
         while True:
             # 退出线程时结束循环
             if self.quit_flag:
                 break
-            # 鼠标左键按下检测
-            if win32api.GetKeyState(win32con.VK_LBUTTON) < 0 and not press:
-                press_x, press_y = win32api.GetCursorPos()
+            if win32api.GetKeyState(win32con.VK_LBUTTON) < 0 and not press:  # 鼠标左键按下
+                press_x, press_y = win32api.GetCursorPos()  # 鼠标按下时的坐标
                 press = ~press
-            # 鼠标左键抬起检测
-            elif win32api.GetKeyState(win32con.VK_LBUTTON) >= 0 and press:
-                release_x, release_y = win32api.GetCursorPos()
+            elif win32api.GetKeyState(win32con.VK_LBUTTON) >= 0 and press:  # 鼠标左键抬起
+                if select:
+                    release_x, release_y = win32api.GetCursorPos()  # 鼠标抬起时的坐标
+                    if abs(release_x - press_x) >= 5 or abs(release_y - press_y) >= 5:  # 鼠标移动 5 个像素点
+                        self.send_ctrl_c()  # 发送 Ctrl + C
+                    select = ~select
                 press = ~press
-                # 鼠标移动检测
-                if abs(release_x - press_x) >= 5 or abs(release_y - press_y) >= 5:
-                    self.send_ctrl_c()
+            if press and not select:
+                cursor_info = win32gui.GetCursorInfo()  # 获取鼠标光标信息
+                if cursor_info[1] == 65541:  # 鼠标指针状态为：I
+                    count += 1
+                else:
+                    count = 0
+                if count >= 10:  # 指针 I 状态维持约 100 毫秒以上
+                    select = ~select
+                    count = 0
             sleep(0.01)
 
     def send_ctrl_c(self):
         """ 发送 Ctrl + C 复制
-        为防止改变剪切板原有内容，首先保存剪切板原始内容，然后再发送 Ctrl + C
-        复制操作发出后，提取复制的内容，然后还原剪切板的原始内容
-        最后检查是否复制到文本内容，如果复制到文本则发送给槽函数
-        TODO: 鼠标调整某些支持快捷复制整行的“编辑窗体”的大小时，可能会触发复制编辑窗体中光标所在行的内容
+        先保存剪切板原始内容，然后发送 Ctrl + C 并获取最新复制内容，最后还原剪切板的原始内容
         """
         # 先保存剪切板中的原始内容
         win32clipboard.OpenClipboard()
@@ -201,7 +209,7 @@ class ScribeThread(QThread):
         win32api.keybd_event(ord('C'), 0, win32con.KEYEVENTF_KEYUP, 0)
         win32api.keybd_event(win32con.VK_CONTROL, 0, win32con.KEYEVENTF_KEYUP, 0)
         sleep(0.1)
-        # 从剪切板中获取临时复制的内容，并恢复之前的内容
+        # 从剪切板中获取最新复制的内容，并恢复之前的内容
         win32clipboard.OpenClipboard()
         try:
             new_clipboard_text = win32clipboard.GetClipboardData().strip()
