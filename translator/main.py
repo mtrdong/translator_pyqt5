@@ -2,10 +2,8 @@
 import base64
 import os
 import sys
-from threading import Thread
 from time import sleep
 
-import win32clipboard
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtMultimedia

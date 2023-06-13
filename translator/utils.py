@@ -72,7 +72,7 @@ def aes_decrypt(
     base64_bytes = base64.b64decode(text)
     # AES解密
     key = key.encode('utf-8')
-    if mode == [AES.MODE_ECB, AES.MODE_CTR]:
+    if mode in [AES.MODE_ECB, AES.MODE_CTR]:
         cipher = AES.new(key, mode)
     else:
         iv = iv.encode('utf-8')

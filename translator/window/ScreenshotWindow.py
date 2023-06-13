@@ -19,6 +19,7 @@ class ScreenshotWindow(QWidget):
         self.setWindowFlags(Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)  # 无边框置顶
         # 初始化变量
         self.screenGeometry = QGuiApplication.primaryScreen().geometry()
+        self.pixelRatio = int(QApplication.primaryScreen().devicePixelRatio())
         self.fullScreenImage = QGuiApplication.primaryScreen().grabWindow(QApplication.desktop().winId())
         self.pressLeftButton = False
         self.beginPos = None
@@ -82,7 +83,12 @@ class ScreenshotWindow(QWidget):
         self.painter.setPen(self.pen)  # 蓝色画笔
         if self.pressLeftButton and self.beginPos is not None and self.endPos is not None:
             pickRect = self.getRectangle(self.beginPos, self.endPos)  # 获得要截图的矩形框
-            self.captureImage = self.fullScreenImage.copy(pickRect)  # 获取矩形框内的图片
+            self.captureImage = self.fullScreenImage.copy(QRect(
+                pickRect.x() * self.pixelRatio,
+                pickRect.y() * self.pixelRatio,
+                pickRect.width() * self.pixelRatio,
+                pickRect.height() * self.pixelRatio
+            ))  # 获取矩形框内的图片
             self.painter.drawPixmap(pickRect.topLeft(), self.captureImage)  # 填充截取的图片
             self.painter.drawRect(pickRect)  # 画矩形边框
         self.painter.end()  # 结束重绘

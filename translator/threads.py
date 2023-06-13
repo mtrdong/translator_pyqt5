@@ -14,6 +14,7 @@ from PyQt5.QtWidgets import QWidget
 from common import engine_class
 from spider import BaseTranslate
 from spider.transl_sougou import SougouTranslate
+from utils import baidu_ocr
 
 __all__ = [
     'MouseCheckThread',
