@@ -144,6 +144,8 @@ class FloatWidget(QtWidgets.QWidget):
         """ 回收窗口
         先执行淡出动画，再回收窗口
         """
+        self.mouse_check_thread.disconnect()
+        self.mouse_check_thread.quit()
         self.animation.setStartValue(1)
         self.animation.setEndValue(0)
         self.animation.start()

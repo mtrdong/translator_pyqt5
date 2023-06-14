@@ -155,11 +155,11 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
             if self.source_lan and self.source_lan != 'auto':
                 combobox_2_index = self.comboBox_2.currentIndex()
                 combobox_3_index = self.comboBox_3.currentIndex()
-                # 保持源语言信号连接，暂停目标语言信号连接，防止自动触发两次翻译
+                # 暂停源标语言信号连接，防止自动触发两次翻译
+                self.comboBox_2.blockSignals(True)  # 关闭信号连接
                 self.comboBox_2.setCurrentIndex(combobox_3_index + 1)
-                self.comboBox_3.blockSignals(True)  # 关闭信号连接
+                self.comboBox_2.blockSignals(False)  # 恢复信号连接
                 self.comboBox_3.setCurrentIndex(combobox_2_index - 1)
-                self.comboBox_3.blockSignals(False)  # 恢复信号连接
                 self.refreshComboBoxItems()
 
     @QtCore.pyqtSlot()
@@ -311,6 +311,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         """
         engine_val = engine_name.get(self.comboBox.currentText())
         self.source_lan = engine_lang[engine_val][self.comboBox_2.currentText()]
+        self.target_lan = engine_lang[engine_val][self.comboBox_3.currentText()]
         if engine_val == 'youdao':
             # 0--中译日（默认）；1--日译中
             index = self.comboBox_2.currentIndex()
@@ -327,6 +328,7 @@ class MainWindow(FramelessWidget, Ui_MainWindow):
         3. 发起翻译
         """
         engine_val = engine_name.get(self.comboBox.currentText())
+        self.source_lan = engine_lang[engine_val][self.comboBox_2.currentText()]
         self.target_lan = engine_lang[engine_val][self.comboBox_3.currentText()]
         if self.textEdit.toPlainText():
             self.startTransl()

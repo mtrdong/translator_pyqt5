@@ -36,8 +36,8 @@ class MouseCheckThread(QThread):
         self.quit_flag = False
 
     def quit(self):
-        super().quit()
         self.quit_flag = True
+        super().quit()
 
     def run(self):
         offset = 20  # 鼠标超出 widget 边缘的距离（单位：像素）
@@ -146,8 +146,8 @@ class ScribeThread(QThread):
         self.quit_flag = False
     
     def quit(self):
-        super().quit()
         self.quit_flag = True
+        super().quit()
 
     def run(self):
         """鼠标发生“拖动”，且拖动过程中鼠标状态经历过：I，则触发一次 Ctrl + C 复制操作"""
