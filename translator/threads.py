@@ -27,6 +27,11 @@ class MouseCheckThread(QThread):
     def __init__(self, widget: QWidget):
         super(MouseCheckThread, self).__init__()
         self.widget = widget
+        self.quit_flag = False
+
+    def quit(self):
+        self.quit_flag = True
+        super().quit()
 
     def run(self):
         offset = 20  # 鼠标超出 widget 边缘的距离（单位：像素）
@@ -34,6 +39,9 @@ class MouseCheckThread(QThread):
         widget_h = self.widget.height()  # widget 的高度
         widget_pos = self.widget.pos()  # widget 左上角的坐标
         while True:
+            # 退出线程时结束循环
+            if self.quit_flag:
+                break
             mouse_pos = QCursor.pos()  # 鼠标当前坐标
             pos = mouse_pos - widget_pos  # 鼠标相对 widget 左上角的坐标
             if not (-offset <= pos.x() <= widget_w + offset and -offset <= pos.y() <= widget_h + offset):
